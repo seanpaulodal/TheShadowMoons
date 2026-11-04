@@ -1,0 +1,9 @@
+# Godot 4+ specific ignores
+.godot/
+*.apk
+*.aab
+*.idsig
+*.keystore
+*.jks
+android/
+export_presets.cfg
