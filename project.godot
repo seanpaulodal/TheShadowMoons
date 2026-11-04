@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 EventBus="*uid://muwnlg26sbys"
 DataRegistry="*uid://m0krv434qrxk"
+FirebaseService="*uid://6gg70so8rwi3"
 
 [display]
 
