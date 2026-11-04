@@ -11,9 +11,14 @@ config_version=5
 [application]
 
 config/name="The Shadow Moons"
-run/main_scene="uid://c5xi76y1my5yk"
+run/main_scene="uid://cywmi7ueuxhlc"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
+
+[autoload]
+
+EventBus="*uid://muwnlg26sbys"
+DataRegistry="*uid://m0krv434qrxk"
 
 [display]
 

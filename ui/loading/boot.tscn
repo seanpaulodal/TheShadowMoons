@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://cywmi7ueuxhlc"]
+
+[ext_resource type="Script" uid="uid://du3s44va7sir3" path="res://ui/loading/boot.gd" id="1_cohn3"]
+
+[node name="Boot" type="Control" unique_id=1907072340]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_cohn3")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1021331020]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02745098, 0.015686275, 0.050980393, 1)
+
+[node name="Center" type="CenterContainer" parent="." unique_id=1585953391]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Box" type="VBoxContainer" parent="Center" unique_id=246628589]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Logo" type="Label" parent="Center/Box" unique_id=927618303]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "THE SHADOW MOONS"
+horizontal_alignment = 1
+
+[node name="Tagline" type="Label" parent="Center/Box" unique_id=1901164235]
+custom_minimum_size = Vector2(900, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Status" type="Label" parent="." unique_id=1071451166]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -23.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
