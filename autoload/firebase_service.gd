@@ -10,6 +10,7 @@ const SESSION_PATH := "user://session.dat"
 const SIGN_UP_URL := "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=%s"
 const SIGN_IN_URL := "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=%s"
 const REFRESH_URL := "https://securetoken.googleapis.com/v1/token?key=%s"
+const RESET_URL := "https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=%s"
 const REFRESH_MARGIN_SECONDS := 120
 
 const FRIENDLY_ERRORS := {
@@ -55,6 +56,17 @@ func sign_up(email: String, password: String) -> Dictionary:
 
 func sign_in(email: String, password: String) -> Dictionary:
 	return await _auth_request(SIGN_IN_URL, email, password)
+
+
+## Sends Firebase's password-reset email. Result: {"ok": true} or a failure.
+func send_password_reset(email: String) -> Dictionary:
+	if not is_configured():
+		return _fail("NOT_CONFIGURED", "Firebase is not configured.")
+	var body := {"requestType": "PASSWORD_RESET", "email": email.strip_edges()}
+	var response: Dictionary = await _post_json(RESET_URL % api_key, body)
+	if not response["ok"]:
+		return _fail(response["error"])
+	return {"ok": true}
 
 
 func sign_out() -> void:
@@ -197,6 +209,8 @@ func _fail(raw_error: String, message: String = "") -> Dictionary:
 	var code := raw_error.split(" ")[0]    # e.g. "WEAK_PASSWORD : ..." -> "WEAK_PASSWORD"
 	if message == "":
 		message = FRIENDLY_ERRORS.get(code, "Something went wrong (%s)." % code)
+		if code.begins_with("NETWORK_ERROR") or code.begins_with("REQUEST_FAILED"):
+			message = "No connection to the server. Check your internet."
 	return {"ok": false, "error": code, "message": message}
 
 

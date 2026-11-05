@@ -1,7 +1,9 @@
 extends Control
-## Boot scene: logo, splash, wait for data, then move on.
+## Boot scene: logo, splash, data check, then straight to the right screen:
+##   valid saved session + character -> loading screen -> world
+##   valid saved session, no character -> character creation
+##   no / expired session -> login screen
 
-const NEXT_SCENE := "res://maps/m0_test.tscn"   # M2 will point this at the auth scene
 const FADE_TIME := 1.0
 const HOLD_TIME := 1.2
 
@@ -18,16 +20,15 @@ func _ready() -> void:
 
 
 func _run_sequence() -> void:
-	# 1) Logo first
+	# 1) Logo first, 2) splash (tagline for now)
 	var tween := create_tween()
 	tween.tween_property(logo, "modulate:a", 1.0, FADE_TIME)
 	tween.tween_interval(HOLD_TIME)
-	# 2) Splash (tagline for now)
 	tween.tween_property(tagline, "modulate:a", 1.0, FADE_TIME)
 	tween.tween_interval(HOLD_TIME)
 	await tween.finished
 
-	# 3) Make sure data is ready
+	# 3) Make sure the game data is ready
 	if not DataRegistry.loaded:
 		await EventBus.data_loaded
 
@@ -39,4 +40,18 @@ func _run_sequence() -> void:
 			return   # release builds stop here instead of running on bad data
 		await get_tree().create_timer(2.5).timeout
 
-	get_tree().change_scene_to_file(NEXT_SCENE)
+	# 4) Decide where to go
+	await _route()
+
+
+func _route() -> void:
+	status.text = "Checking your session..."
+	var restore: Dictionary = await FirebaseService.try_restore_session()
+	if restore["ok"]:
+		status.text = "Loading your character..."
+		var flow: Dictionary = await FlowRouter.continue_after_sign_in(get_tree())
+		if flow["ok"]:
+			return    # the scene is changing
+		status.text = str(flow.get("message", "Could not load your account."))
+		await get_tree().create_timer(2.0).timeout
+	FlowRouter.go_to_auth(get_tree())

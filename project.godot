@@ -20,11 +20,13 @@ config/icon="res://icon.svg"
 EventBus="*uid://muwnlg26sbys"
 DataRegistry="*uid://m0krv434qrxk"
 FirebaseService="*uid://6gg70so8rwi3"
+FirestoreService="*uid://cvo8r0cyt4xbc"
+Session="*uid://p1bsmrprdtim"
 
 [display]
 
-window/size/viewport_width=1920
-window/size/viewport_height=1080
+window/size/viewport_width=1280
+window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 

@@ -1,6 +1,6 @@
-[gd_scene format=3 uid="uid://bcqg1a0shhbat"]
+[gd_scene format=3 uid="uid://dwt4byskk5vr2"]
 
-[ext_resource type="Script" uid="uid://dx0mn7ryjw3y6" path="res://systems/auth_test.gd" id="1_hf044"]
+[ext_resource type="Script" path="res://systems/auth_test.gd" id="1_hf044"]
 
 [node name="AuthTest" type="Node" unique_id=86042988]
 script = ExtResource("1_hf044")

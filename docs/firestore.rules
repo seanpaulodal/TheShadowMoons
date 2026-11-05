@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // -----------------------------------------------------------------
+    // Account profile and characters:  tsm_players/{uid}/...
+    // -----------------------------------------------------------------
+    match /tsm_players/{uid} {
+
+      allow read: if isOwner(uid);
+
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['schema_version', 'email', 'created_at'])
+        && request.resource.data.schema_version == 1
+        && request.resource.data.email is string
+        && request.resource.data.created_at is string;
+
+      allow update, delete: if false;
+
+      match /characters/{slotId} {
+
+        // A brand-new character: fixed starting values, valid name and class,
+        // and it must be created together with its name reservation.
+        function validNewCharacter() {
+          let d = request.resource.data;
+          let nameDoc = /databases/$(database)/documents/tsm_names/$(d.name.lower());
+          return d.keys().hasOnly([
+              'schema_version', 'name', 'class_id', 'appearance', 'level', 'exp',
+              'rebirth', 'stat_points', 'gold', 'current_map', 'inventory',
+              'equipment', 'created_at', 'updated_at'])
+            && d.keys().hasAll([
+              'schema_version', 'name', 'class_id', 'appearance', 'level', 'exp',
+              'rebirth', 'stat_points', 'gold', 'current_map', 'inventory',
+              'equipment', 'created_at', 'updated_at'])
+            && slotId in ['slot_1', 'slot_2', 'slot_3', 'slot_4']
+            && d.schema_version == 1
+            && d.name is string
+            && d.name.matches('^[A-Za-z0-9_]{3,16}$')
+            && d.class_id in ['warrior', 'mage', 'archer', 'rogue', 'gunner',
+                              'extreme', 'brawler', 'healer', 'necromancer']
+            && d.level == 1
+            && d.exp == 0
+            && d.rebirth == 0
+            && d.stat_points == 0
+            && d.gold == 0
+            && d.current_map == 'map_1'
+            && d.appearance is map
+            && d.inventory is list
+            && d.inventory.size() == 0
+            && d.equipment is map
+            && d.created_at is string
+            && d.updated_at is string
+            && existsAfter(nameDoc)
+            && getAfter(nameDoc).data.uid == request.auth.uid
+            && getAfter(nameDoc).data.slot == slotId;
+        }
+
+        // Saving progress: name, class and creation date can never change,
+        // and values must stay inside the game's limits.
+        function validUpdate() {
+          let before = resource.data;
+          let after = request.resource.data;
+          return after.diff(before).affectedKeys().hasOnly([
+              'level', 'exp', 'rebirth', 'stat_points', 'gold', 'current_map',
+              'inventory', 'equipment', 'appearance', 'updated_at'])
+            && after.level is int && after.level >= 1 && after.level <= 300
+            && after.rebirth is int && after.rebirth >= before.rebirth && after.rebirth <= 10
+            && after.exp is number && after.exp >= 0
+            && after.stat_points is int && after.stat_points >= 0
+            && after.gold is number && after.gold >= 0
+            && after.updated_at is string;
+        }
+
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && validNewCharacter();
+        allow update: if isOwner(uid) && validUpdate();
+        allow delete: if false;
+      }
+    }
+
+    // -----------------------------------------------------------------
+    // Character-name reservations:  tsm_names/{lowercase name}
+    // Nobody can read or list these (no name browsing). A reservation can
+    // only be created together with the character that owns the name.
+    // -----------------------------------------------------------------
+    match /tsm_names/{nameKey} {
+      allow create: if signedIn()
+        && nameKey.matches('^[a-z0-9_]{3,16}$')
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'slot', 'created_at'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.name.lower() == nameKey
+        && request.resource.data.slot in ['slot_1', 'slot_2', 'slot_3', 'slot_4']
+        && getAfter(/databases/$(database)/documents/tsm_players/$(request.auth.uid)/characters/$(request.resource.data.slot)).data.name == request.resource.data.name;
+      allow read, update, delete: if false;
+    }
+  }
+}
