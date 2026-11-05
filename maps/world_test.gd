@@ -1,8 +1,15 @@
 extends Node3D
-## Empty test world (M2.4). Shows the loaded character as a placeholder capsule.
-## Movement, camera and combat arrive in later milestones.
+## Test world (M4): a big checkered field with some obstacles. Walk around with
+## WASD / the touch joystick and turn the camera with the right mouse button or
+## by dragging the right side of the screen. Combat and enemies come later.
 
-var _model: MeshInstance3D
+const WORLD_SIZE := 200.0
+const OBSTACLE_COUNT := 36
+
+var player: PlayerController
+var controls: TouchControls
+
+var _info: Label
 
 
 func _ready() -> void:
@@ -11,22 +18,43 @@ func _ready() -> void:
 	if not Session.has_character():
 		FlowRouter.go_to_auth(get_tree())
 		return
-	_build_world()
+	_build_environment()
+	_build_ground()
+	_scatter_obstacles()
+	_spawn_player()
 	_build_hud()
 
 
-func _process(delta: float) -> void:
-	if _model != null:
-		_model.rotate_y(delta * 0.6)
+## Adds a solid box to the world (used for obstacles and by tests).
+func add_box(center: Vector3, size: Vector3, color: Color = Color("3a2a58")) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.position = center
+	var shape := CollisionShape3D.new()
+	var box_shape := BoxShape3D.new()
+	box_shape.size = size
+	shape.shape = box_shape
+	body.add_child(shape)
+	var mesh_instance := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = size
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	box.material = material
+	mesh_instance.mesh = box
+	body.add_child(mesh_instance)
+	add_child(body)
+	return body
 
 
-func _build_world() -> void:
+# ---------- world ----------
+
+func _build_environment() -> void:
 	var environment := Environment.new()
 	environment.background_mode = Environment.BG_COLOR
 	environment.background_color = TSMTheme.BG
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color("6a5a8a")
-	environment.ambient_light_energy = 0.8
+	environment.ambient_light_color = Color("7a6a9a")
+	environment.ambient_light_energy = 0.9
 	var world_environment := WorldEnvironment.new()
 	world_environment.environment = environment
 	add_child(world_environment)
@@ -36,48 +64,87 @@ func _build_world() -> void:
 	sun.shadow_enabled = false    # keep it light for phones
 	add_child(sun)
 
-	var ground := MeshInstance3D.new()
+
+func _build_ground() -> void:
+	var ground := StaticBody3D.new()
+	var shape := CollisionShape3D.new()
+	var floor_shape := BoxShape3D.new()
+	floor_shape.size = Vector3(WORLD_SIZE, 1.0, WORLD_SIZE)
+	shape.shape = floor_shape
+	shape.position = Vector3(0, -0.5, 0)
+	ground.add_child(shape)
+
+	var mesh_instance := MeshInstance3D.new()
 	var plane := PlaneMesh.new()
-	plane.size = Vector2(60, 60)
-	var ground_material := StandardMaterial3D.new()
-	ground_material.albedo_color = Color("1a1028")
-	plane.material = ground_material
-	ground.mesh = plane
+	plane.size = Vector2(WORLD_SIZE, WORLD_SIZE)
+	var material := StandardMaterial3D.new()
+	material.albedo_texture = _checker_texture()
+	material.uv1_scale = Vector3(WORLD_SIZE / 4.0, WORLD_SIZE / 4.0, 1.0)
+	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	plane.material = material
+	mesh_instance.mesh = plane
+	ground.add_child(mesh_instance)
 	add_child(ground)
 
-	_model = MeshInstance3D.new()
-	var capsule := CapsuleMesh.new()
-	capsule.radius = 0.4
-	capsule.height = 1.8
-	var body_material := StandardMaterial3D.new()
-	body_material.albedo_color = Color("7a4bd1")
-	capsule.material = body_material
-	_model.mesh = capsule
-	_model.position = Vector3(0, 0.9, 0)
-	add_child(_model)
+	# Invisible walls so nobody walks off the edge.
+	var half := WORLD_SIZE / 2.0
+	var wall_height := 10.0
+	add_wall(Vector3(0, wall_height / 2.0, -half), Vector3(WORLD_SIZE, wall_height, 1))
+	add_wall(Vector3(0, wall_height / 2.0, half), Vector3(WORLD_SIZE, wall_height, 1))
+	add_wall(Vector3(-half, wall_height / 2.0, 0), Vector3(1, wall_height, WORLD_SIZE))
+	add_wall(Vector3(half, wall_height / 2.0, 0), Vector3(1, wall_height, WORLD_SIZE))
 
-	var nameplate := Label3D.new()
-	nameplate.text = "%s\n%s  Lv %d" % [
-			str(Session.character.get("name", "?")),
-			str(Session.character.get("class_id", "?")).capitalize(),
-			int(Session.character.get("level", 1))]
-	nameplate.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	nameplate.font_size = 48
-	nameplate.pixel_size = 0.005
-	nameplate.outline_size = 10
-	nameplate.modulate = TSMTheme.ACCENT
-	nameplate.position = Vector3(0, 2.4, 0)
-	add_child(nameplate)
 
-	var camera := Camera3D.new()
-	camera.position = Vector3(0, 1.8, 5.0)
-	add_child(camera)
-	camera.look_at(Vector3(0, 1.0, 0))
-	camera.current = true
+func add_wall(center: Vector3, size: Vector3) -> void:
+	var wall := StaticBody3D.new()
+	wall.position = center
+	var shape := CollisionShape3D.new()
+	var box_shape := BoxShape3D.new()
+	box_shape.size = size
+	shape.shape = box_shape
+	wall.add_child(shape)
+	add_child(wall)
+
+
+func _scatter_obstacles() -> void:
+	# The same seed gives the same field every time, so it feels like a place.
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 12345
+	var limit := WORLD_SIZE / 2.0 - 10.0
+	for i in OBSTACLE_COUNT:
+		var position := Vector2(rng.randf_range(-limit, limit), rng.randf_range(-limit, limit))
+		if position.length() < 8.0:
+			continue    # keep the spawn area clear
+		var size := Vector3(rng.randf_range(1.5, 4.0), rng.randf_range(1.0, 6.0), rng.randf_range(1.5, 4.0))
+		var tint := Color("3a2a58").lerp(Color("5b2a8c"), rng.randf())
+		add_box(Vector3(position.x, size.y / 2.0, position.y), size, tint)
+
+
+func _checker_texture() -> ImageTexture:
+	var image := Image.create(64, 64, true, Image.FORMAT_RGBA8)
+	for y in 64:
+		for x in 64:
+			var dark := ((x >> 5) + (y >> 5)) % 2 == 0
+			image.set_pixel(x, y, Color("221733") if dark else Color("2e2144"))
+	image.generate_mipmaps()
+	return ImageTexture.create_from_image(image)
+
+
+# ---------- player and HUD ----------
+
+func _spawn_player() -> void:
+	controls = TouchControls.new()
+	add_child(controls)
+
+	player = PlayerController.new()
+	player.controls = controls
+	player.spawn_position = Vector3(0, 0.2, 0)
+	add_child(player)
 
 
 func _build_hud() -> void:
 	var layer := CanvasLayer.new()
+	layer.layer = 2    # above the touch controls, so buttons get taps first
 	add_child(layer)
 
 	var hud := Control.new()
@@ -86,13 +153,14 @@ func _build_hud() -> void:
 	hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(hud)
 
-	var info := Label.new()
-	info.text = "%s  |  %s  |  Level %d" % [
+	_info = Label.new()
+	_info.text = "%s  |  %s  |  Level %d  |  Speed %.2f" % [
 			str(Session.character.get("name", "?")),
 			str(Session.character.get("class_id", "?")).capitalize(),
-			int(Session.character.get("level", 1))]
-	info.position = Vector2(24, 20)
-	hud.add_child(info)
+			int(Session.character.get("level", 1)),
+			player.move_speed()]
+	_info.position = Vector2(24, 20)
+	hud.add_child(_info)
 
 	var sign_out := Button.new()
 	sign_out.text = "Sign Out"
@@ -105,14 +173,14 @@ func _build_hud() -> void:
 	hud.add_child(sign_out)
 
 	var hint := Label.new()
-	hint.text = "Empty test world (M2.4). Movement arrives in M4."
-	hint.add_theme_font_size_override("font_size", 18)
+	hint.text = "Move: WASD or left thumb  |  Look: right mouse button or drag the right side  |  Zoom: mouse wheel"
+	hint.add_theme_font_size_override("font_size", 16)
 	hint.add_theme_color_override("font_color", TSMTheme.MUTED)
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	hint.offset_left = 24
-	hint.offset_top = -52
-	hint.offset_right = 700
-	hint.offset_bottom = -16
+	hint.offset_top = -44
+	hint.offset_right = 1300
+	hint.offset_bottom = -12
 	hud.add_child(hint)
 
 

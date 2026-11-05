@@ -1,0 +1,27 @@
+{
+  "_note": "PLACEHOLDER rules. How item columns turn into stats, where each kind of gear can go, and inventory size.",
+  "equipment_slots": ["weapon", "armor", "helmet", "gloves", "boots", "ring_1", "ring_2", "accessory", "pet", "mount"],
+  "slot_aliases": { "ring": ["ring_1", "ring_2"] },
+  "type_to_slots": {
+    "Weapon": ["weapon"],
+    "Armor": ["armor", "helmet", "gloves", "boots"],
+    "Accessory": ["ring", "accessory"],
+    "Mount": ["mount"],
+    "Pet": ["pet"]
+  },
+  "btype_to_stat": {
+    "Attack": "atk_power",
+    "Magic Attack": "magic_power",
+    "Defense": "def_power",
+    "Max HP": "max_health",
+    "Max Mana": "max_mana",
+    "Speed": "move_speed"
+  },
+  "consumable_btype": { "Health": "health", "Mana": "mana", "SP": "stamina", "Stamina": "stamina" },
+  "weapon_bonus_conversion": {
+    "crit_chance_bonus": { "stat": "crit_chance", "offset": 0.0, "scale": 100.0 },
+    "crit_dmg_bonus":    { "stat": "crit_damage", "offset": -1.0, "scale": 100.0 }
+  },
+  "known_vendors": ["GeneralStore", "ArmorSmith", "MagicVendor", "MountVendor"],
+  "inventory": { "max_slots": 60, "max_stack": 999 }
+}

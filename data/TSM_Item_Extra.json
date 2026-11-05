@@ -1,0 +1,22 @@
+[
+  { "item_id": "wooden_sword",         "equip_slot": "weapon",    "level_req": 1, "class_req": [] },
+  { "item_id": "iron_sword",           "equip_slot": "weapon",    "level_req": 1, "class_req": [] },
+  { "item_id": "flame_blade",          "equip_slot": "weapon",    "level_req": 1, "class_req": [] },
+  { "item_id": "frost_dagger",         "equip_slot": "weapon",    "level_req": 1, "class_req": [] },
+  { "item_id": "storm_bow",            "equip_slot": "weapon",    "level_req": 1, "class_req": [] },
+  { "item_id": "archmage_staff",       "equip_slot": "weapon",    "level_req": 1, "class_req": [] },
+  { "item_id": "battle_axe",           "equip_slot": "weapon",    "level_req": 1, "class_req": [] },
+  { "item_id": "iron_armor",           "equip_slot": "armor",     "level_req": 1, "class_req": [] },
+  { "item_id": "mage_robes",           "equip_slot": "armor",     "level_req": 1, "class_req": [] },
+  { "item_id": "iron_helm",            "equip_slot": "helmet",    "level_req": 1, "class_req": [] },
+  { "item_id": "iron_gloves",          "equip_slot": "gloves",    "level_req": 1, "class_req": [] },
+  { "item_id": "iron_boots",           "equip_slot": "boots",     "level_req": 1, "class_req": [] },
+  { "item_id": "leather_boots",        "equip_slot": "boots",     "level_req": 1, "class_req": [] },
+  { "item_id": "iron_necklace",        "equip_slot": "accessory", "level_req": 1, "class_req": [] },
+  { "item_id": "amulet_of_wisdom",     "equip_slot": "accessory", "level_req": 1, "class_req": [] },
+  { "item_id": "iron_ring",            "equip_slot": "ring",      "level_req": 1, "class_req": [] },
+  { "item_id": "ring_of_vigor",        "equip_slot": "ring",      "level_req": 1, "class_req": [] },
+  { "item_id": "shadow_steed_mount",   "equip_slot": "mount",     "level_req": 1, "class_req": [] },
+  { "item_id": "armored_bear_mount",   "equip_slot": "mount",     "level_req": 1, "class_req": [] },
+  { "item_id": "celestial_wolf_mount", "equip_slot": "mount",     "level_req": 1, "class_req": [] }
+]

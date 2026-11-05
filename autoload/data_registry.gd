@@ -18,6 +18,11 @@ const DATASETS := {
 		"id_field": "enemy_id",
 		"required": ["enemy_id", "enemy_name", "enemy_level", "max_health"],
 	},
+	"item_extra": {
+		"path": "res://data/TSM_Item_Extra.json",
+		"id_field": "item_id",
+		"required": ["item_id", "equip_slot"],
+	},
 	"classes": {
 		"path": "res://data/TSM_Class_Data.json",
 		"id_field": "class_id",
@@ -40,6 +45,10 @@ const CONFIGS := {
 	"stat_rules": {
 		"path": "res://data/TSM_Stat_Rules.json",
 		"required": ["attributes", "stats", "base_defaults", "growth_defaults"],
+	},
+	"item_rules": {
+		"path": "res://data/TSM_Item_Rules.json",
+		"required": ["equipment_slots", "btype_to_stat", "consumable_btype", "inventory"],
 	},
 	"progression": {
 		"path": "res://data/TSM_Progression.json",
@@ -91,6 +100,10 @@ func get_enemy(id: Variant) -> Dictionary:
 
 func get_achievement(id: Variant) -> Dictionary:
 	return _get_row("achievements", id)
+
+## Extra per-item settings that the item sheet does not have (equip slot, level and class limits).
+func get_item_extra(id: Variant) -> Dictionary:
+	return _get_row("item_extra", id)
 
 func get_class_data(id: Variant) -> Dictionary:
 	return _get_row("classes", id)
