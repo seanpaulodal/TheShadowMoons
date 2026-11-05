@@ -25,16 +25,19 @@ func _process(delta: float) -> void:
 		return
 
 	var target := 0.0
-	var keyboard_px := DisplayServer.virtual_keyboard_get_height()
-	if keyboard_px > 0:
-		var focus := content.get_viewport().gui_get_focus_owner()
-		if focus != null and content.is_ancestor_of(focus):
-			var viewport_h := content.get_viewport().get_visible_rect().size.y
-			var window_h := maxf(float(DisplayServer.window_get_size().y), 1.0)
-			var keyboard_units := float(keyboard_px) * viewport_h / window_h
-			# The field's rectangle already includes the current shift.
-			var field_bottom := focus.get_global_rect().end.y + _shift
-			target = shift_needed(field_bottom, viewport_h, keyboard_units)
+	
+	# Only check the virtual keyboard if the current display server actually supports it
+	if DisplayServer.has_feature(DisplayServer.FEATURE_VIRTUAL_KEYBOARD):
+		var keyboard_px := DisplayServer.virtual_keyboard_get_height()
+		if keyboard_px > 0:
+			var focus := content.get_viewport().gui_get_focus_owner()
+			if focus != null and content.is_ancestor_of(focus):
+				var viewport_h := content.get_viewport().get_visible_rect().size.y
+				var window_h := maxf(float(DisplayServer.window_get_size().y), 1.0)
+				var keyboard_units := float(keyboard_px) * viewport_h / window_h
+				# The field's rectangle already includes the current shift.
+				var field_bottom := focus.get_global_rect().end.y + _shift
+				target = shift_needed(field_bottom, viewport_h, keyboard_units)
 
 	_shift = lerpf(_shift, target, clampf(delta * SPEED, 0.0, 1.0))
 	if absf(_shift - target) < 0.5:

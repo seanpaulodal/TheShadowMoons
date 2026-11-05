@@ -52,7 +52,7 @@ func _ready() -> void:
 
 ## Recalculates the stats from the saved character. Call after equipping gear,
 ## spending attribute points or leveling up.
-func refresh_stats(modifiers: Array = [], mounted: bool = false) -> void:
+func refresh_stats(modifiers: Array = [], _mounted: bool = false) -> void:
 	var character := Session.character
 	var result := StatCalculator.calculate(str(character.get("class_id", "")),
 			int(character.get("level", 1)), character.get("attributes", {}), modifiers)

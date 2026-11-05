@@ -74,13 +74,13 @@ func _on_touch(event: InputEventScreenTouch) -> void:
 
 func _on_drag(event: InputEventScreenDrag) -> void:
 	if event.index == _joystick_index:
-		var offset := event.position - _joystick_origin
-		_joystick_position = _joystick_origin + offset.limit_length(JOYSTICK_RADIUS)
-		var strength := clampf(offset.length() / JOYSTICK_RADIUS, 0.0, 1.0)
+		var drag_offset := event.position - _joystick_origin
+		_joystick_position = _joystick_origin + drag_offset.limit_length(JOYSTICK_RADIUS)
+		var strength := clampf(drag_offset.length() / JOYSTICK_RADIUS, 0.0, 1.0)
 		if strength < DEAD_ZONE:
 			move_vector = Vector2.ZERO
 		else:
-			move_vector = offset.normalized() * strength
+			move_vector = drag_offset.normalized() * strength
 		_view.queue_redraw()
 	elif event.index == _look_index:
 		_look_delta += event.relative * LOOK_SENSITIVITY

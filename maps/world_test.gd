@@ -112,12 +112,12 @@ func _scatter_obstacles() -> void:
 	rng.seed = 12345
 	var limit := WORLD_SIZE / 2.0 - 10.0
 	for i in OBSTACLE_COUNT:
-		var position := Vector2(rng.randf_range(-limit, limit), rng.randf_range(-limit, limit))
-		if position.length() < 8.0:
+		var pos := Vector2(rng.randf_range(-limit, limit), rng.randf_range(-limit, limit))
+		if pos.length() < 8.0:
 			continue    # keep the spawn area clear
 		var size := Vector3(rng.randf_range(1.5, 4.0), rng.randf_range(1.0, 6.0), rng.randf_range(1.5, 4.0))
 		var tint := Color("3a2a58").lerp(Color("5b2a8c"), rng.randf())
-		add_box(Vector3(position.x, size.y / 2.0, position.y), size, tint)
+		add_box(Vector3(pos.x, size.y / 2.0, pos.y), size, tint)
 
 
 func _checker_texture() -> ImageTexture:
