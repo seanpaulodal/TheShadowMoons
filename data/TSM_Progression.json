@@ -1,0 +1,10 @@
+{
+  "_note": "PLACEHOLDER numbers. exp needed from level L to L+1 = floor(exp_base * L ^ exp_exponent * (1 + rebirth_exp_increase * rebirth)).",
+  "max_level": 300,
+  "max_rebirth": 10,
+  "exp_base": 100,
+  "exp_exponent": 2.0,
+  "rebirth_exp_increase": 0.0,
+  "stat_points_per_level": 5,
+  "max_attribute_points": 999
+}

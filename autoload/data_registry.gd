@@ -18,6 +18,11 @@ const DATASETS := {
 		"id_field": "enemy_id",
 		"required": ["enemy_id", "enemy_name", "enemy_level", "max_health"],
 	},
+	"classes": {
+		"path": "res://data/TSM_Class_Data.json",
+		"id_field": "class_id",
+		"required": ["class_id", "display_name", "start_attributes", "base_stats", "growth_stats"],
+	},
 	"achievements": {
 		"path": "res://data/TSM_Achievements.json",
 		"id_field": "id",
@@ -30,7 +35,20 @@ const DATASETS := {
 	},
 }
 
+# Single-object settings files (not tables of rows).
+const CONFIGS := {
+	"stat_rules": {
+		"path": "res://data/TSM_Stat_Rules.json",
+		"required": ["attributes", "stats", "base_defaults", "growth_defaults"],
+	},
+	"progression": {
+		"path": "res://data/TSM_Progression.json",
+		"required": ["max_level", "max_rebirth", "exp_base", "exp_exponent", "stat_points_per_level"],
+	},
+}
+
 var loaded: bool = false
+var _configs: Dictionary = {}         # config name -> Dictionary
 var _tables: Dictionary = {}          # table name -> { id (String) -> row (Dictionary) }
 var _errors: PackedStringArray = []
 var _warnings: PackedStringArray = []
@@ -43,11 +61,14 @@ func _ready() -> void:
 func load_all() -> void:
 	loaded = false
 	_tables.clear()
+	_configs.clear()
 	_errors.clear()
 	_warnings.clear()
 
 	for table_name in DATASETS:
 		_load_dataset(table_name, DATASETS[table_name])
+	for config_name in CONFIGS:
+		_load_config(config_name, CONFIGS[config_name])
 
 	loaded = true
 	var report := get_report()
@@ -71,6 +92,13 @@ func get_enemy(id: Variant) -> Dictionary:
 func get_achievement(id: Variant) -> Dictionary:
 	return _get_row("achievements", id)
 
+func get_class_data(id: Variant) -> Dictionary:
+	return _get_row("classes", id)
+
+## A single-object settings file, e.g. "stat_rules" or "progression".
+func get_config(config_name: String) -> Dictionary:
+	return _configs.get(config_name, {})
+
 func has_item(id: Variant) -> bool:
 	return not _get_row("items", id).is_empty()
 
@@ -83,6 +111,8 @@ func get_report() -> Dictionary:
 	var counts := {}
 	for table_name in _tables:
 		counts[table_name] = _tables[table_name].size()
+	for config_name in _configs:
+		counts[config_name] = 0 if _configs[config_name].is_empty() else 1
 	return {
 		"counts": counts,
 		"errors": _errors.duplicate(),
@@ -173,6 +203,32 @@ func _load_dataset(table_name: String, cfg: Dictionary) -> void:
 	_tables[table_name] = table
 	if table_name == "enemies":
 		_check_enemy_levels(table)
+
+
+func _load_config(config_name: String, cfg: Dictionary) -> void:
+	_configs[config_name] = {}
+	var path: String = cfg["path"]
+	if not FileAccess.file_exists(path):
+		_errors.append("[%s] file not found: %s" % [config_name, path])
+		return
+
+	var json := JSON.new()
+	if json.parse(FileAccess.get_file_as_string(path)) != OK:
+		_errors.append("[%s] JSON error in %s at line %d: %s" % [
+				config_name, path, json.get_error_line(), json.get_error_message()])
+		return
+	if not (json.data is Dictionary):
+		_errors.append("[%s] %s must contain one JSON object" % [config_name, path])
+		return
+
+	var missing: PackedStringArray = []
+	for key in cfg["required"]:
+		if not json.data.has(key):
+			missing.append(key)
+	if not missing.is_empty():
+		_errors.append("[%s] missing keys: %s" % [config_name, ", ".join(missing)])
+		return
+	_configs[config_name] = json.data
 
 
 ## Accepts a list of rows, an object keyed by id, or {"anything": [rows]}.
