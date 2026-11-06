@@ -5,6 +5,13 @@ extends Node
 ##   tsm_players/{uid}/characters/slot_{n}   -> one character per slot
 
 signal character_loaded(character: Dictionary)
+## Fires whenever the active character changes (items, equipment, attribute
+## points, level). Stats and screens listen to this to refresh themselves.
+signal character_changed
+
+# Call this inside functions like load_character(), add_item(), allocate_attribute(), etc.
+func _notify_changed() -> void:
+	character_changed.emit()
 
 const SCHEMA_VERSION := 1
 const MAX_SLOTS := 4

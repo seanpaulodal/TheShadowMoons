@@ -25,7 +25,9 @@ const ACTION_KEYS := {
 	"move_right": [KEY_D, KEY_RIGHT],
 }
 
-## Final stats of the character (see StatCalculator). Refresh when gear changes.
+signal stats_changed
+
+## Final stats of the character (see CharacterStats). Kept up to date automatically.
 var stats: Dictionary = {}
 ## Optional: touch controls to read the joystick and camera drag from.
 var controls: TouchControls
@@ -33,6 +35,8 @@ var controls: TouchControls
 var move_override: Vector2 = Vector2.ZERO
 var spawn_position: Vector3 = Vector3(0, 1, 0)
 
+var _extra_modifiers: Array = []
+var _mounted: bool = false
 var _yaw: float = 0.0
 var _pitch: float = -0.4
 var _distance: float = 6.5
@@ -47,19 +51,32 @@ func _ready() -> void:
 	_build_body()
 	_build_camera()
 	refresh_stats()
+	Session.character_changed.connect(_on_character_changed)
 	global_position = spawn_position
 
 
-## Recalculates the stats from the saved character. Call after equipping gear,
-## spending attribute points or leveling up.
-func refresh_stats(modifiers: Array = [], _mounted: bool = false) -> void:
-	var character := Session.character
-	var result := StatCalculator.calculate(str(character.get("class_id", "")),
-			int(character.get("level", 1)), character.get("attributes", {}), modifiers)
+## Recalculates the stats from the saved character: its class, level and
+## allocated attribute points, plus everything it wears. Called automatically
+## when the character changes. `extra_modifiers` is for temporary bonuses.
+func refresh_stats(extra_modifiers: Array = [], mounted: bool = false) -> void:
+	_extra_modifiers = extra_modifiers
+	if mounted != _mounted:
+		_mounted = mounted
+	var result := CharacterStats.compute(Session.character, _mounted, _extra_modifiers)
 	if result["ok"]:
 		stats = result["stats"]
 	else:
 		stats = {"move_speed": FALLBACK_SPEED}
+	stats_changed.emit()
+
+
+## Riding a mount adds the mount's bonus (for example speed).
+func set_mounted(riding: bool) -> void:
+	refresh_stats(_extra_modifiers, riding)
+
+
+func _on_character_changed() -> void:
+	refresh_stats(_extra_modifiers, _mounted)
 
 
 func move_speed() -> float:

@@ -154,13 +154,10 @@ func _build_hud() -> void:
 	layer.add_child(hud)
 
 	_info = Label.new()
-	_info.text = "%s  |  %s  |  Level %d  |  Speed %.2f" % [
-			str(Session.character.get("name", "?")),
-			str(Session.character.get("class_id", "?")).capitalize(),
-			int(Session.character.get("level", 1)),
-			player.move_speed()]
 	_info.position = Vector2(24, 20)
 	hud.add_child(_info)
+	_update_info()
+	player.stats_changed.connect(_update_info)
 
 	var sign_out := Button.new()
 	sign_out.text = "Sign Out"
@@ -182,6 +179,14 @@ func _build_hud() -> void:
 	hint.offset_right = 1300
 	hint.offset_bottom = -12
 	hud.add_child(hint)
+
+
+func _update_info() -> void:
+	_info.text = "%s  |  %s  |  Level %d  |  Speed %.2f" % [
+			str(Session.character.get("name", "?")),
+			str(Session.character.get("class_id", "?")).capitalize(),
+			int(Session.character.get("level", 1)),
+			player.move_speed()]
 
 
 func _on_sign_out() -> void:

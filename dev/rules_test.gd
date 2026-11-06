@@ -68,6 +68,31 @@ func _ready() -> void:
 			await FirestoreService.get_document("tsm_names/%s" % existing_name),
 			"PERMISSION_DENIED")
 
+	var zero_attributes := {"str": 0, "int": 0, "vit": 0, "dex": 0, "wis": 0, "lck": 0, "agi": 0, "cha": 0}
+	var greedy := zero_attributes.duplicate()
+	for key in greedy:
+		greedy[key] = 999    # far more points than any low-level character has earned
+	var bad_keys := zero_attributes.duplicate()
+	bad_keys["luck_of_the_gods"] = 1
+	var too_many_items: Array = []
+	for i in 101:
+		too_many_items.append({"item_id": "healing_potion", "qty": 1})
+	_check("spend far more attribute points than earned",
+			await FirestoreService.update_fields(path, {"attributes": greedy, "updated_at": _now}),
+			"PERMISSION_DENIED")
+	_check("an attribute that does not exist",
+			await FirestoreService.update_fields(path, {"attributes": bad_keys, "updated_at": _now}),
+			"PERMISSION_DENIED")
+	_check("give yourself 500 unspent stat points",
+			await FirestoreService.update_fields(path, {"stat_points": 500, "updated_at": _now}),
+			"PERMISSION_DENIED")
+	_check("a bag with 101 entries",
+			await FirestoreService.update_fields(path, {"inventory": too_many_items, "updated_at": _now}),
+			"PERMISSION_DENIED")
+	_check("an equipment slot that does not exist",
+			await FirestoreService.update_fields(path, {"equipment": {"tail": {"uid": "x", "item_id": "iron_sword"}}, "updated_at": _now}),
+			"PERMISSION_DENIED")
+
 	print("[rules] --- name must be unique ---")
 	_check("second character with an already-used name",
 			await FirestoreService.create_documents([
@@ -78,6 +103,12 @@ func _ready() -> void:
 	print("[rules] --- this must WORK ---")
 	_check("normal save (level unchanged)",
 			await FirestoreService.update_fields(path, {"level": level, "updated_at": _now}),
+			"OK")
+	_check("saving attribute points that are all zero",
+			await FirestoreService.update_fields(path, {"attributes": zero_attributes, "updated_at": _now}),
+			"OK")
+	_check("saving an empty bag and nothing worn",
+			await FirestoreService.update_fields(path, {"inventory": [], "equipment": {}, "updated_at": _now}),
 			"OK")
 
 	print("[rules] RESULT: %d passed, %d failed" % [_passed, _failed])

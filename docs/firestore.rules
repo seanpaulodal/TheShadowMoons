@@ -63,6 +63,25 @@ service cloud.firestore {
             && getAfter(nameDoc).data.slot == slotId;
         }
 
+        // Attribute points: the 8 known attributes only, whole numbers, and the
+        // points spent plus the points still unspent can never be more than the
+        // character has earned. 5 points per level; each rebirth completes 299
+        // levels. (Keep these numbers in step with TSM_Progression.json.)
+        function validAttributes(a, points, level, rebirth) {
+          return a.keys().hasOnly(['str', 'int', 'vit', 'dex', 'wis', 'lck', 'agi', 'cha'])
+            && a.keys().hasAll(['str', 'int', 'vit', 'dex', 'wis', 'lck', 'agi', 'cha'])
+            && a['str'] is int && a['str'] >= 0 && a['str'] <= 999
+            && a['int'] is int && a['int'] >= 0 && a['int'] <= 999
+            && a['vit'] is int && a['vit'] >= 0 && a['vit'] <= 999
+            && a['dex'] is int && a['dex'] >= 0 && a['dex'] <= 999
+            && a['wis'] is int && a['wis'] >= 0 && a['wis'] <= 999
+            && a['lck'] is int && a['lck'] >= 0 && a['lck'] <= 999
+            && a['agi'] is int && a['agi'] >= 0 && a['agi'] <= 999
+            && a['cha'] is int && a['cha'] >= 0 && a['cha'] <= 999
+            && (a['str'] + a['int'] + a['vit'] + a['dex'] + a['wis'] + a['lck'] + a['agi'] + a['cha'] + points)
+                <= 5 * (level - 1 + 299 * rebirth);
+        }
+
         // Saving progress: name, class and creation date can never change,
         // and values must stay inside the game's limits.
         function validUpdate() {
@@ -70,13 +89,21 @@ service cloud.firestore {
           let after = request.resource.data;
           return after.diff(before).affectedKeys().hasOnly([
               'level', 'exp', 'rebirth', 'stat_points', 'gold', 'current_map',
-              'inventory', 'equipment', 'appearance', 'updated_at'])
+              'inventory', 'equipment', 'appearance', 'attributes', 'updated_at'])
             && after.level is int && after.level >= 1 && after.level <= 300
             && after.rebirth is int && after.rebirth >= before.rebirth && after.rebirth <= 10
             && after.exp is number && after.exp >= 0
             && after.stat_points is int && after.stat_points >= 0
+            && after.stat_points <= 5 * (after.level - 1 + 299 * after.rebirth)
             && after.gold is number && after.gold >= 0
-            && after.updated_at is string;
+            && after.updated_at is string
+            && after.inventory is list && after.inventory.size() <= 100
+            && after.equipment is map
+            && after.equipment.keys().hasOnly([
+                'weapon', 'armor', 'helmet', 'gloves', 'pants', 'boots',
+                'ring_1', 'ring_2', 'accessory', 'pet', 'mount'])
+            && (!('attributes' in after)
+                || validAttributes(after['attributes'], after.stat_points, after.level, after.rebirth));
         }
 
         allow read: if isOwner(uid);
