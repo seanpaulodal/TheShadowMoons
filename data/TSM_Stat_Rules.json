@@ -1,42 +1,159 @@
 {
   "_note": "PLACEHOLDER balance. Percent-type stats (accuracy, crit_chance, evasion, block_rate, parry_rate, block_mitigation) are percentage points. crit_damage is the damage multiplier in percent (150 = 150%). atk_speed is a multiplier (1.0 = normal). Tune freely: no code changes needed.",
   "attributes": {
-    "str": { "label": "Strength",     "per_point": { "atk_power": 2.0, "max_stamina": 1.0 } },
-    "int": { "label": "Intelligence", "per_point": { "magic_power": 2.0, "max_mana": 5.0 } },
-    "vit": { "label": "Vitality",     "per_point": { "max_health": 8.0, "def_power": 0.8, "max_stamina": 2.0 } },
-    "dex": { "label": "Dexterity",    "per_point": { "accuracy": 0.5, "crit_chance": 0.1, "atk_speed": 0.004 } },
-    "wis": { "label": "Wisdom",       "per_point": { "magic_resist": 0.8, "max_mana": 3.0 } },
-    "lck": { "label": "Luck",         "per_point": { "crit_chance": 0.2, "crit_damage": 0.5 } },
-    "agi": { "label": "Agility",      "per_point": { "move_speed": 0.02, "evasion": 0.4, "atk_speed": 0.004 } },
-    "cha": { "label": "Charisma",     "per_point": { } }
+    "str": {
+      "label": "Strength",
+      "per_point": {
+        "atk_power": 2.0,
+        "max_stamina": 1.0
+      }
+    },
+    "int": {
+      "label": "Intelligence",
+      "per_point": {
+        "magic_power": 2.0,
+        "max_mana": 5.0
+      }
+    },
+    "vit": {
+      "label": "Vitality",
+      "per_point": {
+        "max_health": 8.0,
+        "def_power": 0.8,
+        "max_stamina": 2.0
+      }
+    },
+    "dex": {
+      "label": "Dexterity",
+      "per_point": {
+        "accuracy": 0.5,
+        "crit_chance": 0.1,
+        "atk_speed": 0.004
+      }
+    },
+    "wis": {
+      "label": "Wisdom",
+      "per_point": {
+        "magic_resist": 0.8,
+        "max_mana": 3.0
+      }
+    },
+    "lck": {
+      "label": "Luck",
+      "per_point": {
+        "crit_chance": 0.2,
+        "crit_damage": 0.5
+      }
+    },
+    "agi": {
+      "label": "Agility",
+      "per_point": {
+        "move_speed": 0.02,
+        "evasion": 0.4,
+        "atk_speed": 0.004
+      }
+    },
+    "cha": {
+      "label": "Charisma",
+      "per_point": {}
+    }
   },
   "base_defaults": {
-    "max_health": 50, "max_mana": 20, "max_stamina": 80,
-    "atk_power": 5, "magic_power": 5, "def_power": 3, "magic_resist": 3,
-    "atk_speed": 1.0, "move_speed": 7.0,
-    "accuracy": 90, "crit_chance": 5, "crit_damage": 150,
-    "evasion": 3, "block_rate": 0, "block_mitigation": 30, "parry_rate": 0
+    "max_health": 50,
+    "max_mana": 20,
+    "max_stamina": 80,
+    "atk_power": 5,
+    "magic_power": 5,
+    "def_power": 3,
+    "magic_resist": 3,
+    "atk_speed": 1.0,
+    "move_speed": 7.0,
+    "accuracy": 90,
+    "crit_chance": 5,
+    "crit_damage": 150,
+    "evasion": 3,
+    "block_rate": 0,
+    "block_mitigation": 30,
+    "parry_rate": 0,
+    "attack_range": 3.0
   },
   "growth_defaults": {
-    "max_health": 8, "max_mana": 3, "max_stamina": 2,
-    "atk_power": 1.0, "magic_power": 1.0, "def_power": 0.6, "magic_resist": 0.6
+    "max_health": 8,
+    "max_mana": 3,
+    "max_stamina": 2,
+    "atk_power": 1.0,
+    "magic_power": 1.0,
+    "def_power": 0.6,
+    "magic_resist": 0.6
   },
   "stats": {
-    "max_health":       { "integer": true,  "min": 1 },
-    "max_mana":         { "integer": true,  "min": 0 },
-    "max_stamina":      { "integer": true,  "min": 0 },
-    "atk_power":        { "integer": true,  "min": 0 },
-    "magic_power":      { "integer": true,  "min": 0 },
-    "def_power":        { "integer": true,  "min": 0 },
-    "magic_resist":     { "integer": true,  "min": 0 },
-    "atk_speed":        { "min": 0.2, "max": 3.0 },
-    "move_speed":       { "min": 1.0, "max": 15.0 },
-    "accuracy":         { "min": 0, "max": 999 },
-    "crit_chance":      { "min": 0, "max": 100 },
-    "crit_damage":      { "min": 100, "max": 500 },
-    "evasion":          { "min": 0, "max": 75 },
-    "block_rate":       { "min": 0, "max": 75 },
-    "block_mitigation": { "min": 0, "max": 90 },
-    "parry_rate":       { "min": 0, "max": 50 }
+    "max_health": {
+      "integer": true,
+      "min": 1
+    },
+    "max_mana": {
+      "integer": true,
+      "min": 0
+    },
+    "max_stamina": {
+      "integer": true,
+      "min": 0
+    },
+    "atk_power": {
+      "integer": true,
+      "min": 0
+    },
+    "magic_power": {
+      "integer": true,
+      "min": 0
+    },
+    "def_power": {
+      "integer": true,
+      "min": 0
+    },
+    "magic_resist": {
+      "integer": true,
+      "min": 0
+    },
+    "atk_speed": {
+      "min": 0.2,
+      "max": 3.0
+    },
+    "move_speed": {
+      "min": 1.0,
+      "max": 15.0
+    },
+    "accuracy": {
+      "min": 0,
+      "max": 999
+    },
+    "crit_chance": {
+      "min": 0,
+      "max": 100
+    },
+    "crit_damage": {
+      "min": 100,
+      "max": 500
+    },
+    "evasion": {
+      "min": 0,
+      "max": 75
+    },
+    "block_rate": {
+      "min": 0,
+      "max": 75
+    },
+    "block_mitigation": {
+      "min": 0,
+      "max": 90
+    },
+    "parry_rate": {
+      "min": 0,
+      "max": 50
+    },
+    "attack_range": {
+      "min": 1.0,
+      "max": 30.0
+    }
   }
 }

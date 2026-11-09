@@ -18,6 +18,11 @@ const DATASETS := {
 		"id_field": "enemy_id",
 		"required": ["enemy_id", "enemy_name", "enemy_level", "max_health"],
 	},
+	"status_effects": {
+		"path": "res://data/TSM_Status_Effects.json",
+		"id_field": "effect_id",
+		"required": ["effect_id", "name", "kind", "duration"],
+	},
 	"item_extra": {
 		"path": "res://data/TSM_Item_Extra.json",
 		"id_field": "item_id",
@@ -45,6 +50,14 @@ const CONFIGS := {
 	"stat_rules": {
 		"path": "res://data/TSM_Stat_Rules.json",
 		"required": ["attributes", "stats", "base_defaults", "growth_defaults"],
+	},
+	"combat_rules": {
+		"path": "res://data/TSM_Combat_Rules.json",
+		"required": ["hit_chance", "defense_constant", "max_reduction", "min_damage", "unarmed", "weapon_damage_stat"],
+	},
+	"element_rules": {
+		"path": "res://data/TSM_Element_Rules.json",
+		"required": ["multipliers", "elements", "aliases"],
 	},
 	"item_rules": {
 		"path": "res://data/TSM_Item_Rules.json",
@@ -102,6 +115,9 @@ func get_achievement(id: Variant) -> Dictionary:
 	return _get_row("achievements", id)
 
 ## Extra per-item settings that the item sheet does not have (equip slot, level and class limits).
+func get_status_effect(id: Variant) -> Dictionary:
+	return _get_row("status_effects", id)
+
 func get_item_extra(id: Variant) -> Dictionary:
 	return _get_row("item_extra", id)
 

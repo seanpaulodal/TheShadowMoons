@@ -1,0 +1,148 @@
+{
+  "_note": "PLACEHOLDER chart. A target's weaknesses and resistances come from its own element (an enemy's status_ELEM), using this chart. enemy_overrides lets you set one enemy's element by hand: {\"some_enemy_id\": {\"element\": \"fire\"}}.",
+  "multipliers": {
+    "weak": 1.5,
+    "resist": 0.5,
+    "immune": 0.0
+  },
+  "elements": {
+    "physical": {
+      "weak_to": [],
+      "resists": [],
+      "immune_to": []
+    },
+    "fire": {
+      "weak_to": [
+        "water",
+        "earth"
+      ],
+      "resists": [
+        "fire",
+        "nature",
+        "ice"
+      ],
+      "immune_to": []
+    },
+    "water": {
+      "weak_to": [
+        "shock",
+        "nature"
+      ],
+      "resists": [
+        "water",
+        "fire",
+        "ice"
+      ],
+      "immune_to": []
+    },
+    "ice": {
+      "weak_to": [
+        "fire"
+      ],
+      "resists": [
+        "ice",
+        "water"
+      ],
+      "immune_to": []
+    },
+    "shock": {
+      "weak_to": [
+        "earth"
+      ],
+      "resists": [
+        "shock"
+      ],
+      "immune_to": []
+    },
+    "earth": {
+      "weak_to": [
+        "water",
+        "nature"
+      ],
+      "resists": [
+        "earth",
+        "shock"
+      ],
+      "immune_to": []
+    },
+    "nature": {
+      "weak_to": [
+        "fire",
+        "ice",
+        "poison"
+      ],
+      "resists": [
+        "water",
+        "earth",
+        "nature"
+      ],
+      "immune_to": []
+    },
+    "poison": {
+      "weak_to": [
+        "earth",
+        "holy"
+      ],
+      "resists": [
+        "poison",
+        "nature"
+      ],
+      "immune_to": []
+    },
+    "holy": {
+      "weak_to": [
+        "dark"
+      ],
+      "resists": [
+        "holy"
+      ],
+      "immune_to": []
+    },
+    "dark": {
+      "weak_to": [
+        "holy"
+      ],
+      "resists": [
+        "dark",
+        "poison"
+      ],
+      "immune_to": []
+    }
+  },
+  "aliases": {
+    "lightning": "shock",
+    "thunder": "shock",
+    "storm": "shock",
+    "frost": "ice",
+    "chilled": "ice",
+    "shadow": "dark",
+    "nightfall": "dark",
+    "void": "dark",
+    "abyss": "dark",
+    "abyssal": "dark",
+    "bloodfire": "fire",
+    "ashfire": "fire",
+    "solar": "fire",
+    "burning": "fire",
+    "plague": "poison",
+    "venom": "poison",
+    "light": "holy",
+    "radiant": "holy",
+    "stone": "earth",
+    "rock": "earth",
+    "natural": "nature",
+    "plant": "nature",
+    "n/a": "physical",
+    "none": "physical",
+    "steel": "physical"
+  },
+  "enemy_overrides": {},
+  "ignored_words": [
+    "corrupted",
+    "cursed",
+    "ancient",
+    "greater",
+    "lesser",
+    "true"
+  ]
+}

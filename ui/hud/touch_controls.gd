@@ -4,7 +4,8 @@ extends CanvasLayer
 ## "drag to look" area on the right part. On desktop the same controls work with
 ## the mouse, because "Emulate Touch From Mouse" is on in the project settings.
 ##
-## Read `move_vector` (x = right, y = back; so pushing up gives y = -1) and call
+## There is also a round ATTACK button at the bottom right. Read `move_vector`
+## (x = right, y = back; so pushing up gives y = -1), `attack_held`, and call
 ## `consume_look_delta()` once per frame.
 
 const JOYSTICK_RADIUS := 110.0
@@ -12,12 +13,17 @@ const KNOB_RADIUS := 46.0
 const DEAD_ZONE := 0.12
 const LOOK_SENSITIVITY := 0.0045
 const MOVE_ZONE_RATIO := 0.45     # left 45% of the screen starts the joystick
+const ATTACK_RADIUS := 90.0
+const ATTACK_MARGIN := 60.0       # gap between the attack button and the screen edge
 
 var move_vector: Vector2 = Vector2.ZERO
+## True while a finger is on the attack button.
+var attack_held: bool = false
 
 var _look_delta: Vector2 = Vector2.ZERO
 var _joystick_index: int = -1
 var _look_index: int = -1
+var _attack_index: int = -1
 var _joystick_origin: Vector2 = Vector2.ZERO
 var _joystick_position: Vector2 = Vector2.ZERO
 var _view: Control
@@ -30,6 +36,7 @@ func _ready() -> void:
 	_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_view.draw.connect(_draw_joystick)
 	add_child(_view)
+	_view.queue_redraw()
 
 
 ## How much the player dragged on the look area since the last call.
@@ -51,12 +58,31 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		_reset_joystick()
 		_look_index = -1
+		_release_attack()
+
+
+## Where the attack button is on screen (its centre).
+func attack_center() -> Vector2:
+	var size := get_viewport().get_visible_rect().size
+	return size - Vector2(ATTACK_MARGIN + ATTACK_RADIUS, ATTACK_MARGIN + ATTACK_RADIUS)
+
+
+func _release_attack() -> void:
+	_attack_index = -1
+	attack_held = false
+	if _view != null:
+		_view.queue_redraw()
 
 
 func _on_touch(event: InputEventScreenTouch) -> void:
 	if event.pressed:
 		var width := get_viewport().get_visible_rect().size.x
-		if event.position.x < width * MOVE_ZONE_RATIO:
+		if event.position.distance_to(attack_center()) <= ATTACK_RADIUS * 1.15:
+			if _attack_index == -1:
+				_attack_index = event.index
+				attack_held = true
+				_view.queue_redraw()
+		elif event.position.x < width * MOVE_ZONE_RATIO:
 			if _joystick_index == -1:
 				_joystick_index = event.index
 				_joystick_origin = event.position
@@ -70,6 +96,8 @@ func _on_touch(event: InputEventScreenTouch) -> void:
 			_reset_joystick()
 		elif event.index == _look_index:
 			_look_index = -1
+		elif event.index == _attack_index:
+			_release_attack()
 
 
 func _on_drag(event: InputEventScreenDrag) -> void:
@@ -94,6 +122,15 @@ func _reset_joystick() -> void:
 
 
 func _draw_joystick() -> void:
+	# The attack button is always visible.
+	var center := attack_center()
+	var pressed_color := Color(0.83, 0.69, 0.22, 0.55) if attack_held else Color(0.36, 0.16, 0.55, 0.45)
+	_view.draw_circle(center, ATTACK_RADIUS, pressed_color)
+	_view.draw_arc(center, ATTACK_RADIUS, 0.0, TAU, 48, Color(0.83, 0.69, 0.22, 0.85), 4.0)
+	var font := ThemeDB.fallback_font
+	_view.draw_string(font, center + Vector2(-ATTACK_RADIUS, 12), "ATK", HORIZONTAL_ALIGNMENT_CENTER,
+			ATTACK_RADIUS * 2.0, 34, Color(1, 1, 1, 0.95))
+
 	if _joystick_index == -1:
 		return
 	_view.draw_circle(_joystick_origin, JOYSTICK_RADIUS, Color(0.36, 0.16, 0.55, 0.22))

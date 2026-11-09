@@ -8,6 +8,7 @@ const OBSTACLE_COUNT := 36
 
 var player: PlayerController
 var controls: TouchControls
+var combat_hud: CombatHud
 
 var _info: Label
 
@@ -22,6 +23,8 @@ func _ready() -> void:
 	_build_ground()
 	_scatter_obstacles()
 	_spawn_player()
+	add_dummy(Vector3(0, 0, -6))
+	add_dummy(Vector3(-6, 0, -10))
 	_build_hud()
 
 
@@ -44,6 +47,14 @@ func add_box(center: Vector3, size: Vector3, color: Color = Color("3a2a58")) -> 
 	body.add_child(mesh_instance)
 	add_child(body)
 	return body
+
+
+## Puts a training dummy in the world (also used by tests).
+func add_dummy(at: Vector3) -> TrainingDummy:
+	var dummy := TrainingDummy.new()
+	dummy.position = at
+	add_child(dummy)
+	return dummy
 
 
 # ---------- world ----------
@@ -112,12 +123,12 @@ func _scatter_obstacles() -> void:
 	rng.seed = 12345
 	var limit := WORLD_SIZE / 2.0 - 10.0
 	for i in OBSTACLE_COUNT:
-		var pos := Vector2(rng.randf_range(-limit, limit), rng.randf_range(-limit, limit))
-		if pos.length() < 8.0:
+		var spot := Vector2(rng.randf_range(-limit, limit), rng.randf_range(-limit, limit))
+		if spot.length() < 8.0:
 			continue    # keep the spawn area clear
 		var size := Vector3(rng.randf_range(1.5, 4.0), rng.randf_range(1.0, 6.0), rng.randf_range(1.5, 4.0))
 		var tint := Color("3a2a58").lerp(Color("5b2a8c"), rng.randf())
-		add_box(Vector3(pos.x, size.y / 2.0, pos.y), size, tint)
+		add_box(Vector3(spot.x, size.y / 2.0, spot.y), size, tint)
 
 
 func _checker_texture() -> ImageTexture:
@@ -159,6 +170,10 @@ func _build_hud() -> void:
 	_update_info()
 	player.stats_changed.connect(_update_info)
 
+	combat_hud = CombatHud.new()
+	hud.add_child(combat_hud)
+	combat_hud.setup(player)
+
 	var sign_out := Button.new()
 	sign_out.text = "Sign Out"
 	sign_out.set_anchors_preset(Control.PRESET_TOP_RIGHT)
@@ -170,7 +185,7 @@ func _build_hud() -> void:
 	hud.add_child(sign_out)
 
 	var hint := Label.new()
-	hint.text = "Move: WASD or left thumb  |  Look: right mouse button or drag the right side  |  Zoom: mouse wheel"
+	hint.text = "Move: WASD or left thumb  |  Attack: Space / F or the ATK button  |  Look: right mouse button or drag  |  Zoom: wheel"
 	hint.add_theme_font_size_override("font_size", 16)
 	hint.add_theme_color_override("font_color", TSMTheme.MUTED)
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)

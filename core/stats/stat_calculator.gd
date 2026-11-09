@@ -14,6 +14,36 @@ extends RefCounted
 const ATTRIBUTES: Array[String] = ["str", "int", "vit", "dex", "wis", "lck", "agi", "cha"]
 
 
+## Applies modifiers (same format as in calculate) to stats that are already
+## calculated, for example a player's stats plus the current status effects, or an
+## enemy's stats plus a Slow. Returns new stats; the input is not changed.
+static func apply_modifiers(stats: Dictionary, modifiers: Array) -> Dictionary:
+	var result := stats.duplicate()
+	if modifiers.is_empty():
+		return result
+	var stat_defs: Dictionary = DataRegistry.get_config("stat_rules").get("stats", {})
+	var flat := {}
+	var percent := {}
+	for modifier in modifiers:
+		var stat := str(modifier.get("stat", ""))
+		flat[stat] = float(flat.get(stat, 0.0)) + float(modifier.get("flat", 0.0))
+		percent[stat] = float(percent.get(stat, 0.0)) + float(modifier.get("percent", 0.0))
+	for stat in flat:
+		if not stats.has(stat):
+			continue
+		var value := (float(stats[stat]) + float(flat[stat])) * (1.0 + float(percent[stat]) / 100.0)
+		var stat_def: Dictionary = stat_defs.get(stat, {})
+		if stat_def.has("min"):
+			value = maxf(value, float(stat_def["min"]))
+		if stat_def.has("max"):
+			value = minf(value, float(stat_def["max"]))
+		if stat_def.get("integer", false) or stats[stat] is int:
+			result[stat] = int(floor(value))
+		else:
+			result[stat] = snappedf(value, 0.01)
+	return result
+
+
 ## Start attributes of the class plus the points the player has spent.
 static func attribute_totals(class_id: String, allocated: Dictionary) -> Dictionary:
 	var class_data := DataRegistry.get_class_data(class_id)

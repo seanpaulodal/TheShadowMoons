@@ -106,6 +106,11 @@ func _test_movement() -> void:
 	add_child(world)
 	await _frames(40)
 	var player: PlayerController = world.player
+	# The world now has training dummies in it. This test only measures walking,
+	# so clear them out of the way.
+	for node in get_tree().get_nodes_in_group("targetable"):
+		node.queue_free()
+	await _frames(2)
 	_report("world built a player", player != null)
 	if player == null:
 		return

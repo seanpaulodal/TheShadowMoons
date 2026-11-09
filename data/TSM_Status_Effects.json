@@ -1,0 +1,471 @@
+[
+  {
+    "effect_id": "poison",
+    "name": "Poison",
+    "description": "Takes poison damage every second. Stacks up to 5 times.",
+    "kind": "dot",
+    "duration": 8,
+    "stacking": "stack",
+    "max_stacks": 5,
+    "cleansable": true,
+    "tick": {
+      "interval": 1.0,
+      "percent_max_health": 0.6,
+      "flat": 0,
+      "element": "poison"
+    }
+  },
+  {
+    "effect_id": "bleed",
+    "name": "Bleed",
+    "description": "Takes physical damage every second. Stacks up to 3 times.",
+    "kind": "dot",
+    "duration": 6,
+    "stacking": "stack",
+    "max_stacks": 3,
+    "cleansable": true,
+    "tick": {
+      "interval": 1.0,
+      "percent_max_health": 0.8,
+      "flat": 0,
+      "element": "physical"
+    }
+  },
+  {
+    "effect_id": "burn",
+    "name": "Burn",
+    "description": "Takes fire damage every second.",
+    "kind": "dot",
+    "duration": 5,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "tick": {
+      "interval": 1.0,
+      "percent_max_health": 1.0,
+      "flat": 0,
+      "element": "fire"
+    }
+  },
+  {
+    "effect_id": "blood_curse",
+    "name": "Blood Curse",
+    "description": "Bleeds dark blood and deals less damage.",
+    "kind": "dot",
+    "duration": 8,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "tick": {
+      "interval": 1.0,
+      "percent_max_health": 0.6,
+      "flat": 0,
+      "element": "dark"
+    },
+    "modifiers": [
+      {
+        "stat": "atk_power",
+        "flat": 0,
+        "percent": -10
+      }
+    ]
+  },
+  {
+    "effect_id": "soul_drain",
+    "name": "Soul Drain",
+    "description": "Takes dark damage every second as the soul is drained.",
+    "kind": "dot",
+    "duration": 6,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "tick": {
+      "interval": 1.0,
+      "percent_max_health": 0.8,
+      "flat": 0,
+      "element": "dark"
+    }
+  },
+  {
+    "effect_id": "starfall",
+    "name": "Starfall",
+    "description": "A burst of holy damage that lands once.",
+    "kind": "dot",
+    "duration": 1,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "tick": {
+      "interval": 1.0,
+      "percent_max_health": 3.0,
+      "flat": 0,
+      "element": "holy"
+    }
+  },
+  {
+    "effect_id": "burning_fear",
+    "name": "Burning Fear",
+    "description": "Burns and cannot attack.",
+    "kind": "dot",
+    "duration": 4,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "tick": {
+      "interval": 1.0,
+      "percent_max_health": 0.8,
+      "flat": 0,
+      "element": "fire"
+    },
+    "flags": [
+      "cannot_attack"
+    ]
+  },
+  {
+    "effect_id": "slow",
+    "name": "Slow",
+    "description": "Moves much slower.",
+    "kind": "debuff",
+    "duration": 6,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "modifiers": [
+      {
+        "stat": "move_speed",
+        "flat": 0,
+        "percent": -35
+      }
+    ]
+  },
+  {
+    "effect_id": "chilled",
+    "name": "Chilled",
+    "description": "Moves and attacks slower.",
+    "kind": "debuff",
+    "duration": 6,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "modifiers": [
+      {
+        "stat": "move_speed",
+        "flat": 0,
+        "percent": -20
+      },
+      {
+        "stat": "atk_speed",
+        "flat": 0,
+        "percent": -10
+      }
+    ],
+    "aliases": [
+      "chill"
+    ]
+  },
+  {
+    "effect_id": "shock",
+    "name": "Shock",
+    "description": "Attacks slower.",
+    "kind": "debuff",
+    "duration": 5,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "modifiers": [
+      {
+        "stat": "atk_speed",
+        "flat": 0,
+        "percent": -25
+      }
+    ]
+  },
+  {
+    "effect_id": "weakness",
+    "name": "Weakness",
+    "description": "Deals less damage.",
+    "kind": "debuff",
+    "duration": 8,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "modifiers": [
+      {
+        "stat": "atk_power",
+        "flat": 0,
+        "percent": -20
+      },
+      {
+        "stat": "magic_power",
+        "flat": 0,
+        "percent": -20
+      }
+    ],
+    "aliases": [
+      "weaken"
+    ]
+  },
+  {
+    "effect_id": "armor_break",
+    "name": "Armor Break",
+    "description": "Defense is reduced. Stacks up to 3 times.",
+    "kind": "debuff",
+    "duration": 8,
+    "stacking": "stack",
+    "max_stacks": 3,
+    "cleansable": true,
+    "modifiers": [
+      {
+        "stat": "def_power",
+        "flat": 0,
+        "percent": -10
+      }
+    ]
+  },
+  {
+    "effect_id": "sundered",
+    "name": "Sundered",
+    "description": "Defense and magic resistance are heavily reduced.",
+    "kind": "debuff",
+    "duration": 8,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "modifiers": [
+      {
+        "stat": "def_power",
+        "flat": 0,
+        "percent": -35
+      },
+      {
+        "stat": "magic_resist",
+        "flat": 0,
+        "percent": -35
+      }
+    ]
+  },
+  {
+    "effect_id": "curse",
+    "name": "Curse",
+    "description": "All power and defense is reduced.",
+    "kind": "debuff",
+    "duration": 10,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "modifiers": [
+      {
+        "stat": "atk_power",
+        "flat": 0,
+        "percent": -10
+      },
+      {
+        "stat": "magic_power",
+        "flat": 0,
+        "percent": -10
+      },
+      {
+        "stat": "def_power",
+        "flat": 0,
+        "percent": -10
+      }
+    ]
+  },
+  {
+    "effect_id": "dread",
+    "name": "Dread",
+    "description": "Deals less damage and crits less often.",
+    "kind": "debuff",
+    "duration": 8,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "modifiers": [
+      {
+        "stat": "atk_power",
+        "flat": 0,
+        "percent": -15
+      },
+      {
+        "stat": "crit_chance",
+        "flat": -5,
+        "percent": 0
+      }
+    ]
+  },
+  {
+    "effect_id": "blind",
+    "name": "Blind",
+    "description": "Accuracy is greatly reduced.",
+    "kind": "debuff",
+    "duration": 5,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "modifiers": [
+      {
+        "stat": "accuracy",
+        "flat": -40,
+        "percent": 0
+      }
+    ]
+  },
+  {
+    "effect_id": "shadow_mark",
+    "name": "Shadow Mark",
+    "description": "Takes more damage from every source.",
+    "kind": "debuff",
+    "duration": 8,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "damage_taken_percent": 15
+  },
+  {
+    "effect_id": "stun",
+    "name": "Stun",
+    "description": "Cannot move, attack or cast.",
+    "kind": "cc",
+    "duration": 1.5,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "flags": [
+      "cannot_move",
+      "cannot_attack",
+      "cannot_cast"
+    ]
+  },
+  {
+    "effect_id": "freeze",
+    "name": "Freeze",
+    "description": "Frozen solid: cannot move, attack or cast.",
+    "kind": "cc",
+    "duration": 2.0,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "flags": [
+      "cannot_move",
+      "cannot_attack",
+      "cannot_cast"
+    ]
+  },
+  {
+    "effect_id": "root",
+    "name": "Root",
+    "description": "Cannot move.",
+    "kind": "cc",
+    "duration": 3.0,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "flags": [
+      "cannot_move"
+    ]
+  },
+  {
+    "effect_id": "silence",
+    "name": "Silence",
+    "description": "Cannot cast skills.",
+    "kind": "cc",
+    "duration": 4.0,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "flags": [
+      "cannot_cast"
+    ]
+  },
+  {
+    "effect_id": "fear",
+    "name": "Fear",
+    "description": "Too afraid to attack.",
+    "kind": "cc",
+    "duration": 3.0,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "flags": [
+      "cannot_attack"
+    ]
+  },
+  {
+    "effect_id": "regeneration",
+    "name": "Regeneration",
+    "description": "Recovers health every second.",
+    "kind": "hot",
+    "duration": 10,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "tick": {
+      "interval": 1.0,
+      "percent_max_health": 1.0,
+      "flat": 0,
+      "element": "holy",
+      "heal": true
+    }
+  },
+  {
+    "effect_id": "haste",
+    "name": "Haste",
+    "description": "Moves and attacks faster.",
+    "kind": "buff",
+    "duration": 8,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "modifiers": [
+      {
+        "stat": "move_speed",
+        "flat": 0,
+        "percent": 30
+      },
+      {
+        "stat": "atk_speed",
+        "flat": 0,
+        "percent": 30
+      }
+    ]
+  },
+  {
+    "effect_id": "fortify",
+    "name": "Fortify",
+    "description": "Defense is increased.",
+    "kind": "buff",
+    "duration": 10,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "modifiers": [
+      {
+        "stat": "def_power",
+        "flat": 0,
+        "percent": 30
+      }
+    ]
+  },
+  {
+    "effect_id": "empower",
+    "name": "Empower",
+    "description": "Deals more damage.",
+    "kind": "buff",
+    "duration": 10,
+    "stacking": "refresh",
+    "max_stacks": 1,
+    "cleansable": true,
+    "modifiers": [
+      {
+        "stat": "atk_power",
+        "flat": 0,
+        "percent": 25
+      },
+      {
+        "stat": "magic_power",
+        "flat": 0,
+        "percent": 25
+      }
+    ]
+  }
+]

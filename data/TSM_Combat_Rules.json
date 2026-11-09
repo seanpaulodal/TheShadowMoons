@@ -1,0 +1,21 @@
+{
+  "_note": "PLACEHOLDER numbers. Hit chance = attacker accuracy - target evasion, kept between min and max (percent). Defense reduces damage by defense / (defense + defense_constant), never more than max_reduction.",
+  "hit_chance": {
+    "min": 5.0,
+    "max": 100.0
+  },
+  "defense_constant": 100.0,
+  "max_reduction": 0.9,
+  "min_damage": 1,
+  "unarmed": {
+    "min": 1,
+    "max": 3
+  },
+  "weapon_damage_stat": {
+    "Attack": "atk_power",
+    "Magic Attack": "magic_power"
+  },
+  "magic_defense_stat": "magic_resist",
+  "physical_defense_stat": "def_power",
+  "attack_button_cooldown_floor": 0.2
+}
