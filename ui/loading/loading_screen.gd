@@ -43,9 +43,9 @@ func _ready() -> void:
 	center.add_child(box)
 
 	var title := Label.new()
-	title.text = "THE SHADOW MOONS"
+	title.text = "THE SHADOW MOONS - PROPHECY UNTOLD"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 48)
+	title.add_theme_font_size_override("font_size", 36)
 	title.add_theme_color_override("font_color", TSMTheme.ACCENT)
 	box.add_child(title)
 

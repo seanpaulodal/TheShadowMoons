@@ -66,13 +66,13 @@ func _build_player_bars() -> void:
 	box.position = Vector2(24, 64)
 	box.add_theme_constant_override("separation", 6)
 	add_child(box)
-	var hp := _bar_row(box, "HP", Color("c0392b"))
+	var hp := _bar_row(box, "HP", Color("ff0000"))
 	_hp_bar = hp[0]
 	_hp_text = hp[1]
-	var mp := _bar_row(box, "MP", Color("2f7fd1"))
+	var mp := _bar_row(box, "MP", Color("0000ff"))
 	_mp_bar = mp[0]
 	_mp_text = mp[1]
-	var sp := _bar_row(box, "SP", Color("3aa655"))
+	var sp := _bar_row(box, "SP", Color("00ff00"))
 	_sp_bar = sp[0]
 	_sp_text = sp[1]
 
@@ -143,7 +143,7 @@ func _build_target_frame() -> void:
 	_target_name.add_theme_color_override("font_color", TSMTheme.ACCENT)
 	box.add_child(_target_name)
 
-	_target_bar = _make_bar(Color("c0392b"), Vector2(0, 20))
+	_target_bar = _make_bar(Color("ff0000"), Vector2(0, 20))
 	box.add_child(_target_bar)
 
 	_target_text = Label.new()
@@ -152,7 +152,7 @@ func _build_target_frame() -> void:
 
 	_target_status = Label.new()
 	_target_status.add_theme_font_size_override("font_size", 16)
-	_target_status.add_theme_color_override("font_color", Color("ffb36b"))
+	_target_status.add_theme_color_override("font_color", Color("FFD700"))
 	box.add_child(_target_status)
 
 	_target_dps = Label.new()
