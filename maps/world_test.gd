@@ -9,8 +9,8 @@ const OBSTACLE_COUNT := 36
 var player: PlayerController
 var controls: TouchControls
 var combat_hud: CombatHud
+var camps: Array = []
 
-var _info: Label
 
 
 func _ready() -> void:
@@ -25,6 +25,7 @@ func _ready() -> void:
 	_spawn_player()
 	add_dummy(Vector3(0, 0, -6))
 	add_dummy(Vector3(-6, 0, -10))
+	_spawn_camps()
 	_build_hud()
 
 
@@ -47,6 +48,17 @@ func add_box(center: Vector3, size: Vector3, color: Color = Color("3a2a58")) -> 
 	body.add_child(mesh_instance)
 	add_child(body)
 	return body
+
+
+## Places the enemy camps listed in TSM_World_Camps.json.
+func _spawn_camps() -> void:
+	var map_rules: Dictionary = DataRegistry.get_config("world_camps").get("map_1", {})
+	for def in map_rules.get("camps", []):
+		var camp := EnemyCamp.new()
+		camp.setup(def, map_rules, self)
+		add_child(camp)
+		camps.append(camp)
+		camp.tick(0.0)     # enemies near the start appear at once
 
 
 ## Puts a training dummy in the world (also used by tests).
@@ -164,28 +176,14 @@ func _build_hud() -> void:
 	hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(hud)
 
-	_info = Label.new()
-	_info.position = Vector2(24, 20)
-	hud.add_child(_info)
-	_update_info()
-	player.stats_changed.connect(_update_info)
-
 	combat_hud = CombatHud.new()
 	hud.add_child(combat_hud)
 	combat_hud.setup(player)
-
-	var sign_out := Button.new()
-	sign_out.text = "Sign Out"
-	sign_out.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	sign_out.offset_left = -220
-	sign_out.offset_right = -24
-	sign_out.offset_top = 20
-	sign_out.offset_bottom = 76
-	sign_out.pressed.connect(_on_sign_out)
-	hud.add_child(sign_out)
+	combat_hud.sign_out_requested.connect(_on_sign_out)
 
 	var hint := Label.new()
-	hint.text = "Move: WASD or left thumb  |  Attack: Space / F or the ATK button  |  Look: right mouse button or drag  |  Zoom: wheel"
+	hint.visible = not DisplayServer.is_touchscreen_available()
+	hint.text = "Move: WASD or left thumb  |  Attack: Space / F or the ATK button  |  Look: right mouse or drag  |  Walk over loot to pick it up"
 	hint.add_theme_font_size_override("font_size", 16)
 	hint.add_theme_color_override("font_color", TSMTheme.MUTED)
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
@@ -196,14 +194,7 @@ func _build_hud() -> void:
 	hud.add_child(hint)
 
 
-func _update_info() -> void:
-	_info.text = "%s  |  %s  |  Level %d  |  Speed %.2f" % [
-			str(Session.character.get("name", "?")),
-			str(Session.character.get("class_id", "?")).capitalize(),
-			int(Session.character.get("level", 1)),
-			player.move_speed()]
-
-
 func _on_sign_out() -> void:
+	await Session.flush()      # send kills and loot that are still waiting
 	FirebaseService.sign_out()
 	FlowRouter.go_to_auth(get_tree())

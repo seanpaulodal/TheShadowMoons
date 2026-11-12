@@ -27,6 +27,10 @@ var attack_profile: Dictionary = {}
 var immortal: bool = false
 var is_dead: bool = false
 var status := StatusEffectManager.new()
+## The fighter that hurt this one most recently (used to decide who gets the rewards).
+var last_attacker: Combatant = null
+## The scene object this fighter belongs to (the player body, an enemy, ...).
+var owner_node: Node = null
 
 
 func _init() -> void:
@@ -124,6 +128,31 @@ func heal(amount: int) -> void:
 	if hp != before:
 		healed.emit(hp - before)
 		changed.emit()
+
+
+## Gives back health, mana or stamina ("health" | "mana" | "stamina").
+## Returns how much was really restored (0 if already full).
+func restore(resource: String, amount: int) -> int:
+	if is_dead or amount <= 0:
+		return 0
+	match resource:
+		"health":
+			var before_hp := hp
+			heal(amount)
+			return hp - before_hp
+		"mana":
+			var before_mp := mp
+			mp = mini(mp + amount, max_mana())
+			if mp != before_mp:
+				changed.emit()
+			return mp - before_mp
+		"stamina":
+			var before_sp := sp
+			sp = mini(sp + amount, max_stamina())
+			if sp != before_sp:
+				changed.emit()
+			return sp - before_sp
+	return 0
 
 
 func revive(health_share: float = 1.0) -> void:

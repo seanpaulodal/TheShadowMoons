@@ -32,6 +32,8 @@ func _ready() -> void:
 	await _frames(3)
 	_player = _world.player
 	for node in get_tree().get_nodes_in_group("targetable"):
+		if not (node is TrainingDummy):
+			continue     # enemies are in the world now too
 		if node.global_position.distance_to(Vector3(0, 0, -6)) < 0.5:
 			_dummy = node
 		else:
@@ -96,9 +98,9 @@ func _cooldown() -> void:
 
 
 func _equip(item_id: String) -> void:
-	await Session.add_item(item_id, 1)
+	Session.add_item(item_id, 1)
 	var bag: Array = Session.character["inventory"]
-	await Session.equip_item(str(bag[bag.size() - 1]["uid"]))
+	Session.equip_item(str(bag[bag.size() - 1]["uid"]))
 	await _frames(2)
 
 

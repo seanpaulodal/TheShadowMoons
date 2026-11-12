@@ -16,6 +16,15 @@ const MOVE_ZONE_RATIO := 0.45     # left 45% of the screen starts the joystick
 const ATTACK_RADIUS := 90.0
 const ATTACK_MARGIN := 60.0       # gap between the attack button and the screen edge
 
+## Off while a window is open, so taps on the window do not move the character.
+var enabled: bool = true:
+	set(value):
+		enabled = value
+		if not value:
+			_reset_joystick()
+			_look_index = -1
+			_release_attack()
+
 var move_vector: Vector2 = Vector2.ZERO
 ## True while a finger is on the attack button.
 var attack_held: bool = false
@@ -47,6 +56,8 @@ func consume_look_delta() -> Vector2:
 
 
 func _input(event: InputEvent) -> void:
+	if not enabled:
+		return
 	if event is InputEventScreenTouch:
 		_on_touch(event)
 	elif event is InputEventScreenDrag:

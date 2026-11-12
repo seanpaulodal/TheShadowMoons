@@ -13,6 +13,8 @@ signal stats_changed
 signal attacked(result: Dictionary)
 signal attack_failed(reason: String)
 signal target_changed(target: Node3D)
+signal died
+signal revived
 
 const GRAVITY := 14.0              # reference value from the design document
 const ACCELERATION := 60.0
@@ -46,6 +48,10 @@ var controls: TouchControls
 var move_override: Vector2 = Vector2.ZERO
 var spawn_position: Vector3 = Vector3(0, 1, 0)
 
+var _dead: bool = false
+var _combat_clock: float = 99.0      # seconds since the last fight action
+var _regen_pools := {"hp": 0.0, "mp": 0.0, "sp": 0.0}
+var _nameplate: Label3D
 var _extra_modifiers: Array = []
 var _mounted: bool = false
 var _combatant_ready: bool = false
@@ -62,11 +68,15 @@ var _model: Node3D
 func _ready() -> void:
 	_ensure_input_actions()
 	add_to_group("player")
+	platform_floor_layers = 0      # never ride along on top of enemies or other bodies
 	_build_body()
 	_build_camera()
 	combatant = Combatant.new()
 	add_child(combatant)
+	combatant.owner_node = self
 	refresh_stats()
+	combatant.damaged.connect(_on_combatant_damaged)
+	combatant.died.connect(_on_died)
 	Session.character_changed.connect(_on_character_changed)
 	global_position = spawn_position
 
@@ -102,6 +112,108 @@ func set_mounted(riding: bool) -> void:
 
 func _on_character_changed() -> void:
 	refresh_stats(_extra_modifiers, _mounted)
+	if _nameplate != null:
+		_nameplate.text = "%s\n%s  Lv %d" % [
+				str(Session.character.get("name", "?")),
+				str(Session.character.get("class_id", "?")).capitalize(),
+				int(Session.character.get("level", 1))]
+
+
+func is_dead() -> bool:
+	return _dead
+
+
+## Uses a potion or food from the bag: restores health, mana or stamina and uses
+## up one. Nothing is used if the bar is already full. (Cooldowns and Auto Pots
+## come with the potion system.) Returns {"ok", "resource", "amount"} or a failure.
+func use_consumable(item_id: String) -> Dictionary:
+	if combatant == null or combatant.is_dead:
+		return {"ok": false, "error": "DEAD", "message": "You can't use items right now."}
+	var effect := ItemDB.consumable_effect(item_id)
+	if effect.is_empty():
+		return {"ok": false, "error": "NOT_USABLE", "message": "That can't be used."}
+	if Inventory.count(Session.character["inventory"], item_id) < 1:
+		return {"ok": false, "error": "NOT_FOUND", "message": "You don't have that."}
+
+	var room := 0
+	match str(effect["resource"]):
+		"health":
+			room = combatant.max_health() - combatant.hp
+		"mana":
+			room = combatant.max_mana() - combatant.mp
+		"stamina":
+			room = combatant.max_stamina() - combatant.sp
+	if room <= 0:
+		return {"ok": false, "error": "ALREADY_FULL", "message": "Already full."}
+
+	Session.remove_item(item_id, 1)
+	var restored := combatant.restore(str(effect["resource"]), int(effect["amount"]))
+	FloatingText.spawn(get_parent(), global_position + Vector3(0, 2.9, 0),
+			"+%d %s" % [restored, ItemInfo.RESOURCE_LABELS.get(effect["resource"], "")],
+			Color("7be07b"), 0.9)
+	return {"ok": true, "resource": effect["resource"], "amount": restored}
+
+
+## Comes back to life at the starting point with full health.
+func revive() -> void:
+	_dead = false
+	combatant.status.clear()
+	combatant.revive(1.0)
+	global_position = spawn_position
+	velocity = Vector3.ZERO
+	_combat_clock = 99.0
+	revived.emit()
+
+
+func _on_died() -> void:
+	_dead = true
+	target = null
+	target_changed.emit(null)
+	died.emit()
+
+
+func _on_combatant_damaged(result: Dictionary) -> void:
+	_combat_clock = 0.0
+	var at := global_position + Vector3(0, 2.9, 0)
+	var outcome := str(result.get("outcome", "hit"))
+	if outcome == "miss":
+		FloatingText.spawn(get_parent(), at, "MISS", Color("b8b0c8"), 0.8)
+	elif outcome == "parry":
+		FloatingText.spawn(get_parent(), at, "PARRY", Color("7fb4ff"), 0.8)
+	elif int(result.get("damage", 0)) > 0:
+		var crit: bool = result.get("is_crit", false)
+		FloatingText.spawn(get_parent(), at, ("-%d!" if crit else "-%d") % int(result["damage"]),
+				Color("ff5a5a"), 1.3 if crit else 1.0)
+
+
+## Slowly recovers health, mana and stamina when nothing has happened for a while.
+## (Placeholder until potions and elixirs are in.)
+func _regenerate(delta: float) -> void:
+	var rules: Dictionary = DataRegistry.get_config("combat_rules").get("out_of_combat_regen", {})
+	if _combat_clock < float(rules.get("delay_seconds", 5.0)):
+		return
+	var rate := float(rules.get("percent_per_second", 1.0)) / 100.0
+	var changed := false
+
+	_regen_pools["hp"] += float(combatant.max_health()) * rate * delta
+	var whole_hp := int(_regen_pools["hp"])
+	if whole_hp > 0:
+		_regen_pools["hp"] -= whole_hp
+		combatant.heal(whole_hp)
+	_regen_pools["mp"] += float(combatant.max_mana()) * rate * delta
+	var whole_mp := int(_regen_pools["mp"])
+	if whole_mp > 0:
+		_regen_pools["mp"] -= whole_mp
+		combatant.mp = mini(combatant.mp + whole_mp, combatant.max_mana())
+		changed = true
+	_regen_pools["sp"] += float(combatant.max_stamina()) * rate * delta
+	var whole_sp := int(_regen_pools["sp"])
+	if whole_sp > 0:
+		_regen_pools["sp"] -= whole_sp
+		combatant.sp = mini(combatant.sp + whole_sp, combatant.max_stamina())
+		changed = true
+	if changed:
+		combatant.changed.emit()
 
 
 ## Walking speed right now, including slows and haste.
@@ -162,6 +274,7 @@ func try_attack(rolls: Dictionary = {}) -> Dictionary:
 	_model.scale = Vector3.ONE * 1.15
 	create_tween().tween_property(_model, "scale", Vector3.ONE, 0.15)
 
+	_combat_clock = 0.0
 	attacked.emit(result)
 	if result.get("killed", false):
 		target = null
@@ -171,6 +284,14 @@ func try_attack(rolls: Dictionary = {}) -> Dictionary:
 
 func _physics_process(delta: float) -> void:
 	_attack_cooldown = maxf(0.0, _attack_cooldown - delta)
+	_combat_clock += delta
+	if _dead:
+		velocity.x = move_toward(velocity.x, 0.0, ACCELERATION * delta)
+		velocity.z = move_toward(velocity.z, 0.0, ACCELERATION * delta)
+		velocity.y -= GRAVITY * delta
+		move_and_slide()
+		return
+	_regenerate(delta)
 
 	var input := _read_move_input().limit_length(1.0)
 	if combatant != null and not combatant.status.can_move():
@@ -272,6 +393,7 @@ func _build_body() -> void:
 	_model.add_child(nose)
 
 	var nameplate := Label3D.new()
+	_nameplate = nameplate
 	nameplate.text = "%s\n%s  Lv %d" % [
 			str(Session.character.get("name", "?")),
 			str(Session.character.get("class_id", "?")).capitalize(),

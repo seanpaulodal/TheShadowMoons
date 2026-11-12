@@ -8,6 +8,8 @@ signal character_loaded(character: Dictionary)
 ## Fires whenever the active character changes (items, equipment, attribute
 ## points, level). Stats and screens listen to this to refresh themselves.
 signal character_changed
+## Kill rewards and picked-up items: {"exp", "gold", "levels_gained", "level", "items": [...]}.
+signal reward_granted(summary: Dictionary)
 
 const SCHEMA_VERSION := 1
 const MAX_SLOTS := 4
@@ -26,11 +28,35 @@ var slot: int = 0
 ## Tests can turn this off to change the character without touching the cloud.
 var save_enabled: bool = true
 
+## How often gameplay changes (kills, loot) are sent to the cloud.
+const AUTOSAVE_SECONDS := 10.0
+## A change you make yourself (equip, spend a point) is sent this soon after.
+const QUICK_FLUSH_SECONDS := 1.5
+
 var _saving: bool = false
+var _dirty: Dictionary = {}       # character fields changed but not saved yet
+var _autosave: Timer
+var _quick_flush: Timer           # sends a change shortly after it happens
 
 
 func _ready() -> void:
 	FirebaseService.signed_out.connect(clear)
+	_autosave = Timer.new()
+	_autosave.wait_time = AUTOSAVE_SECONDS
+	_autosave.timeout.connect(_on_autosave)
+	add_child(_autosave)
+	_autosave.start()
+	_quick_flush = Timer.new()
+	_quick_flush.one_shot = true
+	_quick_flush.wait_time = QUICK_FLUSH_SECONDS
+	_quick_flush.timeout.connect(_on_autosave)
+	add_child(_quick_flush)
+
+
+func _notification(what: int) -> void:
+	# Closing or minimising the game: send what is still waiting.
+	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_APPLICATION_PAUSED:
+		flush()
 
 
 func has_character() -> bool:
@@ -40,6 +66,7 @@ func has_character() -> bool:
 func clear() -> void:
 	character = {}
 	slot = 0
+	_dirty.clear()
 
 
 func profile_path() -> String:
@@ -203,6 +230,89 @@ func save_fields(fields: Dictionary) -> Dictionary:
 	return result
 
 
+# ---------- gameplay changes: applied at once, saved a little later ----------
+# Kills and loot happen all the time, so they change the character immediately
+# and are sent to the cloud in batches (every few seconds, on sign out, and when
+# the game closes). If a save fails, the changes stay waiting and are sent next time.
+
+## Gives EXP and gold (after a kill). Levels up when it can.
+func grant_rewards(exp_amount: int, gold_amount: int) -> Dictionary:
+	if not has_character():
+		return _fail("NO_CHARACTER", "No character is loaded.")
+	var outcome := Progression.add_exp(_progress_state(), maxi(0, exp_amount))
+	var state: Dictionary = outcome["state"]
+	var gold_now := int(character.get("gold", 0)) + maxi(0, gold_amount)
+	_apply_local({
+		"level": state["level"], "exp": state["exp"],
+		"stat_points": state["stat_points"], "gold": gold_now,
+	})
+	var summary := {
+		"exp": maxi(0, exp_amount), "gold": maxi(0, gold_amount),
+		"levels_gained": outcome["levels_gained"], "level": state["level"],
+	}
+	reward_granted.emit(summary)
+	return {"ok": true, "summary": summary}
+
+
+## Puts a picked-up item in the bag. Fails if the bag is full.
+func collect_item(item_id: String, qty: int = 1) -> Dictionary:
+	if not has_character():
+		return _fail("NO_CHARACTER", "No character is loaded.")
+	var outcome := Inventory.add(character["inventory"], item_id, qty)
+	if not outcome["ok"]:
+		return outcome
+	_apply_local({"inventory": outcome["inventory"]})
+	reward_granted.emit({"items": [{"item_id": item_id, "qty": qty}]})
+	return {"ok": true}
+
+
+## True when something changed locally and has not reached the cloud yet.
+func has_unsaved_changes() -> bool:
+	return not _dirty.is_empty()
+
+
+## Sends everything that is waiting. Safe to call at any time.
+func flush() -> Dictionary:
+	if _dirty.is_empty():
+		return {"ok": true}
+	if not has_character():
+		return _fail("NO_CHARACTER", "No character is loaded.")
+	if not save_enabled:
+		_dirty.clear()
+		return {"ok": true}
+	if _saving:
+		return _fail("BUSY", "Still saving.")
+
+	var keys: Array = _dirty.keys()
+	_dirty.clear()
+	var fields := {}
+	for key in keys:
+		fields[key] = character[key]
+	fields["updated_at"] = Time.get_datetime_string_from_system(true)
+
+	_saving = true
+	var result: Dictionary = await FirestoreService.update_fields(character_path(slot), fields)
+	_saving = false
+	if not result["ok"]:
+		for key in keys:
+			_dirty[key] = true     # try again next time
+	return result
+
+
+func _apply_local(fields: Dictionary) -> void:
+	character.merge(fields.duplicate(true), true)
+	for key in fields:
+		_dirty[key] = true
+	if save_enabled and _quick_flush != null and _quick_flush.is_stopped():
+		_quick_flush.start()
+	character_changed.emit()
+
+
+func _on_autosave() -> void:
+	if not _dirty.is_empty() and has_character() and not _saving:
+		flush()
+
+
 # ---------- stats and build ----------
 
 ## The character's total stats: class + level + allocated points + worn equipment.
@@ -210,26 +320,26 @@ func total_stats(mounted: bool = false) -> Dictionary:
 	return CharacterStats.compute(character, mounted)
 
 
-## Spends stat points on one attribute and saves it.
+## Spends stat points on one attribute. Applied at once, saved a moment later.
 func allocate_attribute(attribute: String, amount: int = 1) -> Dictionary:
 	if not has_character():
 		return _fail("NO_CHARACTER", "No character is loaded.")
 	var outcome := Progression.allocate(_progress_state(), character["attributes"], attribute, amount)
 	if not outcome["ok"]:
 		return outcome
-	return await _commit({
+	return _commit({
 		"attributes": outcome["allocated"],
 		"stat_points": outcome["state"]["stat_points"],
 	})
 
 
-## Adds EXP (levels up if it can) and saves it. Result has "levels_gained".
+## Adds EXP (levels up if it can). Result has "levels_gained".
 func grant_exp(amount: int) -> Dictionary:
 	if not has_character():
 		return _fail("NO_CHARACTER", "No character is loaded.")
 	var outcome := Progression.add_exp(_progress_state(), amount)
 	var state: Dictionary = outcome["state"]
-	var result := await _commit({
+	var result := _commit({
 		"level": state["level"],
 		"exp": state["exp"],
 		"stat_points": state["stat_points"],
@@ -245,7 +355,7 @@ func add_item(item_id: String, qty: int = 1) -> Dictionary:
 	var outcome := Inventory.add(character["inventory"], item_id, qty)
 	if not outcome["ok"]:
 		return outcome
-	return await _commit({"inventory": outcome["inventory"]})
+	return _commit({"inventory": outcome["inventory"]})
 
 
 func remove_item(item_id: String, qty: int = 1) -> Dictionary:
@@ -254,7 +364,25 @@ func remove_item(item_id: String, qty: int = 1) -> Dictionary:
 	var outcome := Inventory.remove(character["inventory"], item_id, qty)
 	if not outcome["ok"]:
 		return outcome
-	return await _commit({"inventory": outcome["inventory"]})
+	return _commit({"inventory": outcome["inventory"]})
+
+
+## Removes one specific piece of gear from the bag. The result has the removed "entry".
+func remove_uid(uid: String) -> Dictionary:
+	if not has_character():
+		return _fail("NO_CHARACTER", "No character is loaded.")
+	var outcome := Inventory.remove_uid(character["inventory"], uid)
+	if not outcome["ok"]:
+		return outcome
+	_commit({"inventory": outcome["inventory"]})
+	return {"ok": true, "entry": outcome["entry"]}
+
+
+## Puts the bag in order. mode: "type", "rarity" or "name".
+func sort_inventory(mode: String) -> Dictionary:
+	if not has_character():
+		return _fail("NO_CHARACTER", "No character is loaded.")
+	return _commit({"inventory": InventoryView.sorted(character["inventory"], mode)})
 
 
 ## Wears a piece of gear from the bag (the one with this uid).
@@ -265,7 +393,7 @@ func equip_item(uid: String, target_slot: String = "") -> Dictionary:
 			{"level": character.get("level", 1), "class_id": character.get("class_id", "")}, target_slot)
 	if not outcome["ok"]:
 		return outcome
-	return await _commit({"inventory": outcome["inventory"], "equipment": outcome["equipped"]})
+	return _commit({"inventory": outcome["inventory"], "equipment": outcome["equipped"]})
 
 
 ## Takes the piece in this slot off and puts it back in the bag.
@@ -275,25 +403,14 @@ func unequip_item(equipment_slot: String) -> Dictionary:
 	var outcome := Equipment.unequip(character["inventory"], character["equipment"], equipment_slot)
 	if not outcome["ok"]:
 		return outcome
-	return await _commit({"inventory": outcome["inventory"], "equipment": outcome["equipped"]})
+	return _commit({"inventory": outcome["inventory"], "equipment": outcome["equipped"]})
 
 
-## Saves the change, and only then applies it to the local character. If the save
-## fails, nothing changes, so the screen never shows something that was not saved.
+## Applies a change to the character at once. It is sent to the cloud a moment
+## later (see flush), and if that fails it is kept and sent again, never lost.
 func _commit(fields: Dictionary) -> Dictionary:
-	if _saving:
-		return _fail("BUSY", "Still saving the last change.")
-	_saving = true
-	var result: Dictionary
-	if save_enabled:
-		result = await save_fields(fields)
-	else:
-		character.merge(fields.duplicate(true), true)
-		result = {"ok": true}
-	_saving = false
-	if result["ok"]:
-		character_changed.emit()
-	return result
+	_apply_local(fields)
+	return {"ok": true}
 
 
 func _progress_state() -> Dictionary:

@@ -21,9 +21,7 @@ func _ready() -> void:
 	theme = TSMTheme.get_theme()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_build_ui()
-	if Session.has_signal("character_changed"):
-		if not Session.is_connected("character_changed", _refresh):
-			Session.character_changed.connect(_refresh)
+	Session.character_changed.connect(_refresh)
 	if Session.has_character():
 		_refresh()
 	else:
@@ -129,8 +127,7 @@ func _build_attribute_column() -> Control:
 		var button := Button.new()
 		button.text = "+%d EXP" % amount
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var current_amount: int = amount
-		button.pressed.connect(func() -> void: await _on_exp(current_amount))
+		button.pressed.connect(_on_exp.bind(amount))
 		exp_row.add_child(button)
 	return box
 
@@ -273,53 +270,30 @@ func _refresh_items() -> void:
 func _refresh_stats() -> void:
 	_clear(_stats_grid)
 	for header in ["Stat", "Base", "Gear", "Final"]:
-		var label: Label = Label.new()
+		var label := Label.new()
 		label.text = header
 		label.add_theme_color_override("font_color", TSMTheme.ACCENT)
 		_stats_grid.add_child(label)
-	
-	var result: Dictionary
-	if Session.has_method("total_stats"):
-		result = Session.total_stats(_mount_check.button_pressed) as Dictionary
-	else:
-		var class_id: String = str(Session.character.get("class_id", ""))
-		var attrs: Dictionary = Session.character.get("attributes", {})
-		var base: Dictionary = StatCalculator.attribute_totals(class_id, attrs)
-		result = {
-			"ok": true,
-			"stats": base,
-			"base_stats": base,
-			"equipment_bonus": {}
-		} as Dictionary
-		
-	if not bool(result.get("ok", false)):
+	var result := Session.total_stats(_mount_check.button_pressed)
+	if not result["ok"]:
 		_say(str(result.get("message", "Could not calculate stats.")), true)
 		return
-		
-	var stats_dict: Dictionary = result.get("stats", {})
-	var base_dict: Dictionary = result.get("base_stats", {})
-	var bonus_dict: Dictionary = result.get("equipment_bonus", {})
-	
-	for stat in stats_ict_keys_safe(stats_dict):
-		var stat_name: String = str(stat)
-		var bonus: float = float(bonus_dict.get(stat_name, 0.0))
-		var cells: Array = [
-			stat_name,
-			_number(base_dict.get(stat_name, 0)),
+	for stat in result["stats"]:
+		var bonus := float(result["equipment_bonus"][stat])
+		var cells := [
+			str(stat),
+			_number(result["base_stats"][stat]),
 			("+" + _number(bonus)) if bonus > 0.0 else (_number(bonus) if bonus < 0.0 else "-"),
-			_number(stats_dict.get(stat_name, 0)),
+			_number(result["stats"][stat]),
 		]
-		for i in range(cells.size()):
-			var cell_label: Label = Label.new()
-			cell_label.text = str(cells[i])
+		for i in cells.size():
+			var label := Label.new()
+			label.text = cells[i]
 			if i == 2 and bonus != 0.0:
-				cell_label.add_theme_color_override("font_color", TSMTheme.OK)
+				label.add_theme_color_override("font_color", TSMTheme.OK)
 			elif i == 0:
-				cell_label.add_theme_color_override("font_color", TSMTheme.MUTED)
-			_stats_grid.add_child(cell_label)
-
-func stats_ict_keys_safe(d: Dictionary) -> Array:
-	return d.keys()
+				label.add_theme_color_override("font_color", TSMTheme.MUTED)
+			_stats_grid.add_child(label)
 
 
 func _number(value: Variant) -> String:
@@ -342,62 +316,11 @@ func _show(result: Dictionary, success_text: String) -> void:
 # ---------- buttons ----------
 
 func _on_spend(attribute: String, amount: int) -> void:
-	var alloc_res: Dictionary
-	if Session.has_method("allocate_attribute"):
-		alloc_res = await Session.allocate_attribute(attribute, amount) as Dictionary
-	else:
-		# Fallback: modify session character data directly if Session lacks the helper
-		var c: Dictionary = Session.character
-		var points: int = int(c.get("stat_points", 0))
-		if points < amount:
-			alloc_res = {"ok": false, "message": "Not enough attribute points."}
-		else:
-			c["stat_points"] = points - amount
-			var attrs: Dictionary = c.get("attributes", {})
-			attrs[attribute] = int(attrs.get(attribute, 0)) + amount
-			c["attributes"] = attrs
-			if Session.has_method("save_character") and Session.get("save_enabled"):
-				await Session.save_character()
-			if Session.has_signal("character_changed"):
-				Session.emit_signal("character_changed")
-			else:
-				_refresh()
-			alloc_res = {"ok": true}
-	_show(alloc_res, "Spent %d point(s) on %s." % [amount, attribute.to_upper()])
+	_show(Session.allocate_attribute(attribute, amount), "Spent %d point(s) on %s." % [amount, attribute.to_upper()])
 
 
 func _on_exp(amount: int) -> void:
-	var result: Dictionary
-	if Session.has_method("grant_exp"):
-		result = await Session.grant_exp(amount) as Dictionary
-	else:
-		# Fallback: handle EXP and level-ups directly in the dev screen if Session lacks the method
-		var c: Dictionary = Session.character
-		var current_exp: int = int(c.get("exp", 0)) + amount
-		var level: int = int(c.get("level", 1))
-		var levels_gained: int = 0
-		
-		# Simple level-up loop (e.g., 1000 exp per level for testing)
-		var exp_per_level: int = 1000
-		while current_exp >= exp_per_level:
-			current_exp -= exp_per_level
-			level += 1
-			levels_gained += 1
-			var points: int = int(c.get("stat_points", 0)) + 5 # 5 points per level up
-			c["stat_points"] = points
-			
-		c["exp"] = current_exp
-		c["level"] = level
-		
-		if Session.has_method("save_character"):
-			await Session.save_character()
-		if Session.has_signal("character_changed"):
-			Session.emit_signal("character_changed")
-		else:
-			_refresh()
-			
-		result = {"ok": true, "levels_gained": levels_gained}
-		
+	var result := Session.grant_exp(amount)
 	_show(result, "Gained %d EXP (%d level(s))." % [amount, int(result.get("levels_gained", 0))])
 
 
@@ -405,125 +328,25 @@ func _on_add_selected() -> void:
 	if _item_picker.selected < 0:
 		return
 	var item_id: String = _picker_ids[_item_picker.selected]
-	var add_res: Dictionary
-	if Session.has_method("add_item"):
-		add_res = await Session.add_item(item_id, 1) as Dictionary
-	else:
-		# Fallback: add item directly to local inventory if Session lacks add_item
-		var c: Dictionary = Session.character
-		var inv: Array = c.get("inventory", [])
-		inv.append({"item_id": item_id, "qty": 1})
-		c["inventory"] = inv
-		if Session.has_method("save_character"):
-			await Session.save_character()
-		if Session.has_signal("character_changed"):
-			Session.emit_signal("character_changed")
-		else:
-			_refresh()
-		add_res = {"ok": true}
-	_show(add_res, "Added %s." % ItemDB.display_name(item_id))
+	_show(Session.add_item(item_id, 1), "Added %s." % ItemDB.display_name(item_id))
 
 
 func _on_add_all_gear() -> void:
-	var added: int = 0
-	for item_id_variant in DataRegistry.get_ids("items"):
-		var item_id: String = str(item_id_variant)
+	var added := 0
+	for item_id in DataRegistry.get_ids("items"):
 		if ItemDB.equip_slot(item_id) == "":
 			continue
-		var result: Dictionary
-		if Session.has_method("add_item"):
-			result = await Session.add_item(item_id, 1) as Dictionary
-		else:
-			var c: Dictionary = Session.character
-			var inv: Array = c.get("inventory", [])
-			inv.append({"item_id": item_id, "qty": 1, "uid": "dev_" + str(randi())})
-			c["inventory"] = inv
-			result = {"ok": true}
-			
-		if not bool(result.get("ok", false)):
+		var result := Session.add_item(item_id, 1)
+		if not result["ok"]:
 			_say(str(result.get("message", "Failed.")), true)
 			return
 		added += 1
-		
-	if Session.has_method("save_character"):
-		await Session.save_character()
-	if Session.has_signal("character_changed"):
-		Session.emit_signal("character_changed")
-	else:
-		_refresh()
-		
 	_say("Added %d pieces of gear." % added)
 
 
 func _on_wear(uid: String) -> void:
-	var wear_res: Dictionary
-	if Session.has_method("equip_item"):
-		wear_res = await Session.equip_item(uid) as Dictionary
-	else:
-		# Fallback: equip item directly in session data
-		var c: Dictionary = Session.character
-		var inv: Array = c.get("inventory", [])
-		var worn: Dictionary = c.get("equipment", {})
-		var target_entry: Dictionary = {}
-		var target_index: int = -1
-		
-		for i in range(inv.size()):
-			var entry: Dictionary = inv[i] as Dictionary
-			if str(entry.get("uid", "")) == uid:
-				target_entry = entry
-				target_index = i
-				break
-				
-		if target_index == -1:
-			wear_res = {"ok": false, "message": "Item not found in inventory."}
-		else:
-			var item_id: String = str(target_entry.get("item_id", ""))
-			var slot: String = ItemDB.equip_slot(item_id)
-			if slot == "":
-				wear_res = {"ok": false, "message": "Item is not equipment."}
-			else:
-				# Unequip current item in slot back to bag if exists
-				if worn.has(slot):
-					inv.append(worn[slot])
-				worn[slot] = target_entry
-				inv.remove_at(target_index)
-				c["inventory"] = inv
-				c["equipment"] = worn
-				
-				if Session.has_method("save_character"):
-					await Session.save_character()
-				if Session.has_signal("character_changed"):
-					Session.emit_signal("character_changed")
-				else:
-					_refresh()
-				wear_res = {"ok": true}
-				
-	_show(wear_res, "Worn.")
+	_show(Session.equip_item(uid), "Worn.")
 
 
 func _on_take_off(slot: String) -> void:
-	var take_off_res: Dictionary
-	if Session.has_method("unequip_item"):
-		take_off_res = await Session.unequip_item(slot) as Dictionary
-	else:
-		# Fallback: unequip item directly from slot back to inventory
-		var c: Dictionary = Session.character
-		var worn: Dictionary = c.get("equipment", {})
-		if not worn.has(slot):
-			take_off_res = {"ok": false, "message": "Nothing equipped in slot."}
-		else:
-			var inv: Array = c.get("inventory", [])
-			inv.append(worn[slot])
-			worn.erase(slot)
-			c["inventory"] = inv
-			c["equipment"] = worn
-			
-			if Session.has_method("save_character"):
-				await Session.save_character()
-			if Session.has_signal("character_changed"):
-				Session.emit_signal("character_changed")
-			else:
-				_refresh()
-			take_off_res = {"ok": true}
-			
-	_show(take_off_res, "Taken off.")
+	_show(Session.unequip_item(slot), "Taken off.")

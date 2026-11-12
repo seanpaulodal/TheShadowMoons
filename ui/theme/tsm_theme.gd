@@ -13,7 +13,18 @@ const MUTED := Color("9a8fb0")
 const ERROR := Color("ff7a7a")
 const OK := Color("8fe3a1")
 
+const RARITY_COLORS := {
+	"common": Color("c8c8c8"), "uncommon": Color("6fd36f"), "rare": Color("5aa9ff"),
+	"epic": Color("b36bff"), "elite": Color("ffb347"), "legendary": Color("ff8a2a"),
+	"mythic": Color("ff4d4d"),
+}
+
 static var _cached: Theme = null
+
+
+## Colour for an item or enemy rarity name (Common ... Mythic).
+static func rarity_color(rarity: String) -> Color:
+	return RARITY_COLORS.get(rarity.strip_edges().to_lower(), Color("c8c8c8"))
 
 
 static func get_theme() -> Theme:

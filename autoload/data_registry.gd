@@ -51,6 +51,14 @@ const CONFIGS := {
 		"path": "res://data/TSM_Stat_Rules.json",
 		"required": ["attributes", "stats", "base_defaults", "growth_defaults"],
 	},
+	"loot_rules": {
+		"path": "res://data/TSM_Loot_Rules.json",
+		"required": ["potion_tiers", "pickup_radius", "despawn_seconds", "spread_radius"],
+	},
+	"world_camps": {
+		"path": "res://data/TSM_World_Camps.json",
+		"required": ["map_1"],
+	},
 	"combat_rules": {
 		"path": "res://data/TSM_Combat_Rules.json",
 		"required": ["hit_chance", "defense_constant", "max_reduction", "min_damage", "unarmed", "weapon_damage_stat"],

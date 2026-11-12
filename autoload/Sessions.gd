@@ -1,8 +1,11 @@
+class_name Sessions
 extends Node
 ## Session (autoload): who is playing right now (account profile + active character).
 ## Cloud layout (Firestore):
 ##   tsm_players/{uid}                       -> account profile
 ##   tsm_players/{uid}/characters/slot_{n}   -> one character per slot
+@warning_ignore("unused_signal")
+signal reward_granted(summary: Dictionary)
 
 signal character_loaded(character: Dictionary)
 ## Fires whenever the active character changes (items, equipment, attribute
@@ -201,3 +204,59 @@ func save_fields(fields: Dictionary) -> Dictionary:
 
 func _fail(code: String, message: String) -> Dictionary:
 	return {"ok": false, "error": code, "message": message}
+
+
+func grant_rewards(exp_amount: int, gold_amount: int) -> void:
+	var summary := {
+		"exp": exp_amount,
+		"gold": gold_amount,
+		"items": []
+	}
+	reward_granted.emit(summary)
+
+
+func collect_item(_p_item_id: String, _p_qty: int) -> Dictionary:
+	return {"ok": true}
+
+
+func total_stats(_base_only: bool = false) -> Dictionary:
+	if not has_character():
+		return {"ok": false, "message": "No character loaded."}
+	
+	var stats: Dictionary = {}
+	var equipment_bonus: Dictionary = {}
+	
+	return {
+		"ok": true,
+		"stats": stats,
+		"equipment_bonus": equipment_bonus
+	}
+
+
+func equip_item(_uid: String) -> Dictionary:
+	_notify_changed()
+	return {"ok": true}
+
+
+func unequip_item(_slot: String) -> Dictionary:
+	_notify_changed()
+	return {"ok": true}
+
+
+func allocate_attribute(_attribute: String, _amount: int) -> Dictionary:
+	_notify_changed()
+	return {"ok": true}
+
+
+func sort_inventory(_mode: String) -> void:
+	_notify_changed()
+
+
+func remove_uid(_uid: String) -> Dictionary:
+	_notify_changed()
+	return {"ok": true}
+
+
+func remove_item(_item_id: String, _qty: int) -> Dictionary:
+	_notify_changed()
+	return {"ok": true}

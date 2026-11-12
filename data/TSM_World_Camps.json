@@ -1,0 +1,73 @@
+{
+  "_note": "PLACEHOLDER layout for the test world. Each camp keeps `count` enemies of one type around `position` [x, z]. Camps farther than wake_distance from the player have no enemies at all (saves phone performance). max_active_enemies limits enemies alive at once.",
+  "map_1": {
+    "wake_distance": 70.0,
+    "respawn_seconds": 30.0,
+    "max_active_enemies": 25,
+    "camps": [
+      {
+        "enemy_id": "green_goblin",
+        "count": 4,
+        "position": [
+          24,
+          -16
+        ],
+        "radius": 8
+      },
+      {
+        "enemy_id": "venomous_spider",
+        "count": 3,
+        "position": [
+          -30,
+          -28
+        ],
+        "radius": 8
+      },
+      {
+        "enemy_id": "skeleton_warrior",
+        "count": 4,
+        "position": [
+          -8,
+          38
+        ],
+        "radius": 9
+      },
+      {
+        "enemy_id": "brute",
+        "count": 2,
+        "position": [
+          -45,
+          35
+        ],
+        "radius": 6
+      },
+      {
+        "enemy_id": "skeleton_lord",
+        "count": 1,
+        "position": [
+          45,
+          40
+        ],
+        "radius": 3
+      },
+      {
+        "enemy_id": "bone_archer",
+        "count": 3,
+        "position": [
+          75,
+          -60
+        ],
+        "radius": 8
+      },
+      {
+        "enemy_id": "flame_imp",
+        "count": 3,
+        "position": [
+          -80,
+          -70
+        ],
+        "radius": 8
+      }
+    ]
+  }
+}

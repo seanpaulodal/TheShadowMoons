@@ -20,6 +20,7 @@ static func attack(attacker: Combatant, defender: Combatant, skill_multiplier: f
 	if not attacker.status.can_attack():
 		return {"ok": false, "error": "CANNOT_ATTACK"}
 
+	defender.last_attacker = attacker
 	var result := DamageCalculator.resolve(attacker.combat_info(skill_multiplier),
 			defender.combat_info(), rolls, _get_rng())
 	result["ok"] = true
@@ -46,7 +47,15 @@ static func _apply_on_hit_status(attacker: Combatant, defender: Combatant, resul
 	var roll := float(rolls["status"]) if rolls.has("status") else _get_rng().randf() * 100.0
 	if roll >= float(on_hit.get("chance", 0.0)) * 100.0:
 		return
-	var applied := defender.status.apply(str(on_hit.get("effect", "")), {"from": attacker.display_name})
+	# One fixed effect ("effect") or a list to pick from ("effects", used by enemies).
+	var effect_name := str(on_hit.get("effect", ""))
+	if on_hit.has("effects"):
+		var choices: Array = on_hit["effects"]
+		if choices.is_empty():
+			return
+		var pick := float(rolls["status_pick"]) if rolls.has("status_pick") else _get_rng().randf()
+		effect_name = str(choices[mini(int(pick * choices.size()), choices.size() - 1)])
+	var applied := defender.status.apply(effect_name, {"from": attacker.display_name})
 	if applied["ok"]:
 		result["applied_status"] = applied["effect_id"]
 

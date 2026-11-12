@@ -1,0 +1,109 @@
+{
+  "_note": "PLACEHOLDER. Items drop as listed in the item sheet (dropped_by_enemy + drop_chance). PTN_dropchance and MNA_dropchance in the enemy sheet give a health / mana potion whose size follows the enemy level (the highest min_level that fits). max_item_drops_per_kill: 0 means no limit.",
+  "max_item_drops_per_kill": 0,
+  "pickup_radius": 1.8,
+  "despawn_seconds": 90.0,
+  "spread_radius": 1.4,
+  "potion_tiers": {
+    "health": [
+      [
+        1,
+        "potion_hp_minor"
+      ],
+      [
+        25,
+        "potion_hp_small"
+      ],
+      [
+        50,
+        "potion_hp_lesser"
+      ],
+      [
+        75,
+        "potion_hp_standard"
+      ],
+      [
+        100,
+        "potion_hp_greater"
+      ],
+      [
+        125,
+        "potion_hp_superior"
+      ],
+      [
+        150,
+        "potion_hp_major"
+      ],
+      [
+        175,
+        "potion_hp_grand"
+      ],
+      [
+        200,
+        "potion_hp_royal"
+      ],
+      [
+        225,
+        "potion_hp_ancient"
+      ],
+      [
+        250,
+        "potion_hp_shadow"
+      ],
+      [
+        275,
+        "potion_hp_moonfall"
+      ]
+    ],
+    "mana": [
+      [
+        1,
+        "potion_mp_minor"
+      ],
+      [
+        25,
+        "potion_mp_small"
+      ],
+      [
+        50,
+        "potion_mp_lesser"
+      ],
+      [
+        75,
+        "potion_mp_standard"
+      ],
+      [
+        100,
+        "potion_mp_greater"
+      ],
+      [
+        125,
+        "potion_mp_superior"
+      ],
+      [
+        150,
+        "potion_mp_major"
+      ],
+      [
+        175,
+        "potion_mp_grand"
+      ],
+      [
+        200,
+        "potion_mp_royal"
+      ],
+      [
+        225,
+        "potion_mp_ancient"
+      ],
+      [
+        250,
+        "potion_mp_shadow"
+      ],
+      [
+        275,
+        "potion_mp_moonfall"
+      ]
+    ]
+  }
+}

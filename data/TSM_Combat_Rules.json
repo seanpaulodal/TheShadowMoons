@@ -17,5 +17,19 @@
   },
   "magic_defense_stat": "magic_resist",
   "physical_defense_stat": "def_power",
-  "attack_button_cooldown_floor": 0.2
+  "attack_button_cooldown_floor": 0.2,
+  "ai": {
+    "aggro_radius": 9.0,
+    "leash_distance": 32.0,
+    "idle_min": 2.0,
+    "idle_max": 5.0,
+    "corpse_seconds": 3.0,
+    "attack_range_padding": 0.3,
+    "think_interval": 0.2
+  },
+  "out_of_combat_regen": {
+    "delay_seconds": 5.0,
+    "percent_per_second": 1.0
+  },
+  "party_exp_bonus_per_member": 0.02
 }
