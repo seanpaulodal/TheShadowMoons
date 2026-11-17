@@ -93,6 +93,26 @@ func _ready() -> void:
 			await FirestoreService.update_fields(path, {"equipment": {"tail": {"uid": "x", "item_id": "iron_sword"}}, "updated_at": _now}),
 			"PERMISSION_DENIED")
 
+	var good_settings := {"auto_hp": true, "auto_mp": false, "hp_percent": 50, "mp_percent": 30,
+			"quick_slots": {"health": "potion_hp_minor", "mana": "", "stamina": ""}}
+	var too_high := good_settings.duplicate(true)
+	too_high["hp_percent"] = 99
+	var extra_key := good_settings.duplicate(true)
+	extra_key["god_mode"] = true
+	var now_unix := int(Time.get_unix_time_from_system())
+	_check("an Auto Pot limit of 99%",
+			await FirestoreService.update_fields(path, {"settings": too_high, "updated_at": _now}), "PERMISSION_DENIED")
+	_check("a setting that does not exist",
+			await FirestoreService.update_fields(path, {"settings": extra_key, "updated_at": _now}), "PERMISSION_DENIED")
+	_check("negative saved health",
+			await FirestoreService.update_fields(path, {"vitals": {"hp": -5, "mp": 0, "sp": 0}, "updated_at": _now}), "PERMISSION_DENIED")
+	_check("an elixir that lasts 400 days",
+			await FirestoreService.update_fields(path, {"elixir": {"id": "elixir_30_day", "activated_at": now_unix,
+					"expires_at": now_unix + 400 * 86400}, "updated_at": _now}), "PERMISSION_DENIED")
+	_check("an elixir that ends in the year 2100",
+			await FirestoreService.update_fields(path, {"elixir": {"id": "elixir_30_day", "activated_at": now_unix,
+					"expires_at": 4102444800}, "updated_at": _now}), "PERMISSION_DENIED")
+
 	print("[rules] --- name must be unique ---")
 	_check("second character with an already-used name",
 			await FirestoreService.create_documents([
@@ -107,6 +127,15 @@ func _ready() -> void:
 	_check("saving attribute points that are all zero",
 			await FirestoreService.update_fields(path, {"attributes": zero_attributes, "updated_at": _now}),
 			"OK")
+	_check("saving good potion settings",
+			await FirestoreService.update_fields(path, {"settings": good_settings, "updated_at": _now}), "OK")
+	_check("saving health, mana and stamina",
+			await FirestoreService.update_fields(path, {"vitals": {"hp": 50, "mp": 10, "sp": 10}, "updated_at": _now}), "OK")
+	_check("a 7-day elixir",
+			await FirestoreService.update_fields(path, {"elixir": {"id": "elixir_7_day", "activated_at": now_unix,
+					"expires_at": now_unix + 7 * 86400}, "updated_at": _now}), "OK")
+	_check("no elixir (cleared again)",
+			await FirestoreService.update_fields(path, {"elixir": {}, "updated_at": _now}), "OK")
 	_check("saving an empty bag and nothing worn",
 			await FirestoreService.update_fields(path, {"inventory": [], "equipment": {}, "updated_at": _now}),
 			"OK")

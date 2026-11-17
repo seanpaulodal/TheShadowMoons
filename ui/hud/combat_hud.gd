@@ -11,6 +11,7 @@ signal sign_out_requested
 
 var inventory_window: InventoryWindow
 var character_window: CharacterWindow
+var shop_window: ShopWindow
 
 var _player: PlayerController
 var _controls: TouchControls
@@ -26,6 +27,9 @@ var _sp_text: Label
 var _exp_bar: ProgressBar
 var _exp_text: Label
 var _gold_label: Label
+var _quick_buttons: Dictionary = {}     # resource -> {"button", "icon", "count", "shade", "time"}
+var _interact_button: Button
+var _interact_npc: ShopNpc
 var _buff_box: HBoxContainer
 var _buff_signature: String = ""
 var _feed: VBoxContainer
@@ -57,11 +61,15 @@ func setup(player: PlayerController) -> void:
 	_build_message()
 	_build_banner()
 	_build_death_panel()
+	_build_quick_slots()
+	_build_interact_button()
 	_build_windows()
 
 	Session.reward_granted.connect(_on_reward)
 	Session.character_changed.connect(_refresh_player)
-	player.died.connect(func() -> void: _death_panel.visible = true)
+	player.died.connect(func() -> void:
+		close_windows()
+		_death_panel.visible = true)
 	player.revived.connect(func() -> void: _death_panel.visible = false)
 	player.combatant.changed.connect(_refresh_player)
 	player.target_changed.connect(_on_target_changed)
@@ -77,20 +85,35 @@ func show_message(text: String) -> void:
 
 
 func is_window_open() -> bool:
-	return inventory_window.visible or character_window.visible
+	return inventory_window.visible or character_window.visible or shop_window.visible
 
 
 func open_inventory() -> void:
-	_open(inventory_window, character_window)
+	_open(inventory_window)
 
 
 func open_character() -> void:
-	_open(character_window, inventory_window)
+	_open(character_window)
+
+
+## Opens a shop window (see TSM_Shop_Rules.json for the ids).
+func open_shop(shop_id: String) -> void:
+	_close_others(shop_window)
+	shop_window.open_shop(shop_id)
+	_refresh_interact()
+	if _controls != null:
+		_controls.enabled = false
 
 
 func close_windows() -> void:
 	inventory_window.close()
 	character_window.close()
+	shop_window.close()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("interact") and _interact_npc != null and not is_window_open():
+		open_shop(_interact_npc.shop_id)
 
 
 func _process(delta: float) -> void:
@@ -102,6 +125,8 @@ func _process(delta: float) -> void:
 		_refresh_time = 0.0
 		_refresh_target()
 		_refresh_buffs()
+		_refresh_quick_slots()
+		_refresh_interact()
 
 
 # ---------- building ----------
@@ -335,14 +360,143 @@ func _build_windows() -> void:
 	character_window.closed.connect(_on_window_closed)
 	character_window.sign_out_requested.connect(func() -> void: sign_out_requested.emit())
 
+	shop_window = ShopWindow.new()
+	add_child(shop_window)
+	shop_window.setup()
+	shop_window.closed.connect(_on_window_closed)
+
+
+func _build_quick_slots() -> void:
+	var row := HBoxContainer.new()
+	row.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	row.offset_right = -264
+	row.offset_left = -264 - 3 * 106
+	row.offset_bottom = -70
+	row.offset_top = -166
+	row.add_theme_constant_override("separation", 10)
+	add_child(row)
+
+	var tags := {"health": "HP", "mana": "MP", "stamina": "SP"}
+	for resource in DataRegistry.get_config("consumable_rules").get("quick_slots", []):
+		var button := Button.new()
+		button.custom_minimum_size = Vector2(96, 96)
+		for state in ["normal", "hover", "pressed", "focus"]:
+			button.add_theme_stylebox_override(state, GameWindow.slot_style(Color("5b2a8c"), false))
+		button.pressed.connect(_on_quick_slot.bind(str(resource)))
+		row.add_child(button)
+
+		var tag := Label.new()
+		tag.text = str(tags.get(resource, ""))
+		tag.position = Vector2(8, 2)
+		tag.add_theme_font_size_override("font_size", 16)
+		tag.add_theme_color_override("font_color", TSMTheme.MUTED)
+		tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(tag)
+
+		var icon := Label.new()
+		icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		icon.add_theme_font_size_override("font_size", 30)
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(icon)
+
+		var count := Label.new()
+		count.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 8)
+		count.add_theme_font_size_override("font_size", 20)
+		count.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(count)
+
+		# Darkens from the top down while the potion cools down.
+		var shade := ColorRect.new()
+		shade.color = Color(0, 0, 0, 0.62)
+		shade.anchor_left = 0.0
+		shade.anchor_right = 1.0
+		shade.anchor_bottom = 1.0
+		shade.anchor_top = 1.0
+		shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(shade)
+
+		var time := Label.new()
+		time.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		time.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		time.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		time.add_theme_font_size_override("font_size", 28)
+		time.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(time)
+
+		_quick_buttons[resource] = {"button": button, "icon": icon, "count": count, "shade": shade, "time": time}
+
+
+func _build_interact_button() -> void:
+	_interact_button = Button.new()
+	_interact_button.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_interact_button.offset_left = -170
+	_interact_button.offset_right = 170
+	_interact_button.offset_top = -270
+	_interact_button.offset_bottom = -180
+	_interact_button.add_theme_font_size_override("font_size", 28)
+	_interact_button.visible = false
+	_interact_button.pressed.connect(func() -> void:
+		if _interact_npc != null:
+			open_shop(_interact_npc.shop_id))
+	add_child(_interact_button)
+
+
+func _on_quick_slot(resource: String) -> void:
+	var result := _player.use_quick_slot(resource)
+	if not result["ok"]:
+		show_message(str(result.get("message", "")))
+
+
+func _refresh_quick_slots() -> void:
+	if _player == null or not Session.has_character():
+		return
+	var slots: Dictionary = Session.character.get("settings", {}).get("quick_slots", {})
+	for resource in _quick_buttons:
+		var parts: Dictionary = _quick_buttons[resource]
+		var item_id := str(slots.get(resource, ""))
+		var owned := Inventory.count(Session.character.get("inventory", []), item_id) if item_id != "" else 0
+		(parts["icon"] as Label).text = GameWindow.initials(item_id) if item_id != "" else "+"
+		(parts["icon"] as Label).add_theme_color_override("font_color",
+				TSMTheme.rarity_color(ItemDB.rarity(item_id)) if item_id != "" else Color("5d5470"))
+		(parts["count"] as Label).text = "x%d" % owned if item_id != "" else ""
+		(parts["button"] as Button).modulate.a = 1.0 if owned > 0 else 0.5
+
+		var fraction := _player.potion_cooldowns.fraction(item_id) if item_id != "" else 0.0
+		var shade := parts["shade"] as ColorRect
+		shade.anchor_top = 1.0 - fraction
+		shade.offset_top = 0.0
+		shade.offset_bottom = 0.0
+		var seconds := ceili(_player.potion_cooldowns.remaining(item_id)) if item_id != "" else 0
+		(parts["time"] as Label).text = str(seconds) if seconds > 0 else ""
+
+
+## Shows the Talk button while the player stands near a shopkeeper.
+func _refresh_interact() -> void:
+	if _player == null or _interact_button == null:
+		return
+	var radius := float(DataRegistry.get_config("shop_rules").get("interaction_radius", 3.5))
+	_interact_npc = null if is_window_open() or _player.is_dead() else ShopNpc.nearest(_player, radius)
+	_interact_button.visible = _interact_npc != null
+	if _interact_npc != null:
+		_interact_button.text = "Talk: %s" % _interact_npc.display_name
+
 
 # ---------- windows ----------
 
-func _open(window: GameWindow, other: GameWindow) -> void:
-	other.close()
+func _open(window: GameWindow) -> void:
+	_close_others(window)
 	window.open()
+	_refresh_interact()
 	if _controls != null:
 		_controls.enabled = false       # taps on a window must not move the character
+
+
+func _close_others(keep: GameWindow) -> void:
+	for window in [inventory_window, character_window, shop_window]:
+		if window != keep:
+			window.close()
 
 
 func _on_window_closed() -> void:
@@ -445,15 +599,18 @@ func _refresh_target() -> void:
 				roundi(dps.dps()), dps.total, dps.hits, dps.crits, dps.misses]
 
 
-## Status effects on the player: a small chip each, with the time left.
+## Status effects on the player: a small chip each, with the time left. An
+## active elixir shows as a gold chip at the end.
 func _refresh_buffs() -> void:
 	if _player == null or _player.combatant == null:
 		return
 	var status := _player.combatant.status
 	var ids := status.active_ids()
+	var elixir_text := _elixir_text()
 	var signature: Array = []
 	for effect_id in ids:
 		signature.append("%s:%d" % [effect_id, status.stacks(effect_id)])
+	signature.append("elixir:" + elixir_text)
 	var key := ",".join(signature)
 
 	if key != _buff_signature:
@@ -461,13 +618,44 @@ func _refresh_buffs() -> void:
 		GameWindow.clear_children(_buff_box)
 		for effect_id in ids:
 			_buff_box.add_child(_make_buff_chip(str(effect_id)))
+		if elixir_text != "":
+			_buff_box.add_child(_make_elixir_chip(elixir_text))
 	for chip in _buff_box.get_children():
+		if str(chip.name) == "elixir":
+			continue
 		var effect_id := str(chip.name)
 		var label := chip.get_child(0) as Label
 		var seconds := ceili(status.remaining(effect_id))
 		var count := status.stacks(effect_id)
 		var effect_name := str(DataRegistry.get_status_effect(effect_id).get("name", effect_id))
 		label.text = "%s%s %ds" % [effect_name, (" x%d" % count) if count > 1 else "", seconds]
+
+
+func _elixir_text() -> String:
+	var elixir: Dictionary = Session.character.get("elixir", {})
+	var now := _player.now_unix()
+	if not ElixirRules.is_active(elixir, now):
+		return ""
+	var definition: Dictionary = ElixirRules.types().get(str(elixir.get("id", "")), {})
+	return "%s %s" % [str(definition.get("name", "Elixir")), ElixirRules.time_text(ElixirRules.seconds_left(elixir, now))]
+
+
+func _make_elixir_chip(text: String) -> Control:
+	var chip := PanelContainer.new()
+	chip.name = "elixir"
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(TSMTheme.PANEL, 0.9)
+	style.border_color = Color("ffd23f")
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(4)
+	chip.add_theme_stylebox_override("panel", style)
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", 15)
+	label.add_theme_color_override("font_color", Color("ffd23f"))
+	chip.add_child(label)
+	return chip
 
 
 func _make_buff_chip(effect_id: String) -> Control:

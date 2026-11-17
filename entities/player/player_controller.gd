@@ -34,6 +34,7 @@ const ACTION_KEYS := {
 	"move_left": [KEY_A, KEY_LEFT],
 	"move_right": [KEY_D, KEY_RIGHT],
 	"attack": [KEY_SPACE, KEY_F],
+	"interact": [KEY_E],
 }
 
 ## Stats from the character's build and gear (see CharacterStats), before status effects.
@@ -48,6 +49,15 @@ var controls: TouchControls
 var move_override: Vector2 = Vector2.ZERO
 var spawn_position: Vector3 = Vector3(0, 1, 0)
 
+## One cooldown per potion (see PotionCooldowns).
+var potion_cooldowns := PotionCooldowns.new()
+## Tests only: a fixed "now" in Unix seconds for elixirs. -1 means the real clock.
+var clock_override: int = -1
+
+var _autopot_timer: float = 0.0
+var _elixir_timer: float = 0.0
+var _vitals_timer: float = 0.0
+var _vitals_dirty: bool = false
 var _dead: bool = false
 var _combat_clock: float = 99.0      # seconds since the last fight action
 var _regen_pools := {"hp": 0.0, "mp": 0.0, "sp": 0.0}
@@ -77,6 +87,8 @@ func _ready() -> void:
 	refresh_stats()
 	combatant.damaged.connect(_on_combatant_damaged)
 	combatant.died.connect(_on_died)
+	_apply_saved_vitals()
+	combatant.changed.connect(func() -> void: _vitals_dirty = true)
 	Session.character_changed.connect(_on_character_changed)
 	global_position = spawn_position
 
@@ -123,9 +135,10 @@ func is_dead() -> bool:
 	return _dead
 
 
-## Uses a potion or food from the bag: restores health, mana or stamina and uses
-## up one. Nothing is used if the bar is already full. (Cooldowns and Auto Pots
-## come with the potion system.) Returns {"ok", "resource", "amount"} or a failure.
+## Uses a potion, food or elixir from the bag. A potion restores health, mana or
+## stamina and is used up; it is refused while that potion is cooling down or when
+## the bar is already full. An elixir starts regenerating. Returns
+## {"ok", "resource", "amount"} or {"ok": false, "error", "message"}.
 func use_consumable(item_id: String) -> Dictionary:
 	if combatant == null or combatant.is_dead:
 		return {"ok": false, "error": "DEAD", "message": "You can't use items right now."}
@@ -134,6 +147,11 @@ func use_consumable(item_id: String) -> Dictionary:
 		return {"ok": false, "error": "NOT_USABLE", "message": "That can't be used."}
 	if Inventory.count(Session.character["inventory"], item_id) < 1:
 		return {"ok": false, "error": "NOT_FOUND", "message": "You don't have that."}
+	if not potion_cooldowns.is_ready(item_id):
+		return {"ok": false, "error": "COOLDOWN",
+				"message": "Not ready yet (%ds)." % ceili(potion_cooldowns.remaining(item_id))}
+	if str(effect["resource"]) == "elixir":
+		return _use_elixir(item_id)
 
 	var room := 0
 	match str(effect["resource"]):
@@ -148,10 +166,116 @@ func use_consumable(item_id: String) -> Dictionary:
 
 	Session.remove_item(item_id, 1)
 	var restored := combatant.restore(str(effect["resource"]), int(effect["amount"]))
+	potion_cooldowns.start(item_id)
 	FloatingText.spawn(get_parent(), global_position + Vector3(0, 2.9, 0),
 			"+%d %s" % [restored, ItemInfo.RESOURCE_LABELS.get(effect["resource"], "")],
 			Color("7be07b"), 0.9)
 	return {"ok": true, "resource": effect["resource"], "amount": restored}
+
+
+## Uses whatever potion is on a quick-use slot ("health", "mana" or "stamina").
+func use_quick_slot(resource: String) -> Dictionary:
+	var assigned := str(Session.character.get("settings", {}).get("quick_slots", {}).get(resource, ""))
+	if assigned == "":
+		return {"ok": false, "error": "NO_SLOT", "message": "Set a potion for this slot in your Bag."}
+	if Inventory.count(Session.character["inventory"], assigned) < 1:
+		return {"ok": false, "error": "NO_POTION", "message": "Out of %s." % ItemDB.display_name(assigned)}
+	return use_consumable(assigned)
+
+
+func _use_elixir(item_id: String) -> Dictionary:
+	var result = Session.activate_elixir(item_id, _now())
+	if not result["ok"]:
+		return result
+	_elixir_timer = 0.0
+	potion_cooldowns.start(item_id, 1.0)
+	FloatingText.spawn(get_parent(), global_position + Vector3(0, 2.9, 0), "Elixir active",
+			Color("ffd23f"), 1.0)
+	return {"ok": true, "resource": "elixir", "amount": 0}
+
+
+## Time as Unix seconds (a test can fix it with clock_override).
+func _now() -> int:
+	return clock_override if clock_override >= 0 else int(Time.get_unix_time_from_system())
+
+
+func now_unix() -> int:
+	return _now()
+
+
+## Drinks potions by itself when health or mana falls under the player's limits.
+func _run_autopot(delta: float) -> void:
+	var rules: Dictionary = DataRegistry.get_config("consumable_rules").get("auto_pot", {})
+	_autopot_timer += delta
+	if _autopot_timer < float(rules.get("check_interval", 0.25)):
+		return
+	_autopot_timer = 0.0
+	var settings: Dictionary = Session.character.get("settings", {})
+	if not (settings.get("auto_hp", false) or settings.get("auto_mp", false)):
+		return
+	var picks := AutoPot.choose({
+		"hp": combatant.hp, "max_hp": combatant.max_health(),
+		"mp": combatant.mp, "max_mp": combatant.max_mana(),
+		"settings": settings,
+		"inventory": Session.character.get("inventory", []),
+		"cooldowns": potion_cooldowns,
+	})
+	for pick in picks:
+		use_consumable(str(pick["item_id"]))
+
+
+## An active elixir restores a percent of the maximum every few seconds.
+func _tick_elixir(delta: float) -> void:
+	var elixir: Dictionary = Session.character.get("elixir", {})
+	if elixir.is_empty():
+		_elixir_timer = 0.0
+		return
+	if not ElixirRules.is_active(elixir, _now()):
+		Session.clear_elixir()
+		return
+	_elixir_timer += delta
+	var every := ElixirRules.tick_seconds()
+	if _elixir_timer < every:
+		return
+	_elixir_timer -= every
+	var amounts := ElixirRules.tick_amounts(elixir, combatant.max_health(), combatant.max_mana(), combatant.max_stamina())
+	combatant.restore("health", int(amounts["hp"]))
+	combatant.restore("mana", int(amounts["mp"]))
+	combatant.restore("stamina", int(amounts["sp"]))
+
+
+## Saves health, mana and stamina every few seconds (only when they changed).
+func _remember_vitals(delta: float) -> void:
+	_vitals_timer += delta
+	if _vitals_timer < 3.0 or not _vitals_dirty:
+		return
+	_vitals_timer = 0.0
+	_vitals_dirty = false
+	Session.record_vitals(combatant.hp, combatant.mp, combatant.sp)
+
+
+## On entering the game: start with the health you left with, plus what an active
+## elixir restored while you were away (at most offline_cap_hours of it).
+func _apply_saved_vitals() -> void:
+	var saved: Dictionary = Session.character.get("vitals", {})
+	if saved.is_empty():
+		return
+	var hp := int(saved.get("hp", combatant.max_health()))
+	var mp := int(saved.get("mp", combatant.max_mana()))
+	var sp := int(saved.get("sp", combatant.max_stamina()))
+	if hp <= 0:
+		hp = combatant.max_health()      # you do not come back dead
+
+	var elixir: Dictionary = Session.character.get("elixir", {})
+	var last_seen := int(Time.get_unix_time_from_datetime_string(str(Session.character.get("updated_at", ""))))
+	if not elixir.is_empty() and last_seen > 0:
+		var ticks := ElixirRules.ticks_between(elixir, last_seen, _now(), true)
+		if ticks > 0:
+			var amounts := ElixirRules.tick_amounts(elixir, combatant.max_health(), combatant.max_mana(), combatant.max_stamina())
+			hp += int(amounts["hp"]) * ticks
+			mp += int(amounts["mp"]) * ticks
+			sp += int(amounts["sp"]) * ticks
+	combatant.set_vitals(hp, mp, sp)
 
 
 ## Comes back to life at the starting point with full health.
@@ -292,6 +416,10 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 	_regenerate(delta)
+	potion_cooldowns.update(delta)
+	_run_autopot(delta)
+	_tick_elixir(delta)
+	_remember_vitals(delta)
 
 	var input := _read_move_input().limit_length(1.0)
 	if combatant != null and not combatant.status.can_move():

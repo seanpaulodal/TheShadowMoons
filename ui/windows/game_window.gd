@@ -65,6 +65,17 @@ func refresh() -> void:
 
 # ---------- small helpers the windows share ----------
 
+## Up to two capital letters from an item's name ("Iron Sword" -> "IS"), used
+## when an item's icon file is not available.
+static func initials(item_id: String) -> String:
+	var letters := ""
+	for word in ItemDB.display_name(item_id).split(" ", false):
+		letters += word.substr(0, 1).to_upper()
+		if letters.length() >= 2:
+			break
+	return letters
+
+
 static func clear_children(node: Node) -> void:
 	for child in node.get_children():
 		node.remove_child(child)

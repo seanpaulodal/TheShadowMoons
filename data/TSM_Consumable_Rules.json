@@ -1,0 +1,55 @@
+{
+  "_note": "PLACEHOLDER numbers. Cooldowns are per potion (each potion has its own timer). Auto Pot thresholds are in percent of max health / mana. Elixirs: the item ids below must exist in the item sheet (see docs/elixir_items.csv); tick_seconds is how often they heal; replace_rule 'higher_or_equal' means a weaker elixir cannot replace a stronger one that is still active ('always' lets any new elixir replace the old).",
+  "cooldowns": {
+    "default_seconds": 5.0,
+    "by_resource": {
+      "health": 6.0,
+      "mana": 6.0,
+      "stamina": 5.0
+    },
+    "overrides": {}
+  },
+  "auto_pot": {
+    "default_hp_percent": 50,
+    "default_mp_percent": 30,
+    "min_percent": 5,
+    "max_percent": 95,
+    "check_interval": 0.25
+  },
+  "quick_slots": [
+    "health",
+    "mana",
+    "stamina"
+  ],
+  "elixirs": {
+    "tick_seconds": 10.0,
+    "replace_rule": "higher_or_equal",
+    "offline_cap_hours": 24,
+    "types": {
+      "elixir_7_day": {
+        "name": "7-Day Elixir",
+        "days": 7,
+        "rank": 1,
+        "hp_percent": 0.5,
+        "mp_percent": 0.5,
+        "sp_percent": 0.5
+      },
+      "elixir_15_day": {
+        "name": "15-Day Elixir",
+        "days": 15,
+        "rank": 2,
+        "hp_percent": 0.75,
+        "mp_percent": 0.75,
+        "sp_percent": 0.75
+      },
+      "elixir_30_day": {
+        "name": "30-Day Elixir",
+        "days": 30,
+        "rank": 3,
+        "hp_percent": 1.0,
+        "mp_percent": 1.0,
+        "sp_percent": 1.0
+      }
+    }
+  }
+}

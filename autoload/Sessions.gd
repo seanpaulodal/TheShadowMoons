@@ -205,6 +205,108 @@ func save_fields(fields: Dictionary) -> Dictionary:
 	return result
 
 
+## Records player vitals (health, mana, stamina) into the active character state.
+func record_vitals(hp: int, mp: int, sp: int) -> void:
+	if not has_character():
+		return
+	character["vitals"] = {
+		"hp": hp,
+		"mp": mp,
+		"sp": sp
+	}
+	_unsaved_changes = true
+
+
+## Updates specific keys in the character's settings dictionary and marks changes as unsaved.
+func update_settings(new_settings: Dictionary) -> Dictionary:
+	if not has_character():
+		return {"ok": false, "message": "No character loaded."}
+	var settings: Dictionary = character.get("settings", {})
+	settings.merge(new_settings, true)
+	character["settings"] = settings
+	_unsaved_changes = true
+	_notify_changed()
+	return {"ok": true}
+
+
+## Assigns or clears a quick-use potion slot.
+func set_quick_slot(resource: String, item_id: String) -> Dictionary:
+	if not has_character():
+		return {"ok": false, "message": "No character loaded."}
+	var settings: Dictionary = character.get("settings", {})
+	var quick_slots: Dictionary = settings.get("quick_slots", {})
+	quick_slots[resource] = item_id
+	settings["quick_slots"] = quick_slots
+	character["settings"] = settings
+	_unsaved_changes = true
+	_notify_changed()
+	return {"ok": true}
+
+
+## Buys items from a shop, deducting gold and adding items to inventory.
+func buy_item(item_id: String, qty: int) -> Dictionary:
+	if not has_character():
+		return {"ok": false, "message": "No character loaded."}
+	var cost := Shop.buy_price(item_id) * qty
+	var current_gold := int(character.get("gold", 0))
+	if current_gold < cost:
+		return {"ok": false, "error": "NOT_ENOUGH_GOLD", "message": "Not enough gold."}
+	
+	var inv: Array = character.get("inventory", [])
+	
+	var has_item := false
+	for entry in inv:
+		if str(entry.get("item_id", "")) == item_id:
+			has_item = true
+			break
+
+	if inv.size() >= Inventory.max_slots() and not has_item:
+		return {"ok": false, "error": "INVENTORY_FULL", "message": "Inventory is full."}
+
+	var add_res := add_item(item_id, qty)
+	if not add_res.get("ok", false):
+		return add_res
+
+	character["gold"] = current_gold - cost
+	_unsaved_changes = true
+	_notify_changed()
+	return {"ok": true}
+
+
+## Sells items from inventory to the shop, adding gold.
+func sell_item(item_id: String, qty: int, target_uid: String = "") -> Dictionary:
+	if not has_character():
+		return {"ok": false, "message": "No character loaded."}
+	var inv: Array = character.get("inventory", [])
+	
+	# If a specific UID is provided, remove that exact stack/item
+	var removed := false
+	if target_uid != "":
+		for i in range(inv.size()):
+			var entry: Dictionary = inv[i]
+			if str(entry.get("uid", "")) == target_uid:
+				var entry_qty := int(entry.get("qty", 1))
+				if entry_qty <= qty:
+					inv.remove_at(i)
+				else:
+					entry["qty"] = entry_qty - qty
+				removed = true
+				break
+		if not removed:
+			return {"ok": false, "error": "NOT_FOUND", "message": "Item not found in inventory."}
+	else:
+		var res := remove_item(item_id, qty)
+		if not res.get("ok", false):
+			return res
+
+	var gain := Shop.sell_price(item_id) * qty
+	character["gold"] = int(character.get("gold", 0)) + gain
+	character["inventory"] = inv
+	_unsaved_changes = true
+	_notify_changed()
+	return {"ok": true}
+
+
 func flush() -> Dictionary:
 	if not save_enabled:
 		_unsaved_changes = false
@@ -234,7 +336,7 @@ func _fill_missing_fields() -> void:
 
 func grant_exp(amount: int) -> Dictionary:
 	if not has_character():
-		return {"levels_gained": 0}
+		return {"levels_gained": 0, "level": 1}
 	var current_exp := int(character.get("exp", 0)) + amount
 	var current_level := int(character.get("level", 1))
 	var levels_gained := 0
@@ -247,7 +349,7 @@ func grant_exp(amount: int) -> Dictionary:
 	character["level"] = current_level
 	_unsaved_changes = true
 	_notify_changed()
-	return {"levels_gained": levels_gained}
+	return {"levels_gained": levels_gained, "level": current_level}
 
 
 func has_unsaved_changes() -> bool:
@@ -256,16 +358,20 @@ func has_unsaved_changes() -> bool:
 
 func grant_rewards(exp_amount: int, gold_amount: int) -> Dictionary:
 	if not has_character():
-		return {"summary": {"levels_gained": 0}}
+		return {"summary": {"levels_gained": 0, "level": 1}}
 	var exp_res := grant_exp(exp_amount)
 	if gold_amount > 0:
 		character["gold"] = int(character.get("gold", 0)) + gold_amount
 		_unsaved_changes = true
+	
+	var current_level := int(character.get("level", 1))
 	var summary := {
 		"exp": exp_amount,
 		"gold": gold_amount,
 		"items": [],
-		"levels_gained": exp_res.get("levels_gained", 0)
+		"levels_gained": exp_res.get("levels_gained", 0),
+		"level": current_level,
+		"new_level": current_level
 	}
 	_notify_changed()
 	reward_granted.emit(summary)

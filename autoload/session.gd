@@ -299,18 +299,110 @@ func flush() -> Dictionary:
 	return result
 
 
-func _apply_local(fields: Dictionary) -> void:
+func _apply_local(fields: Dictionary, notify: bool = true) -> void:
 	character.merge(fields.duplicate(true), true)
 	for key in fields:
 		_dirty[key] = true
 	if save_enabled and _quick_flush != null and _quick_flush.is_stopped():
 		_quick_flush.start()
-	character_changed.emit()
+	if notify:
+		character_changed.emit()
 
 
 func _on_autosave() -> void:
 	if not _dirty.is_empty() and has_character() and not _saving:
 		flush()
+
+
+# ---------- potions, shop, elixirs ----------
+
+## Changes Auto Pot settings: "auto_hp", "auto_mp" (on / off) and "hp_percent",
+## "mp_percent" (kept between the min and max in the rules).
+func update_settings(changes: Dictionary) -> Dictionary:
+	if not has_character():
+		return _fail("NO_CHARACTER", "No character is loaded.")
+	var rules: Dictionary = DataRegistry.get_config("consumable_rules").get("auto_pot", {})
+	var low := int(rules.get("min_percent", 5))
+	var high := int(rules.get("max_percent", 95))
+	var settings: Dictionary = character["settings"].duplicate(true)
+	for key in changes:
+		match str(key):
+			"auto_hp", "auto_mp":
+				settings[key] = bool(changes[key])
+			"hp_percent", "mp_percent":
+				settings[key] = clampi(int(changes[key]), low, high)
+			_:
+				return _fail("UNKNOWN_SETTING", "Unknown setting: %s" % str(key))
+	return _commit({"settings": settings})
+
+
+## Puts a potion on a quick-use slot ("health", "mana" or "stamina").
+## An empty item_id clears the slot.
+func set_quick_slot(resource: String, item_id: String) -> Dictionary:
+	if not has_character():
+		return _fail("NO_CHARACTER", "No character is loaded.")
+	if not DataRegistry.get_config("consumable_rules").get("quick_slots", []).has(resource):
+		return _fail("UNKNOWN_SLOT", "Unknown slot: %s" % resource)
+	if item_id != "":
+		var effect := ItemDB.consumable_effect(item_id)
+		if effect.is_empty() or str(effect["resource"]) != resource:
+			return _fail("WRONG_SLOT", "That does not go in the %s slot." % resource)
+	var settings: Dictionary = character["settings"].duplicate(true)
+	settings["quick_slots"][resource] = item_id
+	return _commit({"settings": settings})
+
+
+## Buys from a shop: gold and bag change together or not at all.
+func buy_item(item_id: String, qty: int = 1) -> Dictionary:
+	if not has_character():
+		return _fail("NO_CHARACTER", "No character is loaded.")
+	var outcome := Shop.buy(int(character.get("gold", 0)), character["inventory"], item_id, qty)
+	if not outcome["ok"]:
+		return outcome
+	_commit({"gold": outcome["gold"], "inventory": outcome["inventory"]})
+	return {"ok": true, "cost": outcome["cost"]}
+
+
+## Sells from the bag. Gear by its unique id, stacks by item id.
+func sell_item(item_id: String, qty: int = 1, uid: String = "") -> Dictionary:
+	if not has_character():
+		return _fail("NO_CHARACTER", "No character is loaded.")
+	var outcome := Shop.sell(int(character.get("gold", 0)), character["inventory"], item_id, qty, uid)
+	if not outcome["ok"]:
+		return outcome
+	_commit({"gold": outcome["gold"], "inventory": outcome["inventory"]})
+	return {"ok": true, "earned": outcome["earned"]}
+
+
+## Drinks an elixir from the bag: uses it up and starts (or replaces) the active one.
+func activate_elixir(item_id: String, now_unix: int = -1) -> Dictionary:
+	if not has_character():
+		return _fail("NO_CHARACTER", "No character is loaded.")
+	var now := now_unix if now_unix >= 0 else int(Time.get_unix_time_from_system())
+	var outcome := ElixirRules.activate(character.get("elixir", {}), item_id, now)
+	if not outcome["ok"]:
+		return outcome
+	var removed := Inventory.remove(character["inventory"], item_id, 1)
+	if not removed["ok"]:
+		return removed
+	_commit({"inventory": removed["inventory"], "elixir": outcome["elixir"]})
+	return {"ok": true, "replaced": outcome["replaced"], "elixir": outcome["elixir"]}
+
+
+func clear_elixir() -> void:
+	if has_character() and not (character.get("elixir", {}) as Dictionary).is_empty():
+		_commit({"elixir": {}})
+
+
+## Remembers current health, mana and stamina (so they survive a restart).
+## Quiet: it does not tell the screens, and it only saves when something changed.
+func record_vitals(hp: int, mp: int, sp: int) -> void:
+	if not has_character():
+		return
+	var saved: Dictionary = character.get("vitals", {})
+	if int(saved.get("hp", -1)) == hp and int(saved.get("mp", -1)) == mp and int(saved.get("sp", -1)) == sp:
+		return
+	_apply_local({"vitals": {"hp": hp, "mp": mp, "sp": sp}}, false)
 
 
 # ---------- stats and build ----------
@@ -432,6 +524,20 @@ func _fill_missing_fields() -> void:
 		character["inventory"] = []
 	if not (character.get("equipment") is Dictionary):
 		character["equipment"] = {}
+	# Potion settings (quick slots, Auto Pots) and the active elixir.
+	var defaults := AutoPot.default_settings()
+	var settings: Dictionary = character["settings"] if character.get("settings") is Dictionary else {}
+	for key in defaults:
+		if not settings.has(key):
+			settings[key] = defaults[key]
+	var quick: Dictionary = settings["quick_slots"] if settings["quick_slots"] is Dictionary else {}
+	for resource in defaults["quick_slots"]:
+		if not quick.has(resource):
+			quick[resource] = ""
+	settings["quick_slots"] = quick
+	character["settings"] = settings
+	if not (character.get("elixir") is Dictionary):
+		character["elixir"] = {}
 	for key in ["exp", "rebirth", "stat_points", "gold"]:
 		character[key] = int(character.get(key, 0))
 

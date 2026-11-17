@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://fqg3crqnv8jr"
+
+[deps]
+
+files=["res://docs/elixir_items.item.translation", "res://docs/elixir_items.item.translation", "res://docs/elixir_items.item.translation", "res://docs/elixir_items.item.translation", "res://docs/elixir_items.dropped.translation", "res://docs/elixir_items.drop.translation", "res://docs/elixir_items.drop.translation", "res://docs/elixir_items.drop.translation", "res://docs/elixir_items.stackable.translation", "res://docs/elixir_items.item.translation", "res://docs/elixir_items.item.translation", "res://docs/elixir_items.item.translation", "res://docs/elixir_items.item.translation", "res://docs/elixir_items.dmg.translation", "res://docs/elixir_items.dmg.translation", "res://docs/elixir_items.crit.translation", "res://docs/elixir_items.crit.translation", "res://docs/elixir_items.elem.translation", "res://docs/elixir_items.status.translation", "res://docs/elixir_items.status.translation", "res://docs/elixir_items.effect.translation", "res://docs/elixir_items.item.translation"]
+
+source_file="res://docs/elixir_items.csv"
+dest_files=["res://docs/elixir_items.item.translation", "res://docs/elixir_items.item.translation", "res://docs/elixir_items.item.translation", "res://docs/elixir_items.item.translation", "res://docs/elixir_items.dropped.translation", "res://docs/elixir_items.drop.translation", "res://docs/elixir_items.drop.translation", "res://docs/elixir_items.drop.translation", "res://docs/elixir_items.stackable.translation", "res://docs/elixir_items.item.translation", "res://docs/elixir_items.item.translation", "res://docs/elixir_items.item.translation", "res://docs/elixir_items.item.translation", "res://docs/elixir_items.dmg.translation", "res://docs/elixir_items.dmg.translation", "res://docs/elixir_items.crit.translation", "res://docs/elixir_items.crit.translation", "res://docs/elixir_items.elem.translation", "res://docs/elixir_items.status.translation", "res://docs/elixir_items.status.translation", "res://docs/elixir_items.effect.translation", "res://docs/elixir_items.item.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

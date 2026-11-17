@@ -24,6 +24,7 @@ var _details: VBoxContainer
 var _message: Label
 var _equip_button: Button
 var _use_button: Button
+var _quick_button: Button
 var _drop_button: Button
 
 
@@ -126,9 +127,11 @@ func _build_layout() -> void:
 	right_box.add_child(actions)
 	_equip_button = _action_button("Equip", _on_equip)
 	_use_button = _action_button("Use", _on_use)
+	_quick_button = _action_button("Quick slot", _on_quick_slot)
 	_drop_button = _action_button("Drop", _on_drop)
 	actions.add_child(_equip_button)
 	actions.add_child(_use_button)
+	actions.add_child(_quick_button)
 	actions.add_child(_drop_button)
 
 
@@ -189,7 +192,7 @@ func _make_slot(entry: Dictionary) -> Button:
 		button.add_child(icon)
 	else:
 		var initials := Label.new()
-		initials.text = _initials(item_id)
+		initials.text = GameWindow.initials(item_id)
 		initials.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		initials.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		initials.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -208,20 +211,12 @@ func _make_slot(entry: Dictionary) -> Button:
 	return button
 
 
-func _initials(item_id: String) -> String:
-	var letters := ""
-	for word in ItemDB.display_name(item_id).split(" ", false):
-		letters += word.substr(0, 1).to_upper()
-		if letters.length() >= 2:
-			break
-	return letters
-
-
 func _refresh_details() -> void:
 	clear_children(_details)
 	var has_selection := _selected_item != ""
 	_equip_button.visible = false
 	_use_button.visible = false
+	_quick_button.visible = false
 	_drop_button.visible = has_selection
 	if not has_selection:
 		var hint := Label.new()
@@ -235,6 +230,8 @@ func _refresh_details() -> void:
 	fill_item_lines(holder, _selected_item)
 	_equip_button.visible = ItemDB.equip_slot(_selected_item) != ""
 	_use_button.visible = not ItemDB.consumable_effect(_selected_item).is_empty()
+	var resource := str(ItemDB.consumable_effect(_selected_item).get("resource", ""))
+	_quick_button.visible = ["health", "mana", "stamina"].has(resource)
 
 
 # ---------- selection ----------
@@ -290,19 +287,34 @@ func _on_sort() -> void:
 func _on_equip() -> void:
 	if _selected_uid == "":
 		return
-	var result: Dictionary = Session.equip_item(_selected_uid)
+	var result := Session.equip_item(_selected_uid)
 	_message.text = "Equipped." if result["ok"] else str(result.get("message", "Could not equip."))
 	_message.add_theme_color_override("font_color", TSMTheme.OK if result["ok"] else TSMTheme.ERROR)
+
 
 func _on_use() -> void:
 	if _selected_item == "":
 		return
-	var result: Dictionary = _player.use_consumable(_selected_item)
+	var result := _player.use_consumable(_selected_item)
 	if result["ok"]:
-		_message.text = "Restored %d." % int(result["amount"])
+		_message.text = "Elixir activated." if str(result["resource"]) == "elixir" else "Restored %d." % int(result["amount"])
 		_message.add_theme_color_override("font_color", TSMTheme.OK)
 	else:
 		_message.text = str(result.get("message", "Could not use that."))
+		_message.add_theme_color_override("font_color", TSMTheme.ERROR)
+
+
+## Puts the selected potion on its quick-use slot (health, mana or stamina).
+func _on_quick_slot() -> void:
+	if _selected_item == "":
+		return
+	var resource := str(ItemDB.consumable_effect(_selected_item).get("resource", ""))
+	var result = Session.set_quick_slot(resource, _selected_item)
+	if result["ok"]:
+		_message.text = "Set as your %s quick slot." % resource
+		_message.add_theme_color_override("font_color", TSMTheme.OK)
+	else:
+		_message.text = str(result.get("message", "Could not set that."))
 		_message.add_theme_color_override("font_color", TSMTheme.ERROR)
 
 

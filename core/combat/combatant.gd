@@ -130,6 +130,14 @@ func heal(amount: int) -> void:
 		changed.emit()
 
 
+## Sets health, mana and stamina directly (for example from the saved character).
+func set_vitals(new_hp: int, new_mp: int, new_sp: int) -> void:
+	hp = clampi(new_hp, 1, max_health())
+	mp = clampi(new_mp, 0, max_mana())
+	sp = clampi(new_sp, 0, max_stamina())
+	changed.emit()
+
+
 ## Gives back health, mana or stamina ("health" | "mana" | "stamina").
 ## Returns how much was really restored (0 if already full).
 func restore(resource: String, amount: int) -> int:

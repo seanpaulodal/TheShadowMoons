@@ -1,0 +1,4 @@
+item_id,item_name,item_desc,item_rarity,item_type,dropped_by_enemy,drop_chance,drop_min,drop_max,stackable,item_buy_value,item_sell_value,item_BType,item_BValue,dmg_min,dmg_max,crit_chance_bonus,crit_dmg_bonus,elem_dmg,status_element,status_effect,effect_chance,item_iconpath
+elixir_7_day,7-Day Elixir,"Restores a little health, mana and stamina every few seconds for 7 days, even while you are away.",Rare,Consumable,N/A,0,N/A,N/A,True,1500,300,Elixir,7,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A
+elixir_15_day,15-Day Elixir,"Restores health, mana and stamina steadily for 15 days, even while you are away.",Epic,Consumable,N/A,0,N/A,N/A,True,3000,600,Elixir,15,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A
+elixir_30_day,30-Day Elixir,"Restores health, mana and stamina quickly for 30 days, even while you are away.",Legendary,Consumable,N/A,0,N/A,N/A,True,5500,1100,Elixir,30,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A

@@ -53,7 +53,8 @@
     "Health": "health",
     "Mana": "mana",
     "SP": "stamina",
-    "Stamina": "stamina"
+    "Stamina": "stamina",
+    "Elixir": "elixir"
   },
   "weapon_bonus_conversion": {
     "crit_chance_bonus": {

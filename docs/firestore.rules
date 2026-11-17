@@ -82,6 +82,45 @@ service cloud.firestore {
                 <= 5 * (level - 1 + 299 * rebirth);
         }
 
+        // Potion settings: Auto Pot switches and limits (5 to 95 percent) and the
+        // three quick-use slots (just item names).
+        function validSettings(s) {
+          return s.keys().hasOnly(['auto_hp', 'auto_mp', 'hp_percent', 'mp_percent', 'quick_slots'])
+            && s.keys().hasAll(['auto_hp', 'auto_mp', 'hp_percent', 'mp_percent', 'quick_slots'])
+            && s.auto_hp is bool
+            && s.auto_mp is bool
+            && s.hp_percent is int && s.hp_percent >= 5 && s.hp_percent <= 95
+            && s.mp_percent is int && s.mp_percent >= 5 && s.mp_percent <= 95
+            && s.quick_slots is map
+            && s.quick_slots.keys().hasOnly(['health', 'mana', 'stamina'])
+            && s.quick_slots.keys().hasAll(['health', 'mana', 'stamina'])
+            && s.quick_slots.health is string && s.quick_slots.health.size() <= 40
+            && s.quick_slots.mana is string && s.quick_slots.mana.size() <= 40
+            && s.quick_slots.stamina is string && s.quick_slots.stamina.size() <= 40;
+        }
+
+        // Saved health, mana and stamina.
+        function validVitals(v) {
+          return v.keys().hasOnly(['hp', 'mp', 'sp'])
+            && v.keys().hasAll(['hp', 'mp', 'sp'])
+            && v.hp is number && v.hp >= 0 && v.hp <= 100000000
+            && v.mp is number && v.mp >= 0 && v.mp <= 100000000
+            && v.sp is number && v.sp >= 0 && v.sp <= 100000000;
+        }
+
+        // The active elixir: empty, or an id with start and end times. It can run
+        // at most 30 days, and cannot end further ahead than that from now.
+        function validElixir(e) {
+          return e.size() == 0 || (
+            e.keys().hasOnly(['id', 'activated_at', 'expires_at'])
+            && e.keys().hasAll(['id', 'activated_at', 'expires_at'])
+            && e.id is string && e.id.size() <= 40
+            && e.activated_at is int && e.expires_at is int
+            && e.expires_at > e.activated_at
+            && e.expires_at - e.activated_at <= 30 * 86400
+            && e.expires_at <= request.time.toMillis() / 1000.0 + 30 * 86400 + 600);
+        }
+
         // Saving progress: name, class and creation date can never change,
         // and values must stay inside the game's limits.
         function validUpdate() {
@@ -89,7 +128,8 @@ service cloud.firestore {
           let after = request.resource.data;
           return after.diff(before).affectedKeys().hasOnly([
               'level', 'exp', 'rebirth', 'stat_points', 'gold', 'current_map',
-              'inventory', 'equipment', 'appearance', 'attributes', 'updated_at'])
+              'inventory', 'equipment', 'appearance', 'attributes', 'settings',
+              'vitals', 'elixir', 'updated_at'])
             && after.level is int && after.level >= 1 && after.level <= 300
             && after.rebirth is int && after.rebirth >= before.rebirth && after.rebirth <= 10
             && after.exp is number && after.exp >= 0
@@ -103,7 +143,10 @@ service cloud.firestore {
                 'weapon', 'armor', 'helmet', 'gloves', 'pants', 'boots',
                 'ring_1', 'ring_2', 'accessory', 'pet', 'mount'])
             && (!('attributes' in after)
-                || validAttributes(after['attributes'], after.stat_points, after.level, after.rebirth));
+                || validAttributes(after['attributes'], after.stat_points, after.level, after.rebirth))
+            && (!('settings' in after) || validSettings(after['settings']))
+            && (!('vitals' in after) || validVitals(after['vitals']))
+            && (!('elixir' in after) || validElixir(after['elixir']));
         }
 
         allow read: if isOwner(uid);

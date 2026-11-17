@@ -1,0 +1,62 @@
+{
+  "_note": "PLACEHOLDER shops. Each shop sells every item of its categories that has a buy price. Sell price = the item sheet's sell value, but never more than max_sell_ratio of the buy price. Positions are [x, z] near the start.",
+  "max_sell_ratio": 0.5,
+  "interaction_radius": 3.5,
+  "shops": [
+    {
+      "id": "general_store",
+      "name": "General Store",
+      "categories": [
+        "consumable"
+      ],
+      "position": [
+        -12,
+        14
+      ]
+    },
+    {
+      "id": "weaponsmith",
+      "name": "Weaponsmith",
+      "categories": [
+        "weapon"
+      ],
+      "position": [
+        -6,
+        14
+      ]
+    },
+    {
+      "id": "armorer",
+      "name": "Armorer",
+      "categories": [
+        "armor"
+      ],
+      "position": [
+        0,
+        14
+      ]
+    },
+    {
+      "id": "jeweler",
+      "name": "Jeweler",
+      "categories": [
+        "accessory"
+      ],
+      "position": [
+        6,
+        14
+      ]
+    },
+    {
+      "id": "mount_vendor",
+      "name": "Mount Vendor",
+      "categories": [
+        "mount"
+      ],
+      "position": [
+        12,
+        14
+      ]
+    }
+  ]
+}

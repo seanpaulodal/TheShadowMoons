@@ -231,6 +231,8 @@ func _test_restore_and_potions() -> void:
 	_eq("...it restores its 25", _player.combatant.hp, hp_before + 25)
 	_eq("...and one is used up", Inventory.count(Session.character["inventory"], "healing_potion"), 1)
 	_player.combatant.heal(1000)
+	_eq("the same potion is on cooldown right after use", _player.use_consumable("healing_potion")["error"], "COOLDOWN")
+	_player.potion_cooldowns = PotionCooldowns.new()
 	var full := _player.use_consumable("healing_potion")
 	_eq("a full bar refuses the potion", full["error"], "ALREADY_FULL")
 	_eq("...and keeps the potion", Inventory.count(Session.character["inventory"], "healing_potion"), 1)
@@ -364,6 +366,7 @@ func _test_inventory_window() -> void:
 	Session.add_item("iron_ring", 1)
 	Session.add_item("shadow_steed_mount", 1)
 	var window := _hud.inventory_window
+	_player.potion_cooldowns = PotionCooldowns.new()
 	_hud.open_inventory()
 	await _frames(2)
 

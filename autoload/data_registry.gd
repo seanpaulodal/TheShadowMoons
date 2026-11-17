@@ -51,6 +51,14 @@ const CONFIGS := {
 		"path": "res://data/TSM_Stat_Rules.json",
 		"required": ["attributes", "stats", "base_defaults", "growth_defaults"],
 	},
+	"consumable_rules": {
+		"path": "res://data/TSM_Consumable_Rules.json",
+		"required": ["cooldowns", "auto_pot", "quick_slots", "elixirs"],
+	},
+	"shop_rules": {
+		"path": "res://data/TSM_Shop_Rules.json",
+		"required": ["max_sell_ratio", "interaction_radius", "shops"],
+	},
 	"loot_rules": {
 		"path": "res://data/TSM_Loot_Rules.json",
 		"required": ["potion_tiers", "pickup_radius", "despawn_seconds", "spread_radius"],

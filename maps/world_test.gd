@@ -10,6 +10,7 @@ var player: PlayerController
 var controls: TouchControls
 var combat_hud: CombatHud
 var camps: Array = []
+var shop_npcs: Array = []
 
 
 
@@ -22,6 +23,7 @@ func _ready() -> void:
 	_build_environment()
 	_build_ground()
 	_scatter_obstacles()
+	_spawn_shops()
 	_spawn_player()
 	add_dummy(Vector3(0, 0, -6))
 	add_dummy(Vector3(-6, 0, -10))
@@ -48,6 +50,25 @@ func add_box(center: Vector3, size: Vector3, color: Color = Color("3a2a58")) -> 
 	body.add_child(mesh_instance)
 	add_child(body)
 	return body
+
+
+## Places the shopkeepers listed in TSM_Shop_Rules.json.
+func _spawn_shops() -> void:
+	for def in DataRegistry.get_config("shop_rules").get("shops", []):
+		var npc := ShopNpc.new()
+		npc.shop_id = str(def["id"])
+		var at: Array = def.get("position", [0, 14])
+		npc.position = Vector3(float(at[0]), 0.0, float(at[1]))
+		add_child(npc)
+		shop_npcs.append(npc)
+
+
+func _near_a_shop(spot: Vector2) -> bool:
+	for def in DataRegistry.get_config("shop_rules").get("shops", []):
+		var at: Array = def.get("position", [0, 14])
+		if spot.distance_to(Vector2(float(at[0]), float(at[1]))) < 9.0:
+			return true
+	return false
 
 
 ## Places the enemy camps listed in TSM_World_Camps.json.
@@ -136,8 +157,8 @@ func _scatter_obstacles() -> void:
 	var limit := WORLD_SIZE / 2.0 - 10.0
 	for i in OBSTACLE_COUNT:
 		var spot := Vector2(rng.randf_range(-limit, limit), rng.randf_range(-limit, limit))
-		if spot.length() < 8.0:
-			continue    # keep the spawn area clear
+		if spot.length() < 8.0 or _near_a_shop(spot):
+			continue    # keep the spawn area and the market clear
 		var size := Vector3(rng.randf_range(1.5, 4.0), rng.randf_range(1.0, 6.0), rng.randf_range(1.5, 4.0))
 		var tint := Color("3a2a58").lerp(Color("5b2a8c"), rng.randf())
 		add_box(Vector3(spot.x, size.y / 2.0, spot.y), size, tint)
