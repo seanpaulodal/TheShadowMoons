@@ -60,6 +60,8 @@ func _new_character() -> void:
 	Session.character = {
 		"name": "Fighter", "class_id": "warrior", "level": 1, "exp": 0, "rebirth": 0,
 		"stat_points": 0, "gold": 0, "attributes": {}, "inventory": [], "equipment": {},
+		"settings": AutoPot.default_settings(),
+		"elixir": {}
 	}
 	Session.slot = 1
 	Session._fill_missing_fields()

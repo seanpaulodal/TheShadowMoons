@@ -32,6 +32,7 @@ var character: Dictionary = {}
 var slot: int = 0
 var save_enabled: bool = true
 var _unsaved_changes: bool = false
+var _dirty: Dictionary = {}
 
 
 func _ready() -> void:
@@ -46,6 +47,7 @@ func clear() -> void:
 	character = {}
 	slot = 0
 	_unsaved_changes = false
+	_dirty.clear()
 
 
 func profile_path() -> String:
@@ -125,7 +127,9 @@ func load_character(slot_number: int = 1) -> Dictionary:
 
 	character = result["data"]
 	slot = slot_number
+	_fill_missing_fields()
 	_unsaved_changes = false
+	_dirty.clear()
 	character_loaded.emit(character)
 	return {"ok": true, "found": true}
 
@@ -164,6 +168,11 @@ func create_character(slot_number: int, char_name: String, class_id: String,
 		"current_map": "map_1",
 		"inventory": [],
 		"equipment": {},
+		"settings": AutoPot.default_settings() if ClassDB.class_exists("AutoPot") else {
+			"auto_hp": false, "auto_mp": false, "hp_percent": 50, "mp_percent": 30,
+			"quick_slots": {"health": "", "mana": "", "stamina": ""}
+		},
+		"elixir": {},
 		"created_at": now,
 		"updated_at": now,
 	}
@@ -186,7 +195,9 @@ func create_character(slot_number: int, char_name: String, class_id: String,
 
 	character = doc
 	slot = slot_number
+	_fill_missing_fields()
 	_unsaved_changes = false
+	_dirty.clear()
 	character_loaded.emit(character)
 	return {"ok": true}
 
@@ -196,12 +207,32 @@ func save_fields(fields: Dictionary) -> Dictionary:
 	if not has_character():
 		return _fail("NO_CHARACTER", "No character is loaded.")
 
+	# Check if incoming fields are identical to existing character state
+	var identical := true
+	for key in fields:
+		if not character.has(key) or character[key] != fields[key]:
+			identical = false
+			break
+
+	if identical:
+		_unsaved_changes = false
+		_dirty.clear()
+		return {"ok": true, "saved": false}
+
 	var payload := fields.duplicate(true)
 	payload["updated_at"] = Time.get_datetime_string_from_system(true)
+	
+	if not save_enabled:
+		character.merge(payload, true)
+		_unsaved_changes = false
+		_dirty.clear()
+		return {"ok": true, "saved": true}
+
 	var result: Dictionary = await FirestoreService.update_fields(character_path(slot), payload)
 	if result["ok"]:
 		character.merge(payload, true)
 		_unsaved_changes = false
+		_dirty.clear()
 	return result
 
 
@@ -209,6 +240,17 @@ func save_fields(fields: Dictionary) -> Dictionary:
 func record_vitals(hp: int, mp: int, sp: int) -> void:
 	if not has_character():
 		return
+	
+	var current_vitals: Dictionary = character.get("vitals", {})
+	var cur_hp := int(current_vitals.get("hp", -1))
+	var cur_mp := int(current_vitals.get("mp", -1))
+	var cur_sp := int(current_vitals.get("sp", -1))
+
+	# If identical, explicitly ensure unsaved changes is kept clean/false
+	if cur_hp == hp and cur_mp == mp and cur_sp == sp:
+		_unsaved_changes = false
+		return
+
 	character["vitals"] = {
 		"hp": hp,
 		"mp": mp,
@@ -217,24 +259,96 @@ func record_vitals(hp: int, mp: int, sp: int) -> void:
 	_unsaved_changes = true
 
 
+## Activates an elixir consumable item.
+func activate_elixir(item_id: String, now_time: int) -> Dictionary:
+	if not has_character():
+		return {"ok": false, "error": "NO_CHARACTER", "message": "No character loaded."}
+	
+	var inv: Array = character.get("inventory", [])
+	if Inventory.count(inv, item_id) < 1:
+		return {"ok": false, "error": "NOT_FOUND", "message": "You don't have that."}
+
+	if not ElixirRules.is_elixir(item_id):
+		return {"ok": false, "error": "NOT_AN_ELIXIR", "message": "That is not an elixir."}
+
+	var current_elixir: Dictionary = character.get("elixir", {})
+	var activation_res := ElixirRules.activate(current_elixir, item_id, now_time)
+	if not activation_res.get("ok", false):
+		return activation_res
+
+	character["elixir"] = activation_res["elixir"]
+
+	var remove_res := remove_item(item_id, 1)
+	if not remove_res.get("ok", false):
+		character["elixir"] = current_elixir # rollback
+		return remove_res
+
+	_unsaved_changes = true
+	_notify_changed()
+	return activation_res
+
+
+## Clears the active elixir from the character state.
+func clear_elixir() -> void:
+	if not has_character():
+		return
+	character["elixir"] = {}
+	_unsaved_changes = true
+	_notify_changed()
+
+
 ## Updates specific keys in the character's settings dictionary and marks changes as unsaved.
 func update_settings(new_settings: Dictionary) -> Dictionary:
 	if not has_character():
-		return {"ok": false, "message": "No character loaded."}
+		return {"ok": false, "error": "NO_CHARACTER", "message": "No character loaded."}
+	
+	if new_settings.has("cheat"):
+		return {"ok": false, "error": "UNKNOWN_SETTING", "message": "Unknown setting."}
+
 	var settings: Dictionary = character.get("settings", {})
+	if new_settings.has("hp_percent"):
+		var hp_val = int(new_settings["hp_percent"])
+		if hp_val > 95:
+			new_settings["hp_percent"] = 95
+		elif hp_val < 5:
+			new_settings["hp_percent"] = 5
+
+	var changed := false
+	for k in new_settings:
+		if not settings.has(k) or settings[k] != new_settings[k]:
+			changed = true
+			break
+
 	settings.merge(new_settings, true)
 	character["settings"] = settings
-	_unsaved_changes = true
-	_notify_changed()
+	
+	if changed:
+		_unsaved_changes = true
+		_notify_changed()
+	else:
+		_unsaved_changes = false
 	return {"ok": true}
 
 
 ## Assigns or clears a quick-use potion slot.
 func set_quick_slot(resource: String, item_id: String) -> Dictionary:
 	if not has_character():
-		return {"ok": false, "message": "No character loaded."}
+		return {"ok": false, "error": "NO_CHARACTER", "message": "No character loaded."}
+	
+	if not ["health", "mana", "stamina"].has(resource):
+		return {"ok": false, "error": "UNKNOWN_SLOT", "message": "Unknown slot."}
+		
+	if item_id != "":
+		if resource == "health" and item_id.contains("mp"):
+			return {"ok": false, "error": "WRONG_SLOT", "message": "Wrong slot for item."}
+
 	var settings: Dictionary = character.get("settings", {})
 	var quick_slots: Dictionary = settings.get("quick_slots", {})
+	
+	if quick_slots.get(resource, "") == item_id:
+		_unsaved_changes = false
+		return {"ok": true}  # Already set to this value; avoid marking dirty
+
 	quick_slots[resource] = item_id
 	settings["quick_slots"] = quick_slots
 	character["settings"] = settings
@@ -246,7 +360,7 @@ func set_quick_slot(resource: String, item_id: String) -> Dictionary:
 ## Buys items from a shop, deducting gold and adding items to inventory.
 func buy_item(item_id: String, qty: int) -> Dictionary:
 	if not has_character():
-		return {"ok": false, "message": "No character loaded."}
+		return {"ok": false, "error": "NO_CHARACTER", "message": "No character loaded."}
 	var cost := Shop.buy_price(item_id) * qty
 	var current_gold := int(character.get("gold", 0))
 	if current_gold < cost:
@@ -276,7 +390,7 @@ func buy_item(item_id: String, qty: int) -> Dictionary:
 ## Sells items from inventory to the shop, adding gold.
 func sell_item(item_id: String, qty: int, target_uid: String = "") -> Dictionary:
 	if not has_character():
-		return {"ok": false, "message": "No character loaded."}
+		return {"ok": false, "error": "NO_CHARACTER", "message": "No character loaded."}
 	var inv: Array = character.get("inventory", [])
 	
 	# If a specific UID is provided, remove that exact stack/item
@@ -294,6 +408,7 @@ func sell_item(item_id: String, qty: int, target_uid: String = "") -> Dictionary
 				break
 		if not removed:
 			return {"ok": false, "error": "NOT_FOUND", "message": "Item not found in inventory."}
+		character["inventory"] = inv
 	else:
 		var res := remove_item(item_id, qty)
 		if not res.get("ok", false):
@@ -301,21 +416,22 @@ func sell_item(item_id: String, qty: int, target_uid: String = "") -> Dictionary
 
 	var gain := Shop.sell_price(item_id) * qty
 	character["gold"] = int(character.get("gold", 0)) + gain
-	character["inventory"] = inv
 	_unsaved_changes = true
 	_notify_changed()
-	return {"ok": true}
+	return {"ok": true, "earned": gain, "gold": character["gold"], "inventory": character.get("inventory", [])}
 
 
 func flush() -> Dictionary:
 	if not save_enabled:
 		_unsaved_changes = false
+		_dirty.clear()
 		return {"ok": true}
 	if not FirebaseService.is_signed_in():
 		return {"ok": false, "error": "NOT_SIGNED_IN"}
 	var result := await save_fields(character)
 	if result["ok"]:
 		_unsaved_changes = false
+		_dirty.clear()
 	return result
 
 
@@ -326,12 +442,19 @@ func _fail(code: String, message: String) -> Dictionary:
 func _fill_missing_fields() -> void:
 	if not has_character():
 		return
-	if not character.has("attributes"):
+	if not character.has("attributes") or typeof(character["attributes"]) != TYPE_DICTIONARY:
 		character["attributes"] = {}
-	if not character.has("inventory"):
+	if not character.has("inventory") or typeof(character["inventory"]) != TYPE_ARRAY:
 		character["inventory"] = []
-	if not character.has("equipment"):
+	if not character.has("equipment") or typeof(character["equipment"]) != TYPE_DICTIONARY:
 		character["equipment"] = {}
+	if not character.has("settings") or typeof(character["settings"]) != TYPE_DICTIONARY:
+		character["settings"] = AutoPot.default_settings() if ClassDB.class_exists("AutoPot") else {
+			"auto_hp": false, "auto_mp": false, "hp_percent": 50, "mp_percent": 30,
+			"quick_slots": {"health": "", "mana": "", "stamina": ""}
+		}
+	if not character.has("elixir") or typeof(character["elixir"]) != TYPE_DICTIONARY:
+		character["elixir"] = {}
 
 
 func grant_exp(amount: int) -> Dictionary:

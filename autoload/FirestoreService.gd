@@ -186,8 +186,15 @@ func _send(method: HTTPClient.Method, url: String, body: Variant = null,
 
 	var code: int = result[1]
 	var text: String = (result[3] as PackedByteArray).get_string_from_utf8()
-	var parsed: Variant = JSON.parse_string(text)
-	var data: Dictionary = parsed if parsed is Dictionary else {}
+	
+	# Safely parse JSON responses using JSON.new() to avoid unhandled console parsing errors
+	var data := {}
+	var trimmed_text := text.strip_edges()
+	if trimmed_text != "":
+		var json := JSON.new()
+		var parse_err := json.parse(text)
+		if parse_err == OK and json.get_data() is Dictionary:
+			data = json.get_data()
 
 	if code >= 200 and code < 300:
 		return {"ok": true, "data": data}
@@ -195,6 +202,11 @@ func _send(method: HTTPClient.Method, url: String, body: Variant = null,
 	var error_code := "HTTP_%d" % code
 	if data.has("error") and data["error"] is Dictionary:
 		error_code = str(data["error"].get("status", error_code))
+	elif trimmed_text != "" and data.is_empty():
+		if code == 400 or code == 403:
+			error_code = "PERMISSION_DENIED"
+		else:
+			error_code = "HTTP_%d_TEXT" % code
 
 	# An expired login: refresh the token and try once more.
 	if error_code == "UNAUTHENTICATED" and not retried:
