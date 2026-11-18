@@ -1729,8 +1729,8 @@
       "item_iconpath": "res://TSM_ICONS/FeastOfTheFallenMoons.png"
     },
     "elixir_7_day": {
-      "item_name": "7-Day Elixir",
-      "item_desc": "Restores a little health, mana and stamina every few seconds for 7 days, even while you are away.",
+      "item_name": "Minor Moon Elixir",
+      "item_desc": "HP+MP+SP Recovery: 10%. Restores 10% of maximum HP, MP and SP every 5 seconds while active, including offline time. Duration: 7 Days.",
       "item_rarity": "Rare",
       "item_type": "Consumable",
       "dropped_by_enemy": "N/A",
@@ -1749,12 +1749,12 @@
       "elem_dmg": "N/A",
       "status_element": "N/A",
       "status_effect": "N/A",
-      "effect_chance": "N/A",
+      "effect_chance": 10,
       "item_iconpath": "N/A"
     },
     "elixir_15_day": {
-      "item_name": "15-Day Elixir",
-      "item_desc": "Restores health, mana and stamina steadily for 15 days, even while you are away.",
+      "item_name": "Greater Moon Elixir",
+      "item_desc": "HP+MP+SP Recovery: 25%. Restores 25% of maximum HP, MP and SP every 5 seconds while active, including offline time. Duration: 15 Days.",
       "item_rarity": "Epic",
       "item_type": "Consumable",
       "dropped_by_enemy": "N/A",
@@ -1773,12 +1773,12 @@
       "elem_dmg": "N/A",
       "status_element": "N/A",
       "status_effect": "N/A",
-      "effect_chance": "N/A",
+      "effect_chance": 25,
       "item_iconpath": "N/A"
     },
     "elixir_30_day": {
-      "item_name": "30-Day Elixir",
-      "item_desc": "Restores health, mana and stamina quickly for 30 days, even while you are away.",
+      "item_name": "Supreme Moon Elixir",
+      "item_desc": "HP+MP+SP Recovery: 50%. Restores 50% of maximum HP, MP and SP every 5 seconds while active, including offline time. Duration: 30 Days.",
       "item_rarity": "Legendary",
       "item_type": "Consumable",
       "dropped_by_enemy": "N/A",
@@ -1797,7 +1797,7 @@
       "elem_dmg": "N/A",
       "status_element": "N/A",
       "status_effect": "N/A",
-      "effect_chance": "N/A",
+      "effect_chance": 50,
       "item_iconpath": "N/A"
     }
   }
