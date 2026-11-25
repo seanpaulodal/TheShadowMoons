@@ -36,7 +36,6 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_ju0fy")
 expand_mode = 1
-stretch_mode = 5
 
 [node name="Center" type="CenterContainer" parent="." unique_id=1585953391]
 visible = false
