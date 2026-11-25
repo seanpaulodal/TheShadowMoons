@@ -47,7 +47,8 @@
     "Defense": "def_power",
     "Max HP": "max_health",
     "Max Mana": "max_mana",
-    "Speed": "move_speed"
+    "Speed": "move_speed",
+    "DEF": "def_power"
   },
   "consumable_btype": {
     "Health": "health",
@@ -77,5 +78,60 @@
   "inventory": {
     "max_slots": 60,
     "max_stack": 999
-  }
+  },
+  "attribute_btypes": {
+    "STR": "str",
+    "AGI": "agi",
+    "VIT": "vit",
+    "INT": "int",
+    "DEX": "dex",
+    "WIS": "wis",
+    "LCK": "lck"
+  },
+  "slot_defaults": {
+    "Weapon": "weapon",
+    "Mount": "mount"
+  },
+  "slot_keywords": [
+    [
+      "helm",
+      "helmet"
+    ],
+    [
+      "helmet",
+      "helmet"
+    ],
+    [
+      "chest",
+      "armor"
+    ],
+    [
+      "armor",
+      "armor"
+    ],
+    [
+      "gloves",
+      "gloves"
+    ],
+    [
+      "pants",
+      "pants"
+    ],
+    [
+      "boots",
+      "boots"
+    ],
+    [
+      "ring",
+      "ring"
+    ],
+    [
+      "necklace",
+      "accessory"
+    ],
+    [
+      "amulet",
+      "accessory"
+    ]
+  ]
 }

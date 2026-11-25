@@ -31,6 +31,7 @@ func _ready() -> void:
 	add_child(_world)
 	await _frames(3)
 	_player = _world.player
+	_world.clear_decor()
 	for node in get_tree().get_nodes_in_group("targetable"):
 		if not (node is TrainingDummy):
 			continue     # enemies are in the world now too

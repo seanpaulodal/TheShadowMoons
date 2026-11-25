@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0.0",
+  "example_player_skill_data": {
+    "player_uid": "FIREBASE_UID_HERE",
+    "character_id": "CHARACTER_ID_HERE",
+    "class_id": "warrior",
+    "skill_points_available": 0,
+    "learned_skills": {
+      "WAR_01_01": {
+        "rank": 1,
+        "unlocked": true,
+        "unlocked_at_level": 1
+      }
+    },
+    "equipped_skill_slots": {
+      "skill_1": "WAR_01_01",
+      "skill_2": null,
+      "skill_3": null,
+      "skill_4": null,
+      "skill_5": null,
+      "skill_6": null,
+      "skill_7": null,
+      "skill_8": null,
+      "ultimate": "WAR_ULT_001",
+      "special_attack": "WAR_SPC_001"
+    },
+    "unlocked_paths": [
+      "blade_mastery"
+    ],
+    "ultimate_progress": {
+      "ability_id": "WAR_ULT_001",
+      "rank": 1,
+      "unlocked": false
+    },
+    "special_attack_progress": {
+      "ability_id": "WAR_SPC_001",
+      "rank": 1,
+      "unlocked": false
+    }
+  },
+  "validation_rules": {
+    "max_equipped_regular_skills": 8,
+    "ultimate_slot_count": 1,
+    "special_attack_slot_count": 1,
+    "cannot_equip_unlearned_skills": true,
+    "cannot_learn_skill_without_prerequisites": true,
+    "cannot_learn_skill_above_character_level": true,
+    "skill_points_spent_must_not_exceed_earned": true
+  }
+}

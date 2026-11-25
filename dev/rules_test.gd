@@ -113,6 +113,24 @@ func _ready() -> void:
 			await FirestoreService.update_fields(path, {"elixir": {"id": "elixir_30_day", "activated_at": now_unix,
 					"expires_at": 4102444800}, "updated_at": _now}), "PERMISSION_DENIED")
 
+	var too_many: Array = []
+	for i in 101:
+		too_many.append("wp_%d" % i)
+	_check("a list of 101 waypoints",
+			await FirestoreService.update_fields(path, {"waypoints": too_many, "updated_at": _now}), "PERMISSION_DENIED")
+	_check("waypoints that are not a list",
+			await FirestoreService.update_fields(path, {"waypoints": "all of them", "updated_at": _now}), "PERMISSION_DENIED")
+
+	var many_skills := {}
+	for i in 41:
+		many_skills["SKILL_%d" % i] = 1
+	_check("41 learned skills",
+			await FirestoreService.update_fields(path, {"skills": {"learned": many_skills, "slots": {}}, "updated_at": _now}), "PERMISSION_DENIED")
+	_check("skills with a field that does not exist",
+			await FirestoreService.update_fields(path, {"skills": {"learned": {}, "slots": {}, "godmode": true}, "updated_at": _now}), "PERMISSION_DENIED")
+	_check("skills that are not a map",
+			await FirestoreService.update_fields(path, {"skills": "all of them", "updated_at": _now}), "PERMISSION_DENIED")
+
 	print("[rules] --- name must be unique ---")
 	_check("second character with an already-used name",
 			await FirestoreService.create_documents([
@@ -136,6 +154,10 @@ func _ready() -> void:
 					"expires_at": now_unix + 7 * 86400}, "updated_at": _now}), "OK")
 	_check("no elixir (cleared again)",
 			await FirestoreService.update_fields(path, {"elixir": {}, "updated_at": _now}), "OK")
+	_check("saving activated waypoints",
+			await FirestoreService.update_fields(path, {"waypoints": ["oakhaven_village", "goblin_hollow"], "updated_at": _now}), "OK")
+	_check("saving learned skills and slots",
+			await FirestoreService.update_fields(path, {"skills": SkillBook.default_record("warrior"), "updated_at": _now}), "OK")
 	_check("saving an empty bag and nothing worn",
 			await FirestoreService.update_fields(path, {"inventory": [], "equipment": {}, "updated_at": _now}),
 			"OK")

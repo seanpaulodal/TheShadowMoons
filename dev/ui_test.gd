@@ -79,6 +79,7 @@ func _build_arena() -> void:
 	await _frames(3)
 	_player = _world.player
 	_hud = _world.combat_hud
+	_world.clear_decor()
 	for camp in _world.camps:
 		camp.queue_free()
 	for child in _world.get_children():
@@ -131,7 +132,7 @@ func _test_item_info() -> void:
 	_eq("sword: attack bonus", sword.has("Attack  +15"), true)
 	_eq("sword: crit chance bonus", sword.has("Crit Chance  +5%"), true)
 	_eq("sword: crit damage bonus", sword.has("Crit Damage  +25%"), true)
-	_eq("sword: first line says weapon and rarity", str(sword[0]).begins_with("Weapon  -  Weapon"), true)
+	_eq("sword: first line says weapon, its type and rarity", str(sword[0]).begins_with("Weapon  -  Sword"), true)
 	var has_price := false
 	for line in ItemInfo.lines("wooden_sword"):
 		if line["kind"] == "price":

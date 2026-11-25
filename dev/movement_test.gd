@@ -108,6 +108,7 @@ func _test_movement() -> void:
 	var player: PlayerController = world.player
 	# The world now has training dummies in it. This test only measures walking,
 	# so clear them out of the way.
+	world.clear_decor()
 	for camp in world.camps:
 		camp.queue_free()
 	for node in get_tree().get_nodes_in_group("targetable"):

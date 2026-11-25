@@ -55,7 +55,7 @@ func _bag_with(items: Array) -> Dictionary:
 
 func _test_item_db() -> void:
 	print("[items] --- ItemDB ---")
-	_eq("72 items loaded", DataRegistry.get_ids("items").size(), 72)
+	_eq("601 items loaded (72 original, 79 gear, 450 weapons)", DataRegistry.get_ids("items").size(), 601)
 	_eq("item_rules loaded", DataRegistry.get_config("item_rules").is_empty(), false)
 	_eq("name", ItemDB.display_name("flame_blade"), "Flame Blade")
 	_eq("category is lower case", ItemDB.category("flame_blade"), "weapon")

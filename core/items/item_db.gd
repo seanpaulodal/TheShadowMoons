@@ -57,11 +57,31 @@ static func icon_path(item_id: String) -> String:
 
 # ---------- equipment ----------
 
-## "weapon", "armor", "helmet", "gloves", "boots", "ring", "accessory", "mount",
-## or "" when the item cannot be equipped. A column named equip_slot in the item
-## sheet wins over the value in TSM_Item_Extra.json.
+## "weapon", "armor", "helmet", "gloves", "pants", "boots", "ring", "accessory",
+## "mount", or "" when the item cannot be equipped. Order of trust: an equip_slot
+## column in the item sheet, then TSM_Item_Extra.json, then a guess from the item's
+## type (every weapon goes in the weapon slot) or from a word in its id (helm, chest,
+## gloves, pants, boots, ring, necklace; see slot_keywords in TSM_Item_Rules.json).
 static func equip_slot(item_id: String) -> String:
-	return _from_sheet_or_extra(item_id, "equip_slot", "")
+	var written := str(_from_sheet_or_extra(item_id, "equip_slot", ""))
+	if written != "":
+		return written
+	return _guess_slot(item_id)
+
+
+static func _guess_slot(item_id: String) -> String:
+	var rules := DataRegistry.get_config("item_rules")
+	var type_name := str(row(item_id).get("item_type", ""))
+	var defaults: Dictionary = rules.get("slot_defaults", {})
+	if defaults.has(type_name):
+		return str(defaults[type_name])
+	if not (rules.get("type_to_slots", {}) as Dictionary).has(type_name):
+		return ""
+	var words := item_id.to_lower().split("_", false)
+	for pair in rules.get("slot_keywords", []):
+		if words.has(str(pair[0])):
+			return str(pair[1])
+	return ""
 
 
 static func level_req(item_id: String) -> int:
@@ -70,6 +90,17 @@ static func level_req(item_id: String) -> int:
 
 ## Lower-case class ids that may use the item. Empty means every class.
 static func class_req(item_id: String) -> Array:
+	# The item_class column: a class name, several separated by commas, "All", or empty.
+	var column: Variant = row(item_id).get("item_class")
+	if not is_absent(column):
+		var listed: Array = []
+		for entry in str(column).split(","):
+			var cleaned := entry.strip_edges().to_lower()
+			if cleaned == "all":
+				return []
+			if cleaned != "":
+				listed.append(cleaned)
+		return listed
 	var raw: Variant = _from_sheet_or_extra(item_id, "class_req", [])
 	var result: Array = []
 	if raw is Array:
@@ -81,6 +112,26 @@ static func class_req(item_id: String) -> Array:
 			if cleaned != "":
 				result.append(cleaned)
 	return result
+
+
+## "Greatsword", "Longbow", "Dual Pistols"... or "" when the sheet does not say.
+static func weapon_type(item_id: String) -> String:
+	var raw: Variant = row(item_id).get("weapon_type")
+	return "" if is_absent(raw) else str(raw).strip_edges()
+
+
+## When the item's bonus is attribute points (STR, AGI, VIT, INT, DEX, WIS, LCK):
+## {"attribute": "vit", "label": "Vitality", "points": 3.0}. Otherwise {}.
+static func attribute_bonus(item_id: String) -> Dictionary:
+	var item := row(item_id)
+	var attributes: Dictionary = DataRegistry.get_config("item_rules").get("attribute_btypes", {})
+	var key := str(item.get("item_BType", ""))
+	if not attributes.has(key) or is_absent(item.get("item_BValue")):
+		return {}
+	var attribute := str(attributes[key])
+	var definition: Dictionary = DataRegistry.get_config("stat_rules").get("attributes", {}).get(attribute, {})
+	return {"attribute": attribute, "label": str(definition.get("label", attribute.capitalize())),
+			"points": _number(item.get("item_BValue"), 0.0)}
 
 
 ## Bonuses this item gives while equipped, in the format StatCalculator expects:
@@ -97,6 +148,15 @@ static func stat_modifiers(item_id: String) -> Array:
 	var stat := str(rules["btype_to_stat"].get(str(item.get("item_BType", "")), ""))
 	if stat != "" and not is_absent(item.get("item_BValue")):
 		mods.append({"stat": stat, "flat": _number(item.get("item_BValue"), 0.0), "source": source})
+
+	# Attribute points (for example VIT +3) are worth what the same points are worth
+	# when spent: each point adds its per-point amounts (stat_rules.json).
+	var attribute := attribute_bonus(item_id)
+	if not attribute.is_empty():
+		var per_point: Dictionary = DataRegistry.get_config("stat_rules").get("attributes", {}).get(attribute["attribute"], {}).get("per_point", {})
+		for stat_name in per_point:
+			mods.append({"stat": str(stat_name), "flat": float(attribute["points"]) * float(per_point[stat_name]),
+					"source": source, "attribute": attribute["attribute"]})
 
 	if category(item_id) == "weapon":
 		var conversion: Dictionary = rules.get("weapon_bonus_conversion", {})
@@ -124,8 +184,15 @@ static func weapon_damage(item_id: String) -> Dictionary:
 ## {"element": "Fire", "amount": 25.0}, or {} when the weapon has no element damage.
 static func element_damage(item_id: String) -> Dictionary:
 	var raw: Variant = row(item_id).get("elem_dmg")
-	if is_absent(raw) or (not (raw is String) and _number(raw, 0.0) == 0.0):
+	if is_absent(raw):
 		return {}
+	if not (raw is String):
+		# Newer weapons: a number, with the element named in status_element.
+		var amount := _number(raw, 0.0)
+		var element_name: Variant = row(item_id).get("status_element")
+		if amount <= 0.0 or is_absent(element_name):
+			return {}
+		return {"element": str(element_name).strip_edges(), "amount": amount}
 	var regex := RegEx.new()
 	regex.compile("^\\s*(\\d+(?:\\.\\d+)?)\\s*\\(\\s*([A-Za-z ]+?)\\s*\\)\\s*$")
 	var found := regex.search(str(raw))
@@ -228,6 +295,22 @@ static func validate() -> Dictionary:
 		var elem: Variant = item.get("elem_dmg")
 		if not is_absent(elem) and elem is String and element_damage(item_id).is_empty():
 			warnings.append("%s: element damage '%s' cannot be read" % [item_id, str(elem)])
+
+		var class_column: Variant = item.get("item_class")
+		if not is_absent(class_column):
+			for entry in str(class_column).split(","):
+				var class_name_text := entry.strip_edges().to_lower()
+				if class_name_text != "all" and class_name_text != "" and DataRegistry.get_class_data(class_name_text).is_empty():
+					errors.append("%s: item_class '%s' is not a class" % [item_id, entry.strip_edges()])
+		if type_name == "Weapon":
+			if weapon_type(item_id) == "":
+				warnings.append("%s: weapon has no weapon_type" % item_id)
+			var damage_element := str(element_damage(item_id).get("element", ""))
+			if damage_element != "" and ElementalSystem.canonical(damage_element).is_empty():
+				warnings.append("%s: element '%s' is not in the element chart (counts as neutral)" % [item_id, damage_element])
+			var effect_name := str(on_hit_status(item_id).get("effect", ""))
+			if effect_name != "" and DataRegistry.get_status_effect(effect_name.to_lower().replace(" ", "_")).is_empty():
+				warnings.append("%s: status effect '%s' does not exist" % [item_id, effect_name])
 
 		for enemy_id in drop_sources(item_id):
 			if DataRegistry.get_enemy(enemy_id).is_empty():

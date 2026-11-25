@@ -1,0 +1,306 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Nine class special attacks.",
+  "abilities": [
+    {
+      "ability_id": "WAR_SPC_001",
+      "ability_name": "Executioner's Judgment",
+      "ability_class": "Warrior",
+      "ability_type": "special_attack",
+      "unlock_level": 100,
+      "unlock_requirement": "Complete the class-specific Special Combat Challenge",
+      "resource_cost": {
+        "resource_type": "rage",
+        "cost": 45
+      },
+      "cooldown_seconds": 45,
+      "cast_time_seconds": 0.8,
+      "range_meters": 8,
+      "damage": {
+        "damage_type": "physical",
+        "base_damage": 520,
+        "scaling_attribute": "STR",
+        "attribute_scaling": 0.9
+      },
+      "effect": {
+        "base_damage": 520,
+        "bonus_damage_vs_missing_hp_percent": 0.6,
+        "execute_threshold_target_hp_percent": 25
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.1,
+        "cooldown_reduction_per_rank": 0.015
+      },
+      "description": "A finishing strike that gains bonus damage against weakened enemies.",
+      "iconpath": "res://Assets/Skills/warrior/special_attack.png"
+    },
+    {
+      "ability_id": "MAG_SPC_001",
+      "ability_name": "Arcane Overload",
+      "ability_class": "Mage",
+      "ability_type": "special_attack",
+      "unlock_level": 100,
+      "unlock_requirement": "Complete the class-specific Special Combat Challenge",
+      "resource_cost": {
+        "resource_type": "mana",
+        "cost": 45
+      },
+      "cooldown_seconds": 45,
+      "cast_time_seconds": 0.8,
+      "range_meters": 8,
+      "damage": {
+        "damage_type": "magic",
+        "base_damage": 0,
+        "scaling_attribute": "INT",
+        "attribute_scaling": 0.9
+      },
+      "effect": {
+        "next_spell_damage_bonus_percent": 0.65,
+        "duration_seconds": 8,
+        "extra_mp_cost": 40
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.1,
+        "cooldown_reduction_per_rank": 0.015
+      },
+      "description": "Consumes a large amount of MP to amplify the next offensive spell.",
+      "iconpath": "res://Assets/Skills/mage/special_attack.png"
+    },
+    {
+      "ability_id": "ARC_SPC_001",
+      "ability_name": "Deadly Focus",
+      "ability_class": "Archer",
+      "ability_type": "special_attack",
+      "unlock_level": 100,
+      "unlock_requirement": "Complete the class-specific Special Combat Challenge",
+      "resource_cost": {
+        "resource_type": "focus",
+        "cost": 45
+      },
+      "cooldown_seconds": 45,
+      "cast_time_seconds": 0.8,
+      "range_meters": 8,
+      "damage": {
+        "damage_type": "physical",
+        "base_damage": 0,
+        "scaling_attribute": "DEX",
+        "attribute_scaling": 0.9
+      },
+      "effect": {
+        "critical_chance_bonus_percent": 25,
+        "ranged_damage_bonus_percent": 0.2,
+        "duration_seconds": 8
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.1,
+        "cooldown_reduction_per_rank": 0.015
+      },
+      "description": "Enters a precision stance that increases critical chance and ranged damage.",
+      "iconpath": "res://Assets/Skills/archer/special_attack.png"
+    },
+    {
+      "ability_id": "ROG_SPC_001",
+      "ability_name": "Final Silence",
+      "ability_class": "Rogue",
+      "ability_type": "special_attack",
+      "unlock_level": 100,
+      "unlock_requirement": "Complete the class-specific Special Combat Challenge",
+      "resource_cost": {
+        "resource_type": "shadow_energy",
+        "cost": 45
+      },
+      "cooldown_seconds": 45,
+      "cast_time_seconds": 0.8,
+      "range_meters": 8,
+      "damage": {
+        "damage_type": "physical",
+        "base_damage": 600,
+        "scaling_attribute": "DEX",
+        "attribute_scaling": 0.9
+      },
+      "effect": {
+        "base_damage": 600,
+        "bonus_damage_vs_low_hp_percent": 0.75,
+        "execute_threshold_target_hp_percent": 20
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.1,
+        "cooldown_reduction_per_rank": 0.015
+      },
+      "description": "A stealth finishing attack with increased damage against low-health targets.",
+      "iconpath": "res://Assets/Skills/rogue/special_attack.png"
+    },
+    {
+      "ability_id": "GUN_SPC_001",
+      "ability_name": "Deadlock Execution",
+      "ability_class": "Gunner",
+      "ability_type": "special_attack",
+      "unlock_level": 100,
+      "unlock_requirement": "Complete the class-specific Special Combat Challenge",
+      "resource_cost": {
+        "resource_type": "ammo",
+        "cost": 45
+      },
+      "cooldown_seconds": 45,
+      "cast_time_seconds": 0.8,
+      "range_meters": 8,
+      "damage": {
+        "damage_type": "physical",
+        "base_damage": 580,
+        "scaling_attribute": "DEX",
+        "attribute_scaling": 0.9
+      },
+      "effect": {
+        "base_damage": 580,
+        "hit_count": 6,
+        "lock_on_stacks": 3,
+        "damage_per_stack_percent": 0.12
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.1,
+        "cooldown_reduction_per_rank": 0.015
+      },
+      "description": "Locks onto one target and releases a concentrated burst of ammunition.",
+      "iconpath": "res://Assets/Skills/gunner/special_attack.png"
+    },
+    {
+      "ability_id": "HEA_SPC_001",
+      "ability_name": "Guardian's Sacrifice",
+      "ability_class": "Healer",
+      "ability_type": "special_attack",
+      "unlock_level": 100,
+      "unlock_requirement": "Complete the class-specific Special Combat Challenge",
+      "resource_cost": {
+        "resource_type": "divine_energy",
+        "cost": 45
+      },
+      "cooldown_seconds": 45,
+      "cast_time_seconds": 0.8,
+      "range_meters": 8,
+      "damage": {
+        "damage_type": "holy",
+        "base_damage": 0,
+        "scaling_attribute": "WIS",
+        "attribute_scaling": 0.9
+      },
+      "effect": {
+        "damage_redirect_percent": 0.35,
+        "duration_seconds": 8,
+        "range_meters": 12
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.1,
+        "cooldown_reduction_per_rank": 0.015
+      },
+      "description": "Forms a protective bond and absorbs part of an ally's incoming damage.",
+      "iconpath": "res://Assets/Skills/healer/special_attack.png"
+    },
+    {
+      "ability_id": "EXT_SPC_001",
+      "ability_name": "Zero Point Collapse",
+      "ability_class": "Extreme",
+      "ability_type": "special_attack",
+      "unlock_level": 100,
+      "unlock_requirement": "Complete the class-specific Special Combat Challenge",
+      "resource_cost": {
+        "resource_type": "anomaly_energy",
+        "cost": 45
+      },
+      "cooldown_seconds": 45,
+      "cast_time_seconds": 0.8,
+      "range_meters": 8,
+      "damage": {
+        "damage_type": "chaos",
+        "base_damage": 650,
+        "scaling_attribute": "INT",
+        "attribute_scaling": 0.9
+      },
+      "effect": {
+        "base_damage": 650,
+        "area_radius_meters": 9,
+        "pull_strength": 0.7,
+        "requires_full_resource": true
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.1,
+        "cooldown_reduction_per_rank": 0.015
+      },
+      "description": "Consumes stored Anomaly Energy to pull enemies inward and release an implosion.",
+      "iconpath": "res://Assets/Skills/extreme/special_attack.png"
+    },
+    {
+      "ability_id": "BRA_SPC_001",
+      "ability_name": "One Thousand Fists",
+      "ability_class": "Brawler",
+      "ability_type": "special_attack",
+      "unlock_level": 100,
+      "unlock_requirement": "Complete the class-specific Special Combat Challenge",
+      "resource_cost": {
+        "resource_type": "combo_gauge",
+        "cost": 45
+      },
+      "cooldown_seconds": 45,
+      "cast_time_seconds": 0.8,
+      "range_meters": 8,
+      "damage": {
+        "damage_type": "physical",
+        "base_damage": 480,
+        "scaling_attribute": "STR",
+        "attribute_scaling": 0.9
+      },
+      "effect": {
+        "base_damage": 480,
+        "hit_count": 12,
+        "combo_damage_growth_percent": 0.06
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.1,
+        "cooldown_reduction_per_rank": 0.015
+      },
+      "description": "Delivers a rapid punch combination whose damage grows with consecutive hits.",
+      "iconpath": "res://Assets/Skills/brawler/special_attack.png"
+    },
+    {
+      "ability_id": "NEC_SPC_001",
+      "ability_name": "Soul Devourer",
+      "ability_class": "Necromancer",
+      "ability_type": "special_attack",
+      "unlock_level": 100,
+      "unlock_requirement": "Complete the class-specific Special Combat Challenge",
+      "resource_cost": {
+        "resource_type": "soul_essence",
+        "cost": 45
+      },
+      "cooldown_seconds": 45,
+      "cast_time_seconds": 0.8,
+      "range_meters": 8,
+      "damage": {
+        "damage_type": "dark",
+        "base_damage": 500,
+        "scaling_attribute": "INT",
+        "attribute_scaling": 0.9
+      },
+      "effect": {
+        "base_damage": 500,
+        "heal_percent_of_damage": 0.3,
+        "soul_essence_gain": 25,
+        "bonus_vs_cursed_percent": 0.2
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.1,
+        "cooldown_reduction_per_rank": 0.015
+      },
+      "description": "Consumes a target's remaining life force, restoring the Necromancer and Soul Essence.",
+      "iconpath": "res://Assets/Skills/necromancer/special_attack.png"
+    }
+  ]
+}

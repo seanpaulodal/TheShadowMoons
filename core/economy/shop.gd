@@ -5,6 +5,17 @@ extends RefCounted
 ## caller keeps the result. The shops themselves are in TSM_Shop_Rules.json.
 
 
+## Stock lists are worked out once per shop (the sheet has hundreds of items).
+static var _stock_cache: Dictionary = {}
+static var _class_cache: Dictionary = {}
+
+
+## Forget the saved lists (the data was loaded again).
+static func clear_cache() -> void:
+	_stock_cache.clear()
+	_class_cache.clear()
+
+
 static func shop_ids() -> Array:
 	var ids: Array = []
 	for shop in DataRegistry.get_config("shop_rules").get("shops", []):
@@ -22,16 +33,36 @@ static func shop_def(shop_id: String) -> Dictionary:
 ## Everything a shop sells: every item of its categories that has a buy price,
 ## cheapest first.
 static func stock(shop_id: String) -> Array:
+	if _stock_cache.has(shop_id):
+		return _stock_cache[shop_id]
 	var categories: Array = shop_def(shop_id).get("categories", [])
-	var items: Array = []
+	var keyed: Array = []                         # [price, name, id], sorted without re-reading the data
 	for item_id in DataRegistry.get_ids("items"):
 		if categories.has(ItemDB.category(item_id)) and buy_price(item_id) > 0:
-			items.append(item_id)
-	items.sort_custom(func(a: String, b: String) -> bool:
-		if buy_price(a) != buy_price(b):
-			return buy_price(a) < buy_price(b)
-		return ItemDB.display_name(a) < ItemDB.display_name(b))
+			keyed.append([buy_price(item_id), ItemDB.display_name(item_id), str(item_id)])
+	keyed.sort_custom(func(a: Array, b: Array) -> bool:
+		if a[0] != b[0]:
+			return a[0] < b[0]
+		return a[1] < b[1])
+	var items: Array = []
+	for entry in keyed:
+		items.append(entry[2])
+	_stock_cache[shop_id] = items
 	return items
+
+
+## The shop's stock that this class can use (items for every class or for this one).
+static func stock_for_class(shop_id: String, class_id: String) -> Array:
+	var key := "%s|%s" % [shop_id, class_id.to_lower()]
+	if _class_cache.has(key):
+		return _class_cache[key]
+	var result: Array = []
+	for item_id in stock(shop_id):
+		var classes := ItemDB.class_req(item_id)
+		if classes.is_empty() or classes.has(class_id.to_lower()):
+			result.append(item_id)
+	_class_cache[key] = result
+	return result
 
 
 static func buy_price(item_id: String) -> int:

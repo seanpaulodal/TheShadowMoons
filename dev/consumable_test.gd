@@ -60,8 +60,6 @@ func _new_character() -> void:
 	Session.character = {
 		"name": "Fighter", "class_id": "warrior", "level": 1, "exp": 0, "rebirth": 0,
 		"stat_points": 0, "gold": 0, "attributes": {}, "inventory": [], "equipment": {},
-		"settings": AutoPot.default_settings(),
-		"elixir": {}
 	}
 	Session.slot = 1
 	Session._fill_missing_fields()
@@ -94,6 +92,7 @@ func _build_arena() -> void:
 	add_child(_world)
 	await _frames(3)
 	_player = _world.player
+	_world.clear_decor()
 	for camp in _world.camps:
 		camp.queue_free()
 	for node in get_tree().get_nodes_in_group("targetable"):
@@ -248,7 +247,7 @@ func _test_shop_logic() -> void:
 	print("[pots] --- shop ---")
 	_eq("five shops", Shop.shop_ids().size(), 5)
 	var weapons := Shop.stock("weaponsmith")
-	_eq("the weaponsmith sells the 7 weapons", weapons.size(), 7)
+	_eq("the weaponsmith sells all 457 weapons", weapons.size(), 457)
 	var all_weapons := true
 	for item_id in weapons:
 		if ItemDB.category(item_id) != "weapon":
@@ -259,8 +258,8 @@ func _test_shop_logic() -> void:
 		if Shop.buy_price(weapons[i]) < Shop.buy_price(weapons[i - 1]):
 			cheapest_first = false
 	_eq("...cheapest first", cheapest_first, true)
-	_eq("the armorer sells the 6 armor pieces", Shop.stock("armorer").size(), 6)
-	_eq("the jeweler sells the 4 accessories", Shop.stock("jeweler").size(), 4)
+	_eq("the armorer sells all 51 armor pieces", Shop.stock("armorer").size(), 51)
+	_eq("the jeweler sells all 38 accessories", Shop.stock("jeweler").size(), 38)
 	_eq("the mount vendor sells the 3 mounts", Shop.stock("mount_vendor").size(), 3)
 	var consumables := 0
 	for item_id in DataRegistry.get_ids("items"):

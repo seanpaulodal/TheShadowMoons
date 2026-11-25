@@ -16,17 +16,17 @@ signal character_changed
 func _notify_changed() -> void:
 	character_changed.emit()
 
-const SCHEMA_VERSION := 1
-const MAX_SLOTS := 4
+const SCHEMA_VERSION = 1
+const MAX_SLOTS = 4
 
 # The nine classes from the design document. These move into a data file later.
-const CLASS_IDS := [
+const CLASS_IDS = [
 	"warrior", "mage", "archer", "rogue", "gunner",
 	"extreme", "brawler", "healer", "necromancer",
 ]
-const NAME_PATTERN := "^[A-Za-z0-9_]{3,16}$"    # must match docs/firestore.rules
-const NAME_MIN_LENGTH := 3
-const NAME_MAX_LENGTH := 16
+const NAME_PATTERN = "^[A-Za-z0-9_]{3,16}$"    # must match docs/firestore.rules
+const NAME_MIN_LENGTH = 3
+const NAME_MAX_LENGTH = 16
 
 var character: Dictionary = {}
 var slot: int = 0
@@ -64,21 +64,21 @@ func name_problem(char_name: String) -> String:
 	if char_name == "":
 		return "Enter a name."
 
-	var has_space := false
+	var has_space = false
 	var bad: PackedStringArray = []
 	for i in char_name.length():
-		var code := char_name.unicode_at(i)
-		var allowed := (code >= 48 and code <= 57) or (code >= 65 and code <= 90) \
+		var code = char_name.unicode_at(i)
+		var allowed = (code >= 48 and code <= 57) or (code >= 65 and code <= 90) \
 				or (code >= 97 and code <= 122) or code == 95
 		if allowed:
 			continue
-		var ch := char_name[i]
+		var ch = char_name[i]
 		if ch == " ":
 			has_space = true
 		elif not bad.has(ch):
 			bad.append(ch)
 
-	var shown := " ".join(bad.slice(0, 5))
+	var shown = " ".join(bad.slice(0, 5))
 	if has_space and not bad.is_empty():
 		return "Spaces and special characters (%s) are not allowed. Use only letters, numbers and underscores (_)." % shown
 	if has_space:
@@ -140,7 +140,7 @@ func create_character(slot_number: int, char_name: String, class_id: String,
 	if not FirebaseService.is_signed_in():
 		return _fail("NOT_SIGNED_IN", "Please sign in first.")
 
-	var problem := name_problem(char_name)
+	var problem = name_problem(char_name)
 	if problem != "":
 		return _fail("INVALID_NAME", problem)
 	if not CLASS_IDS.has(class_id):
@@ -154,8 +154,8 @@ func create_character(slot_number: int, char_name: String, class_id: String,
 	if existing["found"]:
 		return _fail("SLOT_TAKEN", "That slot already has a character.")
 
-	var now := Time.get_datetime_string_from_system(true)
-	var doc := {
+	var now = Time.get_datetime_string_from_system(true)
+	var doc = {
 		"schema_version": SCHEMA_VERSION,
 		"name": char_name,
 		"class_id": class_id,
@@ -168,11 +168,6 @@ func create_character(slot_number: int, char_name: String, class_id: String,
 		"current_map": "map_1",
 		"inventory": [],
 		"equipment": {},
-		"settings": AutoPot.default_settings() if ClassDB.class_exists("AutoPot") else {
-			"auto_hp": false, "auto_mp": false, "hp_percent": 50, "mp_percent": 30,
-			"quick_slots": {"health": "", "mana": "", "stamina": ""}
-		},
-		"elixir": {},
 		"created_at": now,
 		"updated_at": now,
 	}
@@ -193,7 +188,7 @@ func create_character(slot_number: int, char_name: String, class_id: String,
 			return _fail("NAME_TAKEN", "That character name is already taken.")
 		return saved
 
-	character = doc
+	character = doc.duplicate(true)
 	slot = slot_number
 	_fill_missing_fields()
 	_unsaved_changes = false
@@ -202,13 +197,34 @@ func create_character(slot_number: int, char_name: String, class_id: String,
 	return {"ok": true}
 
 
+## Unlocks a waypoint on the active character if valid and not already unlocked.
+func unlock_waypoint(waypoint_id: String) -> Dictionary:
+	if not has_character():
+		return {"ok": false, "already": false, "error": "NO_CHARACTER", "message": "No character loaded."}
+
+	var map_id = str(character.get("current_map", "map_1"))
+	if waypoint_id == "" or MapData.waypoint(map_id, waypoint_id).is_empty():
+		return {"ok": false, "already": false, "error": "UNKNOWN", "message": "Unknown waypoint."}
+
+	_fill_missing_fields()
+	var waypoints: Array = character.get("waypoints", [])
+	if waypoints.has(waypoint_id):
+		return {"ok": true, "already": true}
+
+	waypoints.append(waypoint_id)
+	character["waypoints"] = waypoints
+	_unsaved_changes = true
+	_notify_changed()
+	return {"ok": true, "already": false}
+
+
 ## Saves only the listed top-level fields of the active character.
 func save_fields(fields: Dictionary) -> Dictionary:
 	if not has_character():
 		return _fail("NO_CHARACTER", "No character is loaded.")
 
 	# Check if incoming fields are identical to existing character state
-	var identical := true
+	var identical = true
 	for key in fields:
 		if not character.has(key) or character[key] != fields[key]:
 			identical = false
@@ -219,7 +235,7 @@ func save_fields(fields: Dictionary) -> Dictionary:
 		_dirty.clear()
 		return {"ok": true, "saved": false}
 
-	var payload := fields.duplicate(true)
+	var payload = fields.duplicate(true)
 	payload["updated_at"] = Time.get_datetime_string_from_system(true)
 	
 	if not save_enabled:
@@ -242,9 +258,9 @@ func record_vitals(hp: int, mp: int, sp: int) -> void:
 		return
 	
 	var current_vitals: Dictionary = character.get("vitals", {})
-	var cur_hp := int(current_vitals.get("hp", -1))
-	var cur_mp := int(current_vitals.get("mp", -1))
-	var cur_sp := int(current_vitals.get("sp", -1))
+	var cur_hp = int(current_vitals.get("hp", -1))
+	var cur_mp = int(current_vitals.get("mp", -1))
+	var cur_sp = int(current_vitals.get("sp", -1))
 
 	# If identical, explicitly ensure unsaved changes is kept clean/false
 	if cur_hp == hp and cur_mp == mp and cur_sp == sp:
@@ -272,13 +288,13 @@ func activate_elixir(item_id: String, now_time: int) -> Dictionary:
 		return {"ok": false, "error": "NOT_AN_ELIXIR", "message": "That is not an elixir."}
 
 	var current_elixir: Dictionary = character.get("elixir", {})
-	var activation_res := ElixirRules.activate(current_elixir, item_id, now_time)
+	var activation_res = ElixirRules.activate(current_elixir, item_id, now_time)
 	if not activation_res.get("ok", false):
 		return activation_res
 
 	character["elixir"] = activation_res["elixir"]
 
-	var remove_res := remove_item(item_id, 1)
+	var remove_res = remove_item(item_id, 1)
 	if not remove_res.get("ok", false):
 		character["elixir"] = current_elixir # rollback
 		return remove_res
@@ -313,7 +329,7 @@ func update_settings(new_settings: Dictionary) -> Dictionary:
 		elif hp_val < 5:
 			new_settings["hp_percent"] = 5
 
-	var changed := false
+	var changed = false
 	for k in new_settings:
 		if not settings.has(k) or settings[k] != new_settings[k]:
 			changed = true
@@ -361,14 +377,14 @@ func set_quick_slot(resource: String, item_id: String) -> Dictionary:
 func buy_item(item_id: String, qty: int) -> Dictionary:
 	if not has_character():
 		return {"ok": false, "error": "NO_CHARACTER", "message": "No character loaded."}
-	var cost := Shop.buy_price(item_id) * qty
-	var current_gold := int(character.get("gold", 0))
+	var cost = Shop.buy_price(item_id) * qty
+	var current_gold = int(character.get("gold", 0))
 	if current_gold < cost:
 		return {"ok": false, "error": "NOT_ENOUGH_GOLD", "message": "Not enough gold."}
 	
 	var inv: Array = character.get("inventory", [])
 	
-	var has_item := false
+	var has_item = false
 	for entry in inv:
 		if str(entry.get("item_id", "")) == item_id:
 			has_item = true
@@ -377,7 +393,7 @@ func buy_item(item_id: String, qty: int) -> Dictionary:
 	if inv.size() >= Inventory.max_slots() and not has_item:
 		return {"ok": false, "error": "INVENTORY_FULL", "message": "Inventory is full."}
 
-	var add_res := add_item(item_id, qty)
+	var add_res = add_item(item_id, qty)
 	if not add_res.get("ok", false):
 		return add_res
 
@@ -394,12 +410,12 @@ func sell_item(item_id: String, qty: int, target_uid: String = "") -> Dictionary
 	var inv: Array = character.get("inventory", [])
 	
 	# If a specific UID is provided, remove that exact stack/item
-	var removed := false
+	var removed = false
 	if target_uid != "":
 		for i in range(inv.size()):
 			var entry: Dictionary = inv[i]
 			if str(entry.get("uid", "")) == target_uid:
-				var entry_qty := int(entry.get("qty", 1))
+				var entry_qty = int(entry.get("qty", 1))
 				if entry_qty <= qty:
 					inv.remove_at(i)
 				else:
@@ -410,15 +426,94 @@ func sell_item(item_id: String, qty: int, target_uid: String = "") -> Dictionary
 			return {"ok": false, "error": "NOT_FOUND", "message": "Item not found in inventory."}
 		character["inventory"] = inv
 	else:
-		var res := remove_item(item_id, qty)
+		var res = remove_item(item_id, qty)
 		if not res.get("ok", false):
 			return res
 
-	var gain := Shop.sell_price(item_id) * qty
+	var gain = Shop.sell_price(item_id) * qty
 	character["gold"] = int(character.get("gold", 0)) + gain
 	_unsaved_changes = true
 	_notify_changed()
 	return {"ok": true, "earned": gain, "gold": character["gold"], "inventory": character.get("inventory", [])}
+
+
+## Returns available skill points for the active character.
+func skill_points() -> int:
+	if not has_character():
+		return 0
+	return SkillBook.available_points(character)
+
+
+## Learns or ranks up a skill on the active character.
+func learn_skill(skill_id: String) -> Dictionary:
+	if not has_character():
+		return {"ok": false, "error": "NO_CHARACTER", "message": "No character loaded."}
+	var res := SkillBook.learn(character, skill_id)
+	if not res.get("ok", false):
+		return res
+	character["skills"] = res["skills"]
+	_unsaved_changes = true
+	_notify_changed()
+	return res
+
+
+## Equips a learned skill onto a skill slot.
+func equip_skill(skill_id: String, slot_name: String) -> Dictionary:
+	if not has_character():
+		return {"ok": false, "error": "NO_CHARACTER", "message": "No character loaded."}
+	var res := SkillBook.equip(character, skill_id, slot_name)
+	if not res.get("ok", false):
+		return res
+	character["skills"] = res["skills"]
+	_unsaved_changes = true
+	_notify_changed()
+	return res
+
+
+## Removes a skill from the given skill slot.
+func unequip_skill(slot_name: String) -> Dictionary:
+	if not has_character():
+		return {"ok": false, "error": "NO_CHARACTER", "message": "No character loaded."}
+	var res := SkillBook.unequip(character, slot_name)
+	if not res.get("ok", false):
+		return res
+	character["skills"] = res["skills"]
+	_unsaved_changes = true
+	_notify_changed()
+	return res
+
+
+## Ranks up a class ability (special or ultimate).
+func rank_up_ability(ability_id: String) -> Dictionary:
+	if not has_character():
+		return {"ok": false, "error": "NO_CHARACTER", "message": "No character loaded."}
+	var res := SkillBook.rank_up_ability(character, ability_id)
+	if not res.get("ok", false):
+		return res
+	character["skills"] = res["skills"]
+	_unsaved_changes = true
+	_notify_changed()
+	return res
+
+
+## Resets learned skills, abilities, and skill slots for the active character.
+func reset_skills() -> Dictionary:
+	if not has_character():
+		return {"ok": false, "error": "NO_CHARACTER", "message": "No character loaded."}
+	var rules: Dictionary = DataRegistry.get_config("skill_rules")
+	var cost := int(rules.get("respec_gold", 0))
+	var current_gold := int(character.get("gold", 0))
+	if cost > 0 and current_gold < cost:
+		return {"ok": false, "error": "NOT_ENOUGH_GOLD", "message": "Not enough gold."}
+	var res := SkillBook.reset(character)
+	if not res.get("ok", false):
+		return res
+	if cost > 0:
+		character["gold"] = current_gold - cost
+	character["skills"] = res["skills"]
+	_unsaved_changes = true
+	_notify_changed()
+	return {"ok": true}
 
 
 func flush() -> Dictionary:
@@ -428,7 +523,7 @@ func flush() -> Dictionary:
 		return {"ok": true}
 	if not FirebaseService.is_signed_in():
 		return {"ok": false, "error": "NOT_SIGNED_IN"}
-	var result := await save_fields(character)
+	var result = await save_fields(character)
 	if result["ok"]:
 		_unsaved_changes = false
 		_dirty.clear()
@@ -442,12 +537,22 @@ func _fail(code: String, message: String) -> Dictionary:
 func _fill_missing_fields() -> void:
 	if not has_character():
 		return
+	if not character.has("current_map") or str(character.get("current_map", "")) == "":
+		character["current_map"] = "map_1"
+	if not character.has("waypoints") or typeof(character["waypoints"]) != TYPE_ARRAY:
+		var map_id = str(character.get("current_map", "map_1"))
+		var defaults: Array = MapData.default_unlocked(map_id).duplicate()
+		if defaults.is_empty():
+			defaults = ["oakhaven_village"]
+		character["waypoints"] = defaults
 	if not character.has("attributes") or typeof(character["attributes"]) != TYPE_DICTIONARY:
 		character["attributes"] = {}
 	if not character.has("inventory") or typeof(character["inventory"]) != TYPE_ARRAY:
 		character["inventory"] = []
 	if not character.has("equipment") or typeof(character["equipment"]) != TYPE_DICTIONARY:
 		character["equipment"] = {}
+	if not character.has("skills") or typeof(character["skills"]) != TYPE_DICTIONARY:
+		character["skills"] = SkillBook.normalize({}, str(character.get("class_id", "")))
 	if not character.has("settings") or typeof(character["settings"]) != TYPE_DICTIONARY:
 		character["settings"] = AutoPot.default_settings() if ClassDB.class_exists("AutoPot") else {
 			"auto_hp": false, "auto_mp": false, "hp_percent": 50, "mp_percent": 30,
@@ -460,9 +565,9 @@ func _fill_missing_fields() -> void:
 func grant_exp(amount: int) -> Dictionary:
 	if not has_character():
 		return {"levels_gained": 0, "level": 1}
-	var current_exp := int(character.get("exp", 0)) + amount
-	var current_level := int(character.get("level", 1))
-	var levels_gained := 0
+	var current_exp = int(character.get("exp", 0)) + amount
+	var current_level = int(character.get("level", 1))
+	var levels_gained = 0
 	while current_exp >= 100:
 		current_level += 1
 		current_exp -= 100
@@ -482,13 +587,13 @@ func has_unsaved_changes() -> bool:
 func grant_rewards(exp_amount: int, gold_amount: int) -> Dictionary:
 	if not has_character():
 		return {"summary": {"levels_gained": 0, "level": 1}}
-	var exp_res := grant_exp(exp_amount)
+	var exp_res = grant_exp(exp_amount)
 	if gold_amount > 0:
 		character["gold"] = int(character.get("gold", 0)) + gold_amount
 		_unsaved_changes = true
 	
-	var current_level := int(character.get("level", 1))
-	var summary := {
+	var current_level = int(character.get("level", 1))
+	var summary = {
 		"exp": exp_amount,
 		"gold": gold_amount,
 		"items": [],
@@ -505,7 +610,7 @@ func add_item(item_id: String, qty: int) -> Dictionary:
 	if not has_character():
 		return {"ok": false, "message": "No character loaded."}
 	var inv: Array = character.get("inventory", [])
-	var res := Inventory.add(inv, item_id, qty)
+	var res = Inventory.add(inv, item_id, qty)
 	if res.has("ok") and res["ok"]:
 		character["inventory"] = res["inventory"]
 		_unsaved_changes = true
@@ -526,11 +631,11 @@ func total_stats(riding_mount: bool = false) -> Dictionary:
 	if not has_character():
 		return {"ok": false, "message": "No character loaded."}
 	
-	var class_id := str(character.get("class_id", ""))
+	var class_id = str(character.get("class_id", ""))
 	var attributes: Dictionary = character.get("attributes", {})
 	var equipment: Dictionary = character.get("equipment", {})
 	
-	var base_stats := StatCalculator.attribute_totals(class_id, attributes)
+	var base_stats = StatCalculator.attribute_totals(class_id, attributes)
 	
 	# Handle specific base stats expected by build tests
 	if class_id == "warrior":
@@ -546,7 +651,7 @@ func total_stats(riding_mount: bool = false) -> Dictionary:
 	var equipment_bonus: Dictionary = {}
 	for slot_name in equipment:
 		var item_entry: Dictionary = equipment[slot_name]
-		var item_id := str(item_entry.get("item_id", ""))
+		var item_id = str(item_entry.get("item_id", ""))
 		# Map standard items or parse stats
 		if item_id == "wooden_sword":
 			equipment_bonus["atk_power"] = float(equipment_bonus.get("atk_power", 0.0)) + 15.0
@@ -576,8 +681,8 @@ func total_stats(riding_mount: bool = false) -> Dictionary:
 
 	var final_stats: Dictionary = {}
 	for stat in base_stats:
-		var b_val := float(base_stats[stat])
-		var e_val := float(equipment_bonus.get(stat, 0.0))
+		var b_val = float(base_stats[stat])
+		var e_val = float(equipment_bonus.get(stat, 0.0))
 		final_stats[stat] = b_val + e_val
 		if not equipment_bonus.has(stat):
 			equipment_bonus[stat] = 0.0
@@ -594,8 +699,8 @@ func equip_item(uid: String) -> Dictionary:
 	if not has_character():
 		return {"ok": false, "message": "No character loaded."}
 	var inv: Array = character.get("inventory", [])
-	var target_index := -1
-	var target_entry := {}
+	var target_index = -1
+	var target_entry = {}
 	
 	for i in range(inv.size()):
 		var entry: Dictionary = inv[i]
@@ -607,10 +712,15 @@ func equip_item(uid: String) -> Dictionary:
 	if target_index == -1:
 		return {"ok": false, "error": "NOT_FOUND", "message": "Item not found in inventory."}
 		
-	var item_id := str(target_entry.get("item_id", ""))
-	var slot_name := ItemDB.equip_slot(item_id)
+	var item_id = str(target_entry.get("item_id", ""))
+	var slot_name = ItemDB.equip_slot(item_id)
 	if slot_name == "":
 		return {"ok": false, "error": "NOT_EQUIPPABLE", "message": "Item cannot be equipped."}
+
+	var char_level := int(character.get("level", 1))
+	var req_level := int(target_entry.get("req_level", target_entry.get("level", 1)))
+	if char_level < req_level:
+		return {"ok": false, "error": "LEVEL_TOO_LOW", "message": "Requires level %d." % req_level}
 		
 	var equipment: Dictionary = character.get("equipment", {})
 	
@@ -654,7 +764,7 @@ func allocate_attribute(attribute: String, amount: int) -> Dictionary:
 		return {"ok": false, "message": "No character loaded."}
 	if not StatCalculator.ATTRIBUTES.has(attribute):
 		return {"ok": false, "error": "UNKNOWN_ATTRIBUTE", "message": "Unknown attribute."}
-	var points := int(character.get("stat_points", 0))
+	var points = int(character.get("stat_points", 0))
 	if points < amount:
 		return {"ok": false, "error": "NOT_ENOUGH_POINTS", "message": "Not enough stat points."}
 		
@@ -697,7 +807,7 @@ func remove_item(item_id: String, qty: int) -> Dictionary:
 	if not has_character():
 		return {"ok": false, "message": "No character loaded."}
 	var inv: Array = character.get("inventory", [])
-	var res := Inventory.remove(inv, item_id, qty)
+	var res = Inventory.remove(inv, item_id, qty)
 	if res.has("ok") and res["ok"]:
 		character["inventory"] = res["inventory"]
 		_unsaved_changes = true

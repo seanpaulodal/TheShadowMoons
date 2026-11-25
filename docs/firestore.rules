@@ -99,6 +99,17 @@ service cloud.firestore {
             && s.quick_slots.stamina is string && s.quick_slots.stamina.size() <= 40;
         }
 
+        // Skills: what is learned (skill id -> rank), the eight slots, ultimate and
+        // special attack ranks, and the trials. Points are worked out from the level.
+        function validSkills(k) {
+          return k.keys().hasOnly(['learned', 'slots', 'abilities', 'trials'])
+            && k.keys().hasAll(['learned', 'slots'])
+            && k.learned is map && k.learned.size() <= 40
+            && k.slots is map && k.slots.size() <= 12
+            && (!('abilities' in k) || (k.abilities is map && k.abilities.size() <= 4))
+            && (!('trials' in k) || (k.trials is map && k.trials.size() <= 4));
+        }
+
         // Saved health, mana and stamina.
         function validVitals(v) {
           return v.keys().hasOnly(['hp', 'mp', 'sp'])
@@ -129,7 +140,7 @@ service cloud.firestore {
           return after.diff(before).affectedKeys().hasOnly([
               'level', 'exp', 'rebirth', 'stat_points', 'gold', 'current_map',
               'inventory', 'equipment', 'appearance', 'attributes', 'settings',
-              'vitals', 'elixir', 'updated_at'])
+              'vitals', 'elixir', 'waypoints', 'skills', 'updated_at'])
             && after.level is int && after.level >= 1 && after.level <= 300
             && after.rebirth is int && after.rebirth >= before.rebirth && after.rebirth <= 10
             && after.exp is number && after.exp >= 0
@@ -146,7 +157,10 @@ service cloud.firestore {
                 || validAttributes(after['attributes'], after.stat_points, after.level, after.rebirth))
             && (!('settings' in after) || validSettings(after['settings']))
             && (!('vitals' in after) || validVitals(after['vitals']))
-            && (!('elixir' in after) || validElixir(after['elixir']));
+            && (!('elixir' in after) || validElixir(after['elixir']))
+            && (!('waypoints' in after)
+                || (after['waypoints'] is list && after['waypoints'].size() <= 100))
+            && (!('skills' in after) || validSkills(after['skills']));
         }
 
         allow read: if isOwner(uid);

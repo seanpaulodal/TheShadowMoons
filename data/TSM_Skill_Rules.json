@@ -1,0 +1,14 @@
+{
+  "_note": "PLACEHOLDER rules for the skill system (not in your skill files). points_per_level: skill points earned each level. Every rank of a skill costs that skill's skill_point_cost. The class's first (level 1) skill is learned for free at rank 1. ability_rank_cost: points for each rank above 1 of an ultimate or special attack. require_trials: when true, ultimates and specials also need the trial to be completed (the trials come with quests).",
+  "points_per_level": 3,
+  "starter_skill_free": true,
+  "equip_slots": 8,
+  "ability_rank_cost": 8,
+  "require_trials": false,
+  "respec_gold": 0,
+  "resource_labels": {
+    "rage": "Rage", "mana": "Mana", "focus": "Focus", "shadow_energy": "Shadow Energy",
+    "ammo": "Ammo", "divine_energy": "Divine Energy", "anomaly_energy": "Anomaly Energy",
+    "combo_gauge": "Combo Gauge", "soul_essence": "Soul Essence"
+  }
+}

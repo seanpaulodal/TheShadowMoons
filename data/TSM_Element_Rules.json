@@ -134,7 +134,8 @@
     "plant": "nature",
     "n/a": "physical",
     "none": "physical",
-    "steel": "physical"
+    "steel": "physical",
+    "wind": "nature"
   },
   "enemy_overrides": {},
   "ignored_words": [

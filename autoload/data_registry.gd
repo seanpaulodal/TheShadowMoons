@@ -26,12 +26,28 @@ const DATASETS := {
 	"item_extra": {
 		"path": "res://data/TSM_Item_Extra.json",
 		"id_field": "item_id",
-		"required": ["item_id", "equip_slot"],
+		"required": ["item_id"],
 	},
 	"classes": {
 		"path": "res://data/TSM_Class_Data.json",
 		"id_field": "class_id",
 		"required": ["class_id", "display_name", "start_attributes", "base_stats", "growth_stats"],
+	},
+	"skills": {
+		"path": "res://data/TSM_Skills.json",
+		"id_field": "skill_id",
+		"required": ["skill_id", "skill_name", "skill_class", "skill_path", "skill_unlock_level",
+				"skill_point_cost", "skill_max_rank", "skill_effect"],
+	},
+	"ultimates": {
+		"path": "res://data/TSM_Class_Ultimates.json",
+		"id_field": "ability_id",
+		"required": ["ability_id", "ability_name", "ability_class", "unlock_level", "rank_max"],
+	},
+	"specials": {
+		"path": "res://data/TSM_Class_Special_Attacks.json",
+		"id_field": "ability_id",
+		"required": ["ability_id", "ability_name", "ability_class", "unlock_level", "rank_max"],
 	},
 	"achievements": {
 		"path": "res://data/TSM_Achievements.json",
@@ -50,6 +66,22 @@ const CONFIGS := {
 	"stat_rules": {
 		"path": "res://data/TSM_Stat_Rules.json",
 		"required": ["attributes", "stats", "base_defaults", "growth_defaults"],
+	},
+	"skill_rules": {
+		"path": "res://data/TSM_Skill_Rules.json",
+		"required": ["points_per_level", "equip_slots", "ability_rank_cost"],
+	},
+	"skill_trees": {
+		"path": "res://data/TSM_Skill_Trees.json",
+		"required": ["paths"],
+	},
+	"skill_effects": {
+		"path": "res://data/TSM_Skill_Effects.json",
+		"required": ["status_effects", "combat_rules"],
+	},
+	"maps": {
+		"path": "res://data/TSM_Maps.json",
+		"required": ["map_1"],
 	},
 	"consumable_rules": {
 		"path": "res://data/TSM_Consumable_Rules.json",
@@ -109,6 +141,7 @@ func load_all() -> void:
 		_load_config(config_name, CONFIGS[config_name])
 
 	loaded = true
+	Shop.clear_cache()          # shop lists are built from the item data
 	var report := get_report()
 	print("[DataRegistry] loaded: ", report["counts"],
 			" | errors: ", _errors.size(), " | warnings: ", _warnings.size())

@@ -1,0 +1,313 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Nine class ultimate abilities.",
+  "abilities": [
+    {
+      "ability_id": "WAR_ULT_001",
+      "ability_name": "Kingdom's Last Stand",
+      "ability_class": "Warrior",
+      "ability_type": "ultimate",
+      "unlock_level": 200,
+      "unlock_requirement": "Complete the class-specific Ultimate Trial",
+      "resource_cost": {
+        "resource_type": "rage",
+        "cost": 100
+      },
+      "cooldown_seconds": 120,
+      "cast_time_seconds": 2.0,
+      "range_meters": 12,
+      "damage": {
+        "damage_type": "physical",
+        "base_damage": 0,
+        "scaling_attribute": "STR",
+        "attribute_scaling": 1.25
+      },
+      "effect": {
+        "attack_power_percent": 0.35,
+        "defense_percent": 0.25,
+        "area_radius_meters": 8,
+        "duration_seconds": 12
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.12,
+        "cooldown_reduction_per_rank": 0.02
+      },
+      "description": "A spectral king's armor empowers the Warrior before a massive sword strike.",
+      "iconpath": "res://Assets/Skills/warrior/ultimate.png"
+    },
+    {
+      "ability_id": "MAG_ULT_001",
+      "ability_name": "Eternal Cataclysm",
+      "ability_class": "Mage",
+      "ability_type": "ultimate",
+      "unlock_level": 200,
+      "unlock_requirement": "Complete the class-specific Ultimate Trial",
+      "resource_cost": {
+        "resource_type": "mana",
+        "cost": 100
+      },
+      "cooldown_seconds": 120,
+      "cast_time_seconds": 2.0,
+      "range_meters": 12,
+      "damage": {
+        "damage_type": "magic",
+        "base_damage": 950,
+        "scaling_attribute": "INT",
+        "attribute_scaling": 1.25
+      },
+      "effect": {
+        "base_damage": 950,
+        "area_radius_meters": 12,
+        "waves": 5,
+        "duration_seconds": 6
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.12,
+        "cooldown_reduction_per_rank": 0.02
+      },
+      "description": "Opens a dimensional rift and rains elemental destruction over a large area.",
+      "iconpath": "res://Assets/Skills/mage/ultimate.png"
+    },
+    {
+      "ability_id": "ARC_ULT_001",
+      "ability_name": "Heaven's Arrowfall",
+      "ability_class": "Archer",
+      "ability_type": "ultimate",
+      "unlock_level": 200,
+      "unlock_requirement": "Complete the class-specific Ultimate Trial",
+      "resource_cost": {
+        "resource_type": "focus",
+        "cost": 100
+      },
+      "cooldown_seconds": 120,
+      "cast_time_seconds": 2.0,
+      "range_meters": 12,
+      "damage": {
+        "damage_type": "physical",
+        "base_damage": 820,
+        "scaling_attribute": "DEX",
+        "attribute_scaling": 1.25
+      },
+      "effect": {
+        "base_damage": 820,
+        "area_radius_meters": 11,
+        "waves": 6
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.12,
+        "cooldown_reduction_per_rank": 0.02
+      },
+      "description": "Calls down enchanted arrows across a selected battlefield area.",
+      "iconpath": "res://Assets/Skills/archer/ultimate.png"
+    },
+    {
+      "ability_id": "ROG_ULT_001",
+      "ability_name": "Requiem of the Eclipse",
+      "ability_class": "Rogue",
+      "ability_type": "ultimate",
+      "unlock_level": 200,
+      "unlock_requirement": "Complete the class-specific Ultimate Trial",
+      "resource_cost": {
+        "resource_type": "shadow_energy",
+        "cost": 100
+      },
+      "cooldown_seconds": 120,
+      "cast_time_seconds": 2.0,
+      "range_meters": 12,
+      "damage": {
+        "damage_type": "physical",
+        "base_damage": 1050,
+        "scaling_attribute": "DEX",
+        "attribute_scaling": 1.25
+      },
+      "effect": {
+        "base_damage": 1050,
+        "max_targets": 5,
+        "hit_count": 8,
+        "bonus_vs_marked_percent": 0.3
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.12,
+        "cooldown_reduction_per_rank": 0.02
+      },
+      "description": "Disappears into darkness and performs rapid strikes against marked enemies.",
+      "iconpath": "res://Assets/Skills/rogue/ultimate.png"
+    },
+    {
+      "ability_id": "GUN_ULT_001",
+      "ability_name": "Apocalypse Protocol",
+      "ability_class": "Gunner",
+      "ability_type": "ultimate",
+      "unlock_level": 200,
+      "unlock_requirement": "Complete the class-specific Ultimate Trial",
+      "resource_cost": {
+        "resource_type": "ammo",
+        "cost": 100
+      },
+      "cooldown_seconds": 120,
+      "cast_time_seconds": 2.0,
+      "range_meters": 12,
+      "damage": {
+        "damage_type": "physical",
+        "base_damage": 1000,
+        "scaling_attribute": "DEX",
+        "attribute_scaling": 1.25
+      },
+      "effect": {
+        "base_damage": 1000,
+        "area_radius_meters": 12,
+        "rocket_count": 6,
+        "duration_seconds": 5
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.12,
+        "cooldown_reduction_per_rank": 0.02
+      },
+      "description": "Marks an area and unleashes rockets, explosives, and heavy gunfire.",
+      "iconpath": "res://Assets/Skills/gunner/ultimate.png"
+    },
+    {
+      "ability_id": "HEA_ULT_001",
+      "ability_name": "Divine Ascension",
+      "ability_class": "Healer",
+      "ability_type": "ultimate",
+      "unlock_level": 200,
+      "unlock_requirement": "Complete the class-specific Ultimate Trial",
+      "resource_cost": {
+        "resource_type": "divine_energy",
+        "cost": 100
+      },
+      "cooldown_seconds": 120,
+      "cast_time_seconds": 2.0,
+      "range_meters": 12,
+      "damage": {
+        "damage_type": "holy",
+        "base_damage": 0,
+        "scaling_attribute": "WIS",
+        "attribute_scaling": 1.25
+      },
+      "effect": {
+        "heal_percent_max_hp": 0.22,
+        "damage_reduction_percent": 0.2,
+        "enemy_damage": 420,
+        "area_radius_meters": 10,
+        "duration_seconds": 10
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.12,
+        "cooldown_reduction_per_rank": 0.02
+      },
+      "description": "Creates a divine field that heals allies, protects them, and damages enemies.",
+      "iconpath": "res://Assets/Skills/healer/ultimate.png"
+    },
+    {
+      "ability_id": "EXT_ULT_001",
+      "ability_name": "The Absolute Anomaly",
+      "ability_class": "Extreme",
+      "ability_type": "ultimate",
+      "unlock_level": 200,
+      "unlock_requirement": "Complete the class-specific Ultimate Trial",
+      "resource_cost": {
+        "resource_type": "anomaly_energy",
+        "cost": 100
+      },
+      "cooldown_seconds": 120,
+      "cast_time_seconds": 2.0,
+      "range_meters": 12,
+      "damage": {
+        "damage_type": "chaos",
+        "base_damage": 0,
+        "scaling_attribute": "INT",
+        "attribute_scaling": 1.25
+      },
+      "effect": {
+        "attack_power_percent": 0.4,
+        "attack_speed_percent": 0.3,
+        "damage_reduction_percent": 0.15,
+        "duration_seconds": 15,
+        "resource_drain_per_second": 8
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.12,
+        "cooldown_reduction_per_rank": 0.02
+      },
+      "description": "Transforms Extreme into an unstable energy entity with enhanced abilities.",
+      "iconpath": "res://Assets/Skills/extreme/ultimate.png"
+    },
+    {
+      "ability_id": "BRA_ULT_001",
+      "ability_name": "Dragon King's Ascension",
+      "ability_class": "Brawler",
+      "ability_type": "ultimate",
+      "unlock_level": 200,
+      "unlock_requirement": "Complete the class-specific Ultimate Trial",
+      "resource_cost": {
+        "resource_type": "combo_gauge",
+        "cost": 100
+      },
+      "cooldown_seconds": 120,
+      "cast_time_seconds": 2.0,
+      "range_meters": 12,
+      "damage": {
+        "damage_type": "physical",
+        "base_damage": 980,
+        "scaling_attribute": "STR",
+        "attribute_scaling": 1.25
+      },
+      "effect": {
+        "base_damage": 980,
+        "hit_count": 10,
+        "area_radius_meters": 5,
+        "combo_bonus_per_hit": 0.04
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.12,
+        "cooldown_reduction_per_rank": 0.02
+      },
+      "description": "Channels dragon energy into a devastating sequence of martial attacks.",
+      "iconpath": "res://Assets/Skills/brawler/ultimate.png"
+    },
+    {
+      "ability_id": "NEC_ULT_001",
+      "ability_name": "The Undying Legion",
+      "ability_class": "Necromancer",
+      "ability_type": "ultimate",
+      "unlock_level": 200,
+      "unlock_requirement": "Complete the class-specific Ultimate Trial",
+      "resource_cost": {
+        "resource_type": "soul_essence",
+        "cost": 100
+      },
+      "cooldown_seconds": 120,
+      "cast_time_seconds": 2.0,
+      "range_meters": 12,
+      "damage": {
+        "damage_type": "dark",
+        "base_damage": 0,
+        "scaling_attribute": "INT",
+        "attribute_scaling": 1.25
+      },
+      "effect": {
+        "summon_count": 8,
+        "duration_seconds": 20,
+        "summon_attack_power_percent": 0.65,
+        "area_radius_meters": 10
+      },
+      "rank_max": 5,
+      "rank_scaling": {
+        "effectiveness_per_rank": 0.12,
+        "cooldown_reduction_per_rank": 0.02
+      },
+      "description": "Opens a gateway and summons an undead legion to overwhelm enemies.",
+      "iconpath": "res://Assets/Skills/necromancer/ultimate.png"
+    }
+  ]
+}

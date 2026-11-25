@@ -12,6 +12,13 @@ signal sign_out_requested
 var inventory_window: InventoryWindow
 var character_window: CharacterWindow
 var shop_window: ShopWindow
+var map_window: WaypointWindow
+var skill_window: SkillWindow
+var minimap: Minimap
+## How long the screen fades when teleporting (seconds each way).
+var fade_seconds: float = 0.35
+
+signal teleported(waypoint_id: String)
 
 var _player: PlayerController
 var _controls: TouchControls
@@ -30,6 +37,12 @@ var _gold_label: Label
 var _quick_buttons: Dictionary = {}     # resource -> {"button", "icon", "count", "shade", "time"}
 var _interact_button: Button
 var _interact_npc: ShopNpc
+var _interact_waypoint: Waypoint
+var _time_label: Label
+var _fade: ColorRect
+var _fade_label: Label
+var _teleporting: bool = false
+var _clock_timer: float = 0.0
 var _buff_box: HBoxContainer
 var _buff_signature: String = ""
 var _feed: VBoxContainer
@@ -63,7 +76,9 @@ func setup(player: PlayerController) -> void:
 	_build_death_panel()
 	_build_quick_slots()
 	_build_interact_button()
+	_build_minimap()
 	_build_windows()
+	_build_fade()
 
 	Session.reward_granted.connect(_on_reward)
 	Session.character_changed.connect(_refresh_player)
@@ -85,7 +100,8 @@ func show_message(text: String) -> void:
 
 
 func is_window_open() -> bool:
-	return inventory_window.visible or character_window.visible or shop_window.visible
+	return inventory_window.visible or character_window.visible or shop_window.visible \
+			or map_window.visible or skill_window.visible or minimap.expanded
 
 
 func open_inventory() -> void:
@@ -96,8 +112,17 @@ func open_character() -> void:
 	_open(character_window)
 
 
+func open_map() -> void:
+	_open(map_window)
+
+
+func open_skills() -> void:
+	_open(skill_window)
+
+
 ## Opens a shop window (see TSM_Shop_Rules.json for the ids).
 func open_shop(shop_id: String) -> void:
+	minimap.collapse()
 	_close_others(shop_window)
 	shop_window.open_shop(shop_id)
 	_refresh_interact()
@@ -109,11 +134,14 @@ func close_windows() -> void:
 	inventory_window.close()
 	character_window.close()
 	shop_window.close()
+	map_window.close()
+	skill_window.close()
+	minimap.collapse()
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("interact") and _interact_npc != null and not is_window_open():
-		open_shop(_interact_npc.shop_id)
+	if event.is_action_pressed("interact") and not is_window_open():
+		_on_interact()
 
 
 func _process(delta: float) -> void:
@@ -127,6 +155,10 @@ func _process(delta: float) -> void:
 		_refresh_buffs()
 		_refresh_quick_slots()
 		_refresh_interact()
+		_clock_timer += 0.1
+		if _clock_timer >= 1.0:
+			_clock_timer = 0.0
+			_refresh_clock()
 
 
 # ---------- building ----------
@@ -236,13 +268,13 @@ func _make_bar(color: Color, min_size: Vector2) -> ProgressBar:
 func _build_menu_buttons() -> void:
 	var row := HBoxContainer.new()
 	row.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	row.offset_left = -300
+	row.offset_left = -576
 	row.offset_right = -16
 	row.offset_top = 12
 	row.offset_bottom = 84
 	row.add_theme_constant_override("separation", 10)
 	add_child(row)
-	for entry in [["Bag", open_inventory], ["Char", open_character]]:
+	for entry in [["Bag", open_inventory], ["Char", open_character], ["Skills", open_skills], ["Map", open_map]]:
 		var button := Button.new()
 		button.text = entry[0]
 		button.custom_minimum_size = Vector2(130, 72)
@@ -365,6 +397,22 @@ func _build_windows() -> void:
 	shop_window.setup()
 	shop_window.closed.connect(_on_window_closed)
 
+	skill_window = SkillWindow.new()
+	add_child(skill_window)
+	skill_window.setup()
+	skill_window.closed.connect(_on_window_closed)
+
+	map_window = WaypointWindow.new()
+	add_child(map_window)
+	map_window.setup(_player, str(Session.character.get("current_map", "map_1")))
+	map_window.closed.connect(_on_window_closed)
+	map_window.teleport_requested.connect(func(waypoint_id: String) -> void:
+		var result := teleport_to(waypoint_id)
+		if result["ok"]:
+			map_window.show_message("", false)
+		else:
+			map_window.show_message(str(result["message"]), true))
+
 
 func _build_quick_slots() -> void:
 	var row := HBoxContainer.new()
@@ -437,9 +485,7 @@ func _build_interact_button() -> void:
 	_interact_button.offset_bottom = -180
 	_interact_button.add_theme_font_size_override("font_size", 28)
 	_interact_button.visible = false
-	_interact_button.pressed.connect(func() -> void:
-		if _interact_npc != null:
-			open_shop(_interact_npc.shop_id))
+	_interact_button.pressed.connect(_on_interact)
 	add_child(_interact_button)
 
 
@@ -472,20 +518,158 @@ func _refresh_quick_slots() -> void:
 		(parts["time"] as Label).text = str(seconds) if seconds > 0 else ""
 
 
-## Shows the Talk button while the player stands near a shopkeeper.
+## Shows the Talk / Activate button while the player stands near a shopkeeper or
+## a waypoint (whichever is closer).
 func _refresh_interact() -> void:
 	if _player == null or _interact_button == null:
 		return
-	var radius := float(DataRegistry.get_config("shop_rules").get("interaction_radius", 3.5))
-	_interact_npc = null if is_window_open() or _player.is_dead() else ShopNpc.nearest(_player, radius)
-	_interact_button.visible = _interact_npc != null
+	_interact_npc = null
+	_interact_waypoint = null
+	if not is_window_open() and not _player.is_dead() and not _teleporting:
+		var shop_radius := float(DataRegistry.get_config("shop_rules").get("interaction_radius", 3.5))
+		var waypoint_radius := float(MapData.get_map(str(Session.character.get("current_map", "map_1"))).get("waypoint_radius", 3.2))
+		var npc := ShopNpc.nearest(_player, shop_radius)
+		var waypoint := Waypoint.nearest(_player, waypoint_radius)
+		if npc != null and (waypoint == null or Vector2(_player.global_position.x - npc.global_position.x, _player.global_position.z - npc.global_position.z).length() <= waypoint.ground_distance(_player.global_position)):
+			_interact_npc = npc
+		else:
+			_interact_waypoint = waypoint
+	_interact_button.visible = _interact_npc != null or _interact_waypoint != null
 	if _interact_npc != null:
 		_interact_button.text = "Talk: %s" % _interact_npc.display_name
+	elif _interact_waypoint != null:
+		_interact_button.text = ("Waypoint: %s" if _interact_waypoint.unlocked else "Activate: %s") % _interact_waypoint.display_name
+
+
+func _on_interact() -> void:
+	if _interact_npc != null:
+		open_shop(_interact_npc.shop_id)
+	elif _interact_waypoint != null:
+		if _interact_waypoint.unlocked:
+			open_map()
+		else:
+			activate_waypoint(_interact_waypoint)
+
+
+## Turns a waypoint blue if you are close enough and the area is clear of enemies.
+func activate_waypoint(waypoint: Waypoint) -> Dictionary:
+	var map := MapData.get_map(str(Session.character.get("current_map", "map_1")))
+	var error := WaypointRules.activation_error(waypoint.unlocked,
+			waypoint.ground_distance(_player.global_position),
+			waypoint.enemies_near(float(map.get("waypoint_clear_radius", 16.0))),
+			float(map.get("waypoint_radius", 3.2)))
+	if error != "":
+		show_message(WaypointRules.message(error))
+		return {"ok": false, "error": error}
+	Session.unlock_waypoint(waypoint.waypoint_id)
+	show_banner("WAYPOINT ACTIVATED")
+	add_feed("Waypoint: %s" % waypoint.display_name, Color("4aa8ff"))
+	_refresh_interact()
+	return {"ok": true}
+
+
+## Teleports to an active waypoint: the screen fades out, you are moved, it fades in.
+## Returns {"ok": true} (the fade then runs by itself) or a failure with a message.
+func teleport_to(waypoint_id: String) -> Dictionary:
+	if _teleporting:
+		return {"ok": false, "error": "BUSY", "message": "Already teleporting."}
+	var map_id := str(Session.character.get("current_map", "map_1"))
+	var error := WaypointRules.teleport_error(Session.character, waypoint_id, _player.is_dead(),
+			_player.seconds_since_combat(), float(MapData.get_map(map_id).get("teleport_combat_delay", 5.0)))
+	if error != "":
+		return {"ok": false, "error": error, "message": WaypointRules.message(error)}
+	_run_teleport(waypoint_id, map_id)
+	return {"ok": true}
+
+
+func _run_teleport(waypoint_id: String, map_id: String) -> void:
+	_teleporting = true
+	close_windows()
+	if _controls != null:
+		_controls.enabled = false
+	var entry := MapData.waypoint(map_id, waypoint_id)
+	var at := MapData.position_of(entry)
+	_fade_label.text = "Teleporting to %s..." % str(entry.get("name", ""))
+	_fade.visible = true
+	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	var fade_out := create_tween()
+	fade_out.tween_property(_fade, "modulate:a", 1.0, fade_seconds)
+	await fade_out.finished
+	_player.teleport_to(Vector3(at.x, 0.0, at.y + 3.0))       # beside the obelisk, not inside it
+	await get_tree().create_timer(fade_seconds * 0.7).timeout
+	var fade_in := create_tween()
+	fade_in.tween_property(_fade, "modulate:a", 0.0, fade_seconds)
+	await fade_in.finished
+
+	_fade.visible = false
+	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if _controls != null and not is_window_open():
+		_controls.enabled = true
+	_teleporting = false
+	teleported.emit(waypoint_id)
+
+
+func is_teleporting() -> bool:
+	return _teleporting
+
+
+func _build_minimap() -> void:
+	minimap = Minimap.new()
+	add_child(minimap)
+	minimap.setup(_player, str(Session.character.get("current_map", "map_1")))
+	minimap.toggled.connect(func(expanded: bool) -> void:
+		if expanded:
+			_close_others(null)
+			if _controls != null:
+				_controls.enabled = false
+		else:
+			_on_window_closed())
+
+	_time_label = Label.new()
+	_time_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_time_label.offset_left = -(Minimap.COMPACT_SIZE + 16.0)
+	_time_label.offset_right = -16.0
+	_time_label.offset_top = 96.0 + Minimap.COMPACT_SIZE + 4.0
+	_time_label.offset_bottom = 96.0 + Minimap.COMPACT_SIZE + 34.0
+	_time_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_time_label.add_theme_font_size_override("font_size", 18)
+	_time_label.add_theme_color_override("font_color", TSMTheme.MUTED)
+	_time_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_time_label)
+
+
+func _build_fade() -> void:
+	_fade = ColorRect.new()
+	_fade.color = Color.BLACK
+	_fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_fade.modulate.a = 0.0
+	_fade.visible = false
+	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_fade)
+	_fade_label = Label.new()
+	_fade_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_fade_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_fade_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_fade_label.add_theme_font_size_override("font_size", 40)
+	_fade_label.add_theme_color_override("font_color", TSMTheme.ACCENT)
+	_fade.add_child(_fade_label)
+
+
+## "Day  14:35" from the sky, updated about once a second.
+func _refresh_clock() -> void:
+	var sky := get_tree().get_first_node_in_group("day_night") as DayNight
+	if sky == null:
+		_time_label.text = ""
+		return
+	var hour := sky.current_hour()
+	_time_label.text = "%s  %s" % [DayNightRules.period_name(hour), DayNightRules.format_hour(hour)]
 
 
 # ---------- windows ----------
 
 func _open(window: GameWindow) -> void:
+	minimap.collapse()
 	_close_others(window)
 	window.open()
 	_refresh_interact()
@@ -494,7 +678,7 @@ func _open(window: GameWindow) -> void:
 
 
 func _close_others(keep: GameWindow) -> void:
-	for window in [inventory_window, character_window, shop_window]:
+	for window in [inventory_window, character_window, shop_window, map_window, skill_window]:
 		if window != keep:
 			window.close()
 

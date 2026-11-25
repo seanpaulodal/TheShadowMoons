@@ -314,6 +314,75 @@ func _on_autosave() -> void:
 		flush()
 
 
+# ---------- skills ----------
+
+func skill_points() -> int:
+	return SkillBook.available_points(character) if has_character() else 0
+
+
+## Learns a skill or raises its rank. Applied at once, saved a moment later.
+func learn_skill(skill_id: String) -> Dictionary:
+	return _skill_change(SkillBook.learn(character, skill_id))
+
+
+func equip_skill(skill_id: String, slot_name: String) -> Dictionary:
+	return _skill_change(SkillBook.equip(character, skill_id, slot_name))
+
+
+func unequip_skill(slot_name: String) -> Dictionary:
+	return _skill_change(SkillBook.unequip(character, slot_name))
+
+
+func rank_up_ability(ability_id: String) -> Dictionary:
+	return _skill_change(SkillBook.rank_up_ability(character, ability_id))
+
+
+func complete_trial(kind: String) -> Dictionary:
+	return _skill_change(SkillBook.complete_trial(character, kind))
+
+
+## Forgets all skills and returns the points (costs respec_gold per level; free for now).
+func reset_skills() -> Dictionary:
+	if not has_character():
+		return _fail("NO_CHARACTER", "No character is loaded.")
+	var price := int(DataRegistry.get_config("skill_rules").get("respec_gold", 0)) * int(character.get("level", 1))
+	if int(character.get("gold", 0)) < price:
+		return _fail("NOT_ENOUGH_GOLD", "Not enough gold (need %d)." % price)
+	var result := SkillBook.reset(character)
+	var fields := {"skills": result["skills"]}
+	if price > 0:
+		fields["gold"] = int(character.get("gold", 0)) - price
+	return _commit(fields)
+
+
+func _skill_change(result: Dictionary) -> Dictionary:
+	if not has_character():
+		return _fail("NO_CHARACTER", "No character is loaded.")
+	if not result["ok"]:
+		return result
+	var committed := _commit({"skills": result["skills"]})
+	for key in ["rank", "cost"]:
+		if result.has(key):
+			committed[key] = result[key]
+	return committed
+
+
+# ---------- waypoints ----------
+
+## Activates a waypoint so you can teleport to it from now on. Applied at once.
+func unlock_waypoint(waypoint_id: String) -> Dictionary:
+	if not has_character():
+		return _fail("NO_CHARACTER", "No character is loaded.")
+	if MapData.waypoint(str(character.get("current_map", "map_1")), waypoint_id).is_empty():
+		return _fail("UNKNOWN", "Unknown waypoint.")
+	var open_waypoints: Array = character.get("waypoints", []).duplicate()
+	if open_waypoints.has(waypoint_id):
+		return {"ok": true, "already": true}
+	open_waypoints.append(waypoint_id)
+	_commit({"waypoints": open_waypoints})
+	return {"ok": true, "already": false}
+
+
 # ---------- potions, shop, elixirs ----------
 
 ## Changes Auto Pot settings: "auto_hp", "auto_mp" (on / off) and "hp_percent",
@@ -538,6 +607,14 @@ func _fill_missing_fields() -> void:
 	character["settings"] = settings
 	if not (character.get("elixir") is Dictionary):
 		character["elixir"] = {}
+	# Skills: points are worked out from the level, so only ranks and slots are kept.
+	character["skills"] = SkillBook.normalize(character.get("skills"), str(character.get("class_id", "")))
+	# Waypoints: the starting town is always open.
+	var open_waypoints: Array = character["waypoints"] if character.get("waypoints") is Array else []
+	for waypoint_id in MapData.default_unlocked(str(character.get("current_map", "map_1"))):
+		if not open_waypoints.has(waypoint_id):
+			open_waypoints.append(waypoint_id)
+	character["waypoints"] = open_waypoints
 	for key in ["exp", "rebirth", "stat_points", "gold"]:
 		character[key] = int(character.get(key, 0))
 

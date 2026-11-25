@@ -20,6 +20,7 @@ func _ready() -> void:
 
 	await _test_shopkeepers_and_talk_button()
 	await _test_buying()
+	await _test_big_shop_lists()
 	await _test_selling()
 	await _test_quick_slots()
 	await _test_potions_tab()
@@ -76,6 +77,7 @@ func _build_arena() -> void:
 	await _frames(3)
 	_player = _world.player
 	_hud = _world.combat_hud
+	_world.clear_decor()
 	for camp in _world.camps:
 		camp.queue_free()
 	for node in get_tree().get_nodes_in_group("targetable"):
@@ -159,7 +161,12 @@ func _test_buying() -> void:
 	var window := _hud.shop_window
 	_hud.open_shop("armorer")
 	await _frames(2)
-	_eq("the Buy tab lists everything the armorer sells", _rows(window).size(), Shop.stock("armorer").size())
+	_eq("the Buy tab lists what the armorer sells that a warrior can use", _rows(window).size(), Shop.stock_for_class("armorer", "warrior").size())
+	_eq("...which is the 6 plain pieces and the 5 warrior set pieces", _rows(window).size(), 11)
+	window._on_only_mine(false)
+	_eq("with My class off it lists everything (51 pieces)", _rows(window).size(), Shop.stock("armorer").size())
+	window._on_only_mine(true)
+	_eq("...and on again", _rows(window).size(), 11)
 	_eq("...cheapest first", _rows(window)[0].text.begins_with(ItemDB.display_name(Shop.stock("armorer")[0])), true)
 	_eq("nothing is selected at first", window._selected_item, "")
 
@@ -219,6 +226,43 @@ func _test_buying() -> void:
 	window._on_main()
 	_report("a full bag says so and keeps the gold", "full" in window._message.text.to_lower() and Session.character["gold"] == gold_before - Shop.buy_price("healing_potion") * 11, window._message.text)
 	Session.character["inventory"] = kept
+	window.close()
+
+
+# ---------- long lists (the weaponsmith sells 457 weapons) ----------
+
+func _test_big_shop_lists() -> void:
+	print("[shop] --- long lists, search and My class ---")
+	_new_character()
+	_player.refresh_stats()
+	var window := _hud.shop_window
+	_hud.open_shop("weaponsmith")
+	await _frames(2)
+	_eq("My class is on when a shop opens", window._only_mine, true)
+	_eq("a warrior sees 57 weapons (50 for warriors, 7 for everyone)", _rows(window).size(), 57)
+	_eq("...which fit on one page (no Show more)", window._list.get_child_count(), 57)
+	window._on_only_mine(false)
+	_eq("with My class off the list is one page of 60 plus Show more", window._list.get_child_count(), 61)
+	var more := window._list.get_child(60) as Button
+	_eq("the Show more button says how many are left", more.text, "Show more  (397 more)")
+	more.pressed.emit()
+	_eq("Show more adds another 60", window._list.get_child_count(), 121)
+	window._on_search("dagger")
+	var expected := 0
+	for item_id in Shop.stock("weaponsmith"):
+		if "dagger" in ItemDB.display_name(item_id).to_lower() or "dagger" in ItemDB.weapon_type(item_id).to_lower():
+			expected += 1
+	_eq("searching finds names and weapon types (Dagger, Dual Daggers...)", _rows(window).size(), expected)
+	_report("...a good number of them (20 or more)", expected >= 20, str(expected))
+	window._on_search("")
+	_eq("clearing the search starts again from one page", window._list.get_child_count(), 61)
+	window._on_only_mine(true)
+	var level_rows := 0
+	for row in _rows(window):
+		if "(Lv " in row.text:
+			level_rows += 1
+	_report("rows show the level a weapon needs", level_rows > 40, str(level_rows))
+	_eq("a level 1 weapon shows no level", _rows(window)[0].text.contains("(Lv"), false)
 	window.close()
 
 

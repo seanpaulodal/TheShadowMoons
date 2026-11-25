@@ -4,9 +4,16 @@ extends GameWindow
 ## only possible here. It shows and asks; the money and the bag change through
 ## Session. It stays open until it is closed with the X (or you die).
 
+## The list shows this many items at a time (a phone builds a long list slowly);
+## "Show more" adds another page.
+const ROWS_PER_PAGE := 60
+
 var _shop_id: String = ""
 var _mode: String = "buy"
 var _search: String = ""
+var _only_mine: bool = true
+var _row_limit: int = ROWS_PER_PAGE
+var _mine_check: CheckButton
 var _selected_item: String = ""
 var _selected_uid: String = ""
 var _quantity: int = 1
@@ -40,6 +47,10 @@ func open_shop(shop_id: String) -> void:
 	_mode = "buy"
 	_search = ""
 	_search_edit.text = ""
+	_only_mine = true
+	_row_limit = ROWS_PER_PAGE
+	_mine_check.set_pressed_no_signal(true)
+	_mine_check.visible = true
 	_selected_item = ""
 	_selected_uid = ""
 	_quantity = 1
@@ -77,6 +88,15 @@ func _build_layout() -> void:
 	_search_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_search_edit.text_changed.connect(_on_search)
 	tabs.add_child(_search_edit)
+
+	# Only show what my class can use (on by default; the shops sell hundreds of items).
+	_mine_check = CheckButton.new()
+	_mine_check.text = "My class"
+	_mine_check.button_pressed = true
+	_mine_check.custom_minimum_size = Vector2(190, 56)
+	_mine_check.add_theme_font_size_override("font_size", 20)
+	_mine_check.toggled.connect(_on_only_mine)
+	tabs.add_child(_mine_check)
 
 	var columns := HBoxContainer.new()
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -180,10 +200,27 @@ func refresh() -> void:
 
 func _refresh_buy_list() -> void:
 	var needle := _search.strip_edges().to_lower()
-	for item_id in Shop.stock(_shop_id):
-		if needle != "" and not ItemDB.display_name(item_id).to_lower().contains(needle):
+	var stock: Array = Shop.stock_for_class(_shop_id, str(Session.character.get("class_id", ""))) \
+			if _only_mine else Shop.stock(_shop_id)
+	var shown := 0
+	var hidden := 0
+	for item_id in stock:
+		if needle != "" and not ItemDB.display_name(item_id).to_lower().contains(needle) \
+				and not ItemDB.weapon_type(item_id).to_lower().contains(needle):
 			continue
-		_list.add_child(_row(item_id, "", Shop.buy_price(item_id), item_id == _selected_item))
+		if shown >= _row_limit:
+			hidden += 1
+			continue
+		shown += 1
+		var level_text := "  (Lv %d)" % ItemDB.level_req(item_id) if ItemDB.level_req(item_id) > 1 else ""
+		_list.add_child(_row(item_id, level_text, Shop.buy_price(item_id), item_id == _selected_item))
+	if hidden > 0:
+		var more := Button.new()
+		more.text = "Show more  (%d more)" % hidden
+		more.custom_minimum_size = Vector2(0, 64)
+		more.add_theme_font_size_override("font_size", 22)
+		more.pressed.connect(_on_show_more)
+		_list.add_child(more)
 
 
 func _refresh_sell_list() -> void:
@@ -297,11 +334,25 @@ func select_sell(entry: Dictionary) -> void:
 
 func _on_search(text: String) -> void:
 	_search = text
+	_row_limit = ROWS_PER_PAGE
+	refresh()
+
+
+func _on_show_more() -> void:
+	_row_limit += ROWS_PER_PAGE
+	refresh()
+
+
+func _on_only_mine(pressed: bool) -> void:
+	_only_mine = pressed
+	_row_limit = ROWS_PER_PAGE
 	refresh()
 
 
 func _on_tab(mode: String) -> void:
 	_mode = mode
+	_row_limit = ROWS_PER_PAGE
+	_mine_check.visible = mode == "buy"
 	_selected_item = ""
 	_selected_uid = ""
 	_quantity = 1

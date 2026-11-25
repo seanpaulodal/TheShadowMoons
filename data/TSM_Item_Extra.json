@@ -1,22 +1,2238 @@
 [
-  { "item_id": "wooden_sword",         "equip_slot": "weapon",    "level_req": 1, "class_req": [] },
-  { "item_id": "iron_sword",           "equip_slot": "weapon",    "level_req": 1, "class_req": [] },
-  { "item_id": "flame_blade",          "equip_slot": "weapon",    "level_req": 1, "class_req": [] },
-  { "item_id": "frost_dagger",         "equip_slot": "weapon",    "level_req": 1, "class_req": [] },
-  { "item_id": "storm_bow",            "equip_slot": "weapon",    "level_req": 1, "class_req": [] },
-  { "item_id": "archmage_staff",       "equip_slot": "weapon",    "level_req": 1, "class_req": [] },
-  { "item_id": "battle_axe",           "equip_slot": "weapon",    "level_req": 1, "class_req": [] },
-  { "item_id": "iron_armor",           "equip_slot": "armor",     "level_req": 1, "class_req": [] },
-  { "item_id": "mage_robes",           "equip_slot": "armor",     "level_req": 1, "class_req": [] },
-  { "item_id": "iron_helm",            "equip_slot": "helmet",    "level_req": 1, "class_req": [] },
-  { "item_id": "iron_gloves",          "equip_slot": "gloves",    "level_req": 1, "class_req": [] },
-  { "item_id": "iron_boots",           "equip_slot": "boots",     "level_req": 1, "class_req": [] },
-  { "item_id": "leather_boots",        "equip_slot": "boots",     "level_req": 1, "class_req": [] },
-  { "item_id": "iron_necklace",        "equip_slot": "accessory", "level_req": 1, "class_req": [] },
-  { "item_id": "amulet_of_wisdom",     "equip_slot": "accessory", "level_req": 1, "class_req": [] },
-  { "item_id": "iron_ring",            "equip_slot": "ring",      "level_req": 1, "class_req": [] },
-  { "item_id": "ring_of_vigor",        "equip_slot": "ring",      "level_req": 1, "class_req": [] },
-  { "item_id": "shadow_steed_mount",   "equip_slot": "mount",     "level_req": 1, "class_req": [] },
-  { "item_id": "armored_bear_mount",   "equip_slot": "mount",     "level_req": 1, "class_req": [] },
-  { "item_id": "celestial_wolf_mount", "equip_slot": "mount",     "level_req": 1, "class_req": [] }
+ {
+  "item_id": "wooden_sword",
+  "equip_slot": "weapon",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "iron_sword",
+  "equip_slot": "weapon",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "flame_blade",
+  "equip_slot": "weapon",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "frost_dagger",
+  "equip_slot": "weapon",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "storm_bow",
+  "equip_slot": "weapon",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "archmage_staff",
+  "equip_slot": "weapon",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "battle_axe",
+  "equip_slot": "weapon",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "iron_armor",
+  "equip_slot": "armor",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "mage_robes",
+  "equip_slot": "armor",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "iron_helm",
+  "equip_slot": "helmet",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "iron_gloves",
+  "equip_slot": "gloves",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "iron_boots",
+  "equip_slot": "boots",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "leather_boots",
+  "equip_slot": "boots",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "iron_necklace",
+  "equip_slot": "accessory",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "amulet_of_wisdom",
+  "equip_slot": "accessory",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "iron_ring",
+  "equip_slot": "ring",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "ring_of_vigor",
+  "equip_slot": "ring",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "shadow_steed_mount",
+  "equip_slot": "mount",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "armored_bear_mount",
+  "equip_slot": "mount",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "celestial_wolf_mount",
+  "equip_slot": "mount",
+  "level_req": 1,
+  "class_req": []
+ },
+ {
+  "item_id": "warrior_001_ashen_greatsword",
+  "level_req": 1
+ },
+ {
+  "item_id": "warrior_002_ashen_longsword",
+  "level_req": 1
+ },
+ {
+  "item_id": "warrior_003_ashen_battle_axe",
+  "level_req": 1
+ },
+ {
+  "item_id": "warrior_004_ashen_warhammer",
+  "level_req": 1
+ },
+ {
+  "item_id": "warrior_005_ashen_spear",
+  "level_req": 1
+ },
+ {
+  "item_id": "warrior_006_ironbound_greatsword",
+  "level_req": 30
+ },
+ {
+  "item_id": "warrior_007_ironbound_longsword",
+  "level_req": 30
+ },
+ {
+  "item_id": "warrior_008_ironbound_battle_axe",
+  "level_req": 30
+ },
+ {
+  "item_id": "warrior_009_ironbound_warhammer",
+  "level_req": 30
+ },
+ {
+  "item_id": "warrior_010_ironbound_spear",
+  "level_req": 30
+ },
+ {
+  "item_id": "warrior_011_dread_greatsword",
+  "level_req": 60
+ },
+ {
+  "item_id": "warrior_012_dread_longsword",
+  "level_req": 60
+ },
+ {
+  "item_id": "warrior_013_dread_battle_axe",
+  "level_req": 60
+ },
+ {
+  "item_id": "warrior_014_dread_warhammer",
+  "level_req": 60
+ },
+ {
+  "item_id": "warrior_015_dread_spear",
+  "level_req": 60
+ },
+ {
+  "item_id": "warrior_016_stormforged_greatsword",
+  "level_req": 90
+ },
+ {
+  "item_id": "warrior_017_stormforged_longsword",
+  "level_req": 90
+ },
+ {
+  "item_id": "warrior_018_stormforged_battle_axe",
+  "level_req": 90
+ },
+ {
+  "item_id": "warrior_019_stormforged_warhammer",
+  "level_req": 90
+ },
+ {
+  "item_id": "warrior_020_stormforged_spear",
+  "level_req": 90
+ },
+ {
+  "item_id": "warrior_021_kingsguard_greatsword",
+  "level_req": 120
+ },
+ {
+  "item_id": "warrior_022_kingsguard_longsword",
+  "level_req": 120
+ },
+ {
+  "item_id": "warrior_023_kingsguard_battle_axe",
+  "level_req": 120
+ },
+ {
+  "item_id": "warrior_024_kingsguard_warhammer",
+  "level_req": 120
+ },
+ {
+  "item_id": "warrior_025_kingsguard_spear",
+  "level_req": 120
+ },
+ {
+  "item_id": "warrior_026_bloodfang_greatsword",
+  "level_req": 150
+ },
+ {
+  "item_id": "warrior_027_bloodfang_longsword",
+  "level_req": 150
+ },
+ {
+  "item_id": "warrior_028_bloodfang_battle_axe",
+  "level_req": 150
+ },
+ {
+  "item_id": "warrior_029_bloodfang_warhammer",
+  "level_req": 150
+ },
+ {
+  "item_id": "warrior_030_bloodfang_spear",
+  "level_req": 150
+ },
+ {
+  "item_id": "warrior_031_dawnbreak_greatsword",
+  "level_req": 180
+ },
+ {
+  "item_id": "warrior_032_dawnbreak_longsword",
+  "level_req": 180
+ },
+ {
+  "item_id": "warrior_033_dawnbreak_battle_axe",
+  "level_req": 180
+ },
+ {
+  "item_id": "warrior_034_dawnbreak_warhammer",
+  "level_req": 180
+ },
+ {
+  "item_id": "warrior_035_dawnbreak_spear",
+  "level_req": 180
+ },
+ {
+  "item_id": "warrior_036_grim_greatsword",
+  "level_req": 210
+ },
+ {
+  "item_id": "warrior_037_grim_longsword",
+  "level_req": 210
+ },
+ {
+  "item_id": "warrior_038_grim_battle_axe",
+  "level_req": 210
+ },
+ {
+  "item_id": "warrior_039_grim_warhammer",
+  "level_req": 210
+ },
+ {
+  "item_id": "warrior_040_grim_spear",
+  "level_req": 210
+ },
+ {
+  "item_id": "warrior_041_runebreaker_greatsword",
+  "level_req": 240
+ },
+ {
+  "item_id": "warrior_042_runebreaker_longsword",
+  "level_req": 240
+ },
+ {
+  "item_id": "warrior_043_runebreaker_battle_axe",
+  "level_req": 240
+ },
+ {
+  "item_id": "warrior_044_runebreaker_warhammer",
+  "level_req": 240
+ },
+ {
+  "item_id": "warrior_045_runebreaker_spear",
+  "level_req": 240
+ },
+ {
+  "item_id": "warrior_046_eclipse_greatsword",
+  "level_req": 270
+ },
+ {
+  "item_id": "warrior_047_eclipse_longsword",
+  "level_req": 270
+ },
+ {
+  "item_id": "warrior_048_eclipse_battle_axe",
+  "level_req": 270
+ },
+ {
+  "item_id": "warrior_049_eclipse_warhammer",
+  "level_req": 270
+ },
+ {
+  "item_id": "warrior_050_eclipse_spear",
+  "level_req": 270
+ },
+ {
+  "item_id": "mage_001_ember_arcane_staff",
+  "level_req": 1
+ },
+ {
+  "item_id": "mage_002_ember_wand",
+  "level_req": 1
+ },
+ {
+  "item_id": "mage_003_ember_crystal_orb",
+  "level_req": 1
+ },
+ {
+  "item_id": "mage_004_ember_spellbook",
+  "level_req": 1
+ },
+ {
+  "item_id": "mage_005_ember_rune_scepter",
+  "level_req": 1
+ },
+ {
+  "item_id": "mage_006_frostweave_arcane_staff",
+  "level_req": 30
+ },
+ {
+  "item_id": "mage_007_frostweave_wand",
+  "level_req": 30
+ },
+ {
+  "item_id": "mage_008_frostweave_crystal_orb",
+  "level_req": 30
+ },
+ {
+  "item_id": "mage_009_frostweave_spellbook",
+  "level_req": 30
+ },
+ {
+  "item_id": "mage_010_frostweave_rune_scepter",
+  "level_req": 30
+ },
+ {
+  "item_id": "mage_011_starfall_arcane_staff",
+  "level_req": 60
+ },
+ {
+  "item_id": "mage_012_starfall_wand",
+  "level_req": 60
+ },
+ {
+  "item_id": "mage_013_starfall_crystal_orb",
+  "level_req": 60
+ },
+ {
+  "item_id": "mage_014_starfall_spellbook",
+  "level_req": 60
+ },
+ {
+  "item_id": "mage_015_starfall_rune_scepter",
+  "level_req": 60
+ },
+ {
+  "item_id": "mage_016_voidcaller_arcane_staff",
+  "level_req": 90
+ },
+ {
+  "item_id": "mage_017_voidcaller_wand",
+  "level_req": 90
+ },
+ {
+  "item_id": "mage_018_voidcaller_crystal_orb",
+  "level_req": 90
+ },
+ {
+  "item_id": "mage_019_voidcaller_spellbook",
+  "level_req": 90
+ },
+ {
+  "item_id": "mage_020_voidcaller_rune_scepter",
+  "level_req": 90
+ },
+ {
+  "item_id": "mage_021_runebound_arcane_staff",
+  "level_req": 120
+ },
+ {
+  "item_id": "mage_022_runebound_wand",
+  "level_req": 120
+ },
+ {
+  "item_id": "mage_023_runebound_crystal_orb",
+  "level_req": 120
+ },
+ {
+  "item_id": "mage_024_runebound_spellbook",
+  "level_req": 120
+ },
+ {
+  "item_id": "mage_025_runebound_rune_scepter",
+  "level_req": 120
+ },
+ {
+  "item_id": "mage_026_astral_arcane_staff",
+  "level_req": 150
+ },
+ {
+  "item_id": "mage_027_astral_wand",
+  "level_req": 150
+ },
+ {
+  "item_id": "mage_028_astral_crystal_orb",
+  "level_req": 150
+ },
+ {
+  "item_id": "mage_029_astral_spellbook",
+  "level_req": 150
+ },
+ {
+  "item_id": "mage_030_astral_rune_scepter",
+  "level_req": 150
+ },
+ {
+  "item_id": "mage_031_stormglass_arcane_staff",
+  "level_req": 180
+ },
+ {
+  "item_id": "mage_032_stormglass_wand",
+  "level_req": 180
+ },
+ {
+  "item_id": "mage_033_stormglass_crystal_orb",
+  "level_req": 180
+ },
+ {
+  "item_id": "mage_034_stormglass_spellbook",
+  "level_req": 180
+ },
+ {
+  "item_id": "mage_035_stormglass_rune_scepter",
+  "level_req": 180
+ },
+ {
+  "item_id": "mage_036_elder_arcane_staff",
+  "level_req": 210
+ },
+ {
+  "item_id": "mage_037_elder_wand",
+  "level_req": 210
+ },
+ {
+  "item_id": "mage_038_elder_crystal_orb",
+  "level_req": 210
+ },
+ {
+  "item_id": "mage_039_elder_spellbook",
+  "level_req": 210
+ },
+ {
+  "item_id": "mage_040_elder_rune_scepter",
+  "level_req": 210
+ },
+ {
+  "item_id": "mage_041_moonlit_arcane_staff",
+  "level_req": 240
+ },
+ {
+  "item_id": "mage_042_moonlit_wand",
+  "level_req": 240
+ },
+ {
+  "item_id": "mage_043_moonlit_crystal_orb",
+  "level_req": 240
+ },
+ {
+  "item_id": "mage_044_moonlit_spellbook",
+  "level_req": 240
+ },
+ {
+  "item_id": "mage_045_moonlit_rune_scepter",
+  "level_req": 240
+ },
+ {
+  "item_id": "mage_046_aether_arcane_staff",
+  "level_req": 270
+ },
+ {
+  "item_id": "mage_047_aether_wand",
+  "level_req": 270
+ },
+ {
+  "item_id": "mage_048_aether_crystal_orb",
+  "level_req": 270
+ },
+ {
+  "item_id": "mage_049_aether_spellbook",
+  "level_req": 270
+ },
+ {
+  "item_id": "mage_050_aether_rune_scepter",
+  "level_req": 270
+ },
+ {
+  "item_id": "archer_001_wildwood_longbow",
+  "level_req": 1
+ },
+ {
+  "item_id": "archer_002_wildwood_recurve_bow",
+  "level_req": 1
+ },
+ {
+  "item_id": "archer_003_wildwood_shortbow",
+  "level_req": 1
+ },
+ {
+  "item_id": "archer_004_wildwood_crossbow",
+  "level_req": 1
+ },
+ {
+  "item_id": "archer_005_wildwood_repeating_crossbow",
+  "level_req": 1
+ },
+ {
+  "item_id": "archer_006_hawkeye_longbow",
+  "level_req": 30
+ },
+ {
+  "item_id": "archer_007_hawkeye_recurve_bow",
+  "level_req": 30
+ },
+ {
+  "item_id": "archer_008_hawkeye_shortbow",
+  "level_req": 30
+ },
+ {
+  "item_id": "archer_009_hawkeye_crossbow",
+  "level_req": 30
+ },
+ {
+  "item_id": "archer_010_hawkeye_repeating_crossbow",
+  "level_req": 30
+ },
+ {
+  "item_id": "archer_011_windrunner_longbow",
+  "level_req": 60
+ },
+ {
+  "item_id": "archer_012_windrunner_recurve_bow",
+  "level_req": 60
+ },
+ {
+  "item_id": "archer_013_windrunner_shortbow",
+  "level_req": 60
+ },
+ {
+  "item_id": "archer_014_windrunner_crossbow",
+  "level_req": 60
+ },
+ {
+  "item_id": "archer_015_windrunner_repeating_crossbow",
+  "level_req": 60
+ },
+ {
+  "item_id": "archer_016_thorn_longbow",
+  "level_req": 90
+ },
+ {
+  "item_id": "archer_017_thorn_recurve_bow",
+  "level_req": 90
+ },
+ {
+  "item_id": "archer_018_thorn_shortbow",
+  "level_req": 90
+ },
+ {
+  "item_id": "archer_019_thorn_crossbow",
+  "level_req": 90
+ },
+ {
+  "item_id": "archer_020_thorn_repeating_crossbow",
+  "level_req": 90
+ },
+ {
+  "item_id": "archer_021_skyhunter_longbow",
+  "level_req": 120
+ },
+ {
+  "item_id": "archer_022_skyhunter_recurve_bow",
+  "level_req": 120
+ },
+ {
+  "item_id": "archer_023_skyhunter_shortbow",
+  "level_req": 120
+ },
+ {
+  "item_id": "archer_024_skyhunter_crossbow",
+  "level_req": 120
+ },
+ {
+  "item_id": "archer_025_skyhunter_repeating_crossbow",
+  "level_req": 120
+ },
+ {
+  "item_id": "archer_026_moonfeather_longbow",
+  "level_req": 150
+ },
+ {
+  "item_id": "archer_027_moonfeather_recurve_bow",
+  "level_req": 150
+ },
+ {
+  "item_id": "archer_028_moonfeather_shortbow",
+  "level_req": 150
+ },
+ {
+  "item_id": "archer_029_moonfeather_crossbow",
+  "level_req": 150
+ },
+ {
+  "item_id": "archer_030_moonfeather_repeating_crossbow",
+  "level_req": 150
+ },
+ {
+  "item_id": "archer_031_stormstring_longbow",
+  "level_req": 180
+ },
+ {
+  "item_id": "archer_032_stormstring_recurve_bow",
+  "level_req": 180
+ },
+ {
+  "item_id": "archer_033_stormstring_shortbow",
+  "level_req": 180
+ },
+ {
+  "item_id": "archer_034_stormstring_crossbow",
+  "level_req": 180
+ },
+ {
+  "item_id": "archer_035_stormstring_repeating_crossbow",
+  "level_req": 180
+ },
+ {
+  "item_id": "archer_036_dusk_longbow",
+  "level_req": 210
+ },
+ {
+  "item_id": "archer_037_dusk_recurve_bow",
+  "level_req": 210
+ },
+ {
+  "item_id": "archer_038_dusk_shortbow",
+  "level_req": 210
+ },
+ {
+  "item_id": "archer_039_dusk_crossbow",
+  "level_req": 210
+ },
+ {
+  "item_id": "archer_040_dusk_repeating_crossbow",
+  "level_req": 210
+ },
+ {
+  "item_id": "archer_041_eaglecrest_longbow",
+  "level_req": 240
+ },
+ {
+  "item_id": "archer_042_eaglecrest_recurve_bow",
+  "level_req": 240
+ },
+ {
+  "item_id": "archer_043_eaglecrest_shortbow",
+  "level_req": 240
+ },
+ {
+  "item_id": "archer_044_eaglecrest_crossbow",
+  "level_req": 240
+ },
+ {
+  "item_id": "archer_045_eaglecrest_repeating_crossbow",
+  "level_req": 240
+ },
+ {
+  "item_id": "archer_046_farstrider_longbow",
+  "level_req": 270
+ },
+ {
+  "item_id": "archer_047_farstrider_recurve_bow",
+  "level_req": 270
+ },
+ {
+  "item_id": "archer_048_farstrider_shortbow",
+  "level_req": 270
+ },
+ {
+  "item_id": "archer_049_farstrider_crossbow",
+  "level_req": 270
+ },
+ {
+  "item_id": "archer_050_farstrider_repeating_crossbow",
+  "level_req": 270
+ },
+ {
+  "item_id": "rogue_001_whisper_dagger",
+  "level_req": 1
+ },
+ {
+  "item_id": "rogue_002_whisper_dual_daggers",
+  "level_req": 1
+ },
+ {
+  "item_id": "rogue_003_whisper_katar",
+  "level_req": 1
+ },
+ {
+  "item_id": "rogue_004_whisper_stiletto",
+  "level_req": 1
+ },
+ {
+  "item_id": "rogue_005_whisper_throwing_knives",
+  "level_req": 1
+ },
+ {
+  "item_id": "rogue_006_nightveil_dagger",
+  "level_req": 30
+ },
+ {
+  "item_id": "rogue_007_nightveil_dual_daggers",
+  "level_req": 30
+ },
+ {
+  "item_id": "rogue_008_nightveil_katar",
+  "level_req": 30
+ },
+ {
+  "item_id": "rogue_009_nightveil_stiletto",
+  "level_req": 30
+ },
+ {
+  "item_id": "rogue_010_nightveil_throwing_knives",
+  "level_req": 30
+ },
+ {
+  "item_id": "rogue_011_venom_dagger",
+  "level_req": 60
+ },
+ {
+  "item_id": "rogue_012_venom_dual_daggers",
+  "level_req": 60
+ },
+ {
+  "item_id": "rogue_013_venom_katar",
+  "level_req": 60
+ },
+ {
+  "item_id": "rogue_014_venom_stiletto",
+  "level_req": 60
+ },
+ {
+  "item_id": "rogue_015_venom_throwing_knives",
+  "level_req": 60
+ },
+ {
+  "item_id": "rogue_016_silent_dagger",
+  "level_req": 90
+ },
+ {
+  "item_id": "rogue_017_silent_dual_daggers",
+  "level_req": 90
+ },
+ {
+  "item_id": "rogue_018_silent_katar",
+  "level_req": 90
+ },
+ {
+  "item_id": "rogue_019_silent_stiletto",
+  "level_req": 90
+ },
+ {
+  "item_id": "rogue_020_silent_throwing_knives",
+  "level_req": 90
+ },
+ {
+  "item_id": "rogue_021_razor_dagger",
+  "level_req": 120
+ },
+ {
+  "item_id": "rogue_022_razor_dual_daggers",
+  "level_req": 120
+ },
+ {
+  "item_id": "rogue_023_razor_katar",
+  "level_req": 120
+ },
+ {
+  "item_id": "rogue_024_razor_stiletto",
+  "level_req": 120
+ },
+ {
+  "item_id": "rogue_025_razor_throwing_knives",
+  "level_req": 120
+ },
+ {
+  "item_id": "rogue_026_blackthorn_dagger",
+  "level_req": 150
+ },
+ {
+  "item_id": "rogue_027_blackthorn_dual_daggers",
+  "level_req": 150
+ },
+ {
+  "item_id": "rogue_028_blackthorn_katar",
+  "level_req": 150
+ },
+ {
+  "item_id": "rogue_029_blackthorn_stiletto",
+  "level_req": 150
+ },
+ {
+  "item_id": "rogue_030_blackthorn_throwing_knives",
+  "level_req": 150
+ },
+ {
+  "item_id": "rogue_031_shade_dagger",
+  "level_req": 180
+ },
+ {
+  "item_id": "rogue_032_shade_dual_daggers",
+  "level_req": 180
+ },
+ {
+  "item_id": "rogue_033_shade_katar",
+  "level_req": 180
+ },
+ {
+  "item_id": "rogue_034_shade_stiletto",
+  "level_req": 180
+ },
+ {
+  "item_id": "rogue_035_shade_throwing_knives",
+  "level_req": 180
+ },
+ {
+  "item_id": "rogue_036_bloodletter_dagger",
+  "level_req": 210
+ },
+ {
+  "item_id": "rogue_037_bloodletter_dual_daggers",
+  "level_req": 210
+ },
+ {
+  "item_id": "rogue_038_bloodletter_katar",
+  "level_req": 210
+ },
+ {
+  "item_id": "rogue_039_bloodletter_stiletto",
+  "level_req": 210
+ },
+ {
+  "item_id": "rogue_040_bloodletter_throwing_knives",
+  "level_req": 210
+ },
+ {
+  "item_id": "rogue_041_viper_dagger",
+  "level_req": 240
+ },
+ {
+  "item_id": "rogue_042_viper_dual_daggers",
+  "level_req": 240
+ },
+ {
+  "item_id": "rogue_043_viper_katar",
+  "level_req": 240
+ },
+ {
+  "item_id": "rogue_044_viper_stiletto",
+  "level_req": 240
+ },
+ {
+  "item_id": "rogue_045_viper_throwing_knives",
+  "level_req": 240
+ },
+ {
+  "item_id": "rogue_046_phantom_dagger",
+  "level_req": 270
+ },
+ {
+  "item_id": "rogue_047_phantom_dual_daggers",
+  "level_req": 270
+ },
+ {
+  "item_id": "rogue_048_phantom_katar",
+  "level_req": 270
+ },
+ {
+  "item_id": "rogue_049_phantom_stiletto",
+  "level_req": 270
+ },
+ {
+  "item_id": "rogue_050_phantom_throwing_knives",
+  "level_req": 270
+ },
+ {
+  "item_id": "gunner_001_ironshot_pistol",
+  "level_req": 1
+ },
+ {
+  "item_id": "gunner_002_ironshot_dual_pistols",
+  "level_req": 1
+ },
+ {
+  "item_id": "gunner_003_ironshot_rifle",
+  "level_req": 1
+ },
+ {
+  "item_id": "gunner_004_ironshot_sniper_rifle",
+  "level_req": 1
+ },
+ {
+  "item_id": "gunner_005_ironshot_shotgun",
+  "level_req": 1
+ },
+ {
+  "item_id": "gunner_006_deadeye_pistol",
+  "level_req": 30
+ },
+ {
+  "item_id": "gunner_007_deadeye_dual_pistols",
+  "level_req": 30
+ },
+ {
+  "item_id": "gunner_008_deadeye_rifle",
+  "level_req": 30
+ },
+ {
+  "item_id": "gunner_009_deadeye_sniper_rifle",
+  "level_req": 30
+ },
+ {
+  "item_id": "gunner_010_deadeye_shotgun",
+  "level_req": 30
+ },
+ {
+  "item_id": "gunner_011_thunderlock_pistol",
+  "level_req": 60
+ },
+ {
+  "item_id": "gunner_012_thunderlock_dual_pistols",
+  "level_req": 60
+ },
+ {
+  "item_id": "gunner_013_thunderlock_rifle",
+  "level_req": 60
+ },
+ {
+  "item_id": "gunner_014_thunderlock_sniper_rifle",
+  "level_req": 60
+ },
+ {
+  "item_id": "gunner_015_thunderlock_shotgun",
+  "level_req": 60
+ },
+ {
+  "item_id": "gunner_016_blackpowder_pistol",
+  "level_req": 90
+ },
+ {
+  "item_id": "gunner_017_blackpowder_dual_pistols",
+  "level_req": 90
+ },
+ {
+  "item_id": "gunner_018_blackpowder_rifle",
+  "level_req": 90
+ },
+ {
+  "item_id": "gunner_019_blackpowder_sniper_rifle",
+  "level_req": 90
+ },
+ {
+  "item_id": "gunner_020_blackpowder_shotgun",
+  "level_req": 90
+ },
+ {
+  "item_id": "gunner_021_dreadfire_pistol",
+  "level_req": 120
+ },
+ {
+  "item_id": "gunner_022_dreadfire_dual_pistols",
+  "level_req": 120
+ },
+ {
+  "item_id": "gunner_023_dreadfire_rifle",
+  "level_req": 120
+ },
+ {
+  "item_id": "gunner_024_dreadfire_sniper_rifle",
+  "level_req": 120
+ },
+ {
+  "item_id": "gunner_025_dreadfire_shotgun",
+  "level_req": 120
+ },
+ {
+  "item_id": "gunner_026_longwatch_pistol",
+  "level_req": 150
+ },
+ {
+  "item_id": "gunner_027_longwatch_dual_pistols",
+  "level_req": 150
+ },
+ {
+  "item_id": "gunner_028_longwatch_rifle",
+  "level_req": 150
+ },
+ {
+  "item_id": "gunner_029_longwatch_sniper_rifle",
+  "level_req": 150
+ },
+ {
+  "item_id": "gunner_030_longwatch_shotgun",
+  "level_req": 150
+ },
+ {
+  "item_id": "gunner_031_ashenbore_pistol",
+  "level_req": 180
+ },
+ {
+  "item_id": "gunner_032_ashenbore_dual_pistols",
+  "level_req": 180
+ },
+ {
+  "item_id": "gunner_033_ashenbore_rifle",
+  "level_req": 180
+ },
+ {
+  "item_id": "gunner_034_ashenbore_sniper_rifle",
+  "level_req": 180
+ },
+ {
+  "item_id": "gunner_035_ashenbore_shotgun",
+  "level_req": 180
+ },
+ {
+  "item_id": "gunner_036_stormpiercer_pistol",
+  "level_req": 210
+ },
+ {
+  "item_id": "gunner_037_stormpiercer_dual_pistols",
+  "level_req": 210
+ },
+ {
+  "item_id": "gunner_038_stormpiercer_rifle",
+  "level_req": 210
+ },
+ {
+  "item_id": "gunner_039_stormpiercer_sniper_rifle",
+  "level_req": 210
+ },
+ {
+  "item_id": "gunner_040_stormpiercer_shotgun",
+  "level_req": 210
+ },
+ {
+  "item_id": "gunner_041_grimshot_pistol",
+  "level_req": 240
+ },
+ {
+  "item_id": "gunner_042_grimshot_dual_pistols",
+  "level_req": 240
+ },
+ {
+  "item_id": "gunner_043_grimshot_rifle",
+  "level_req": 240
+ },
+ {
+  "item_id": "gunner_044_grimshot_sniper_rifle",
+  "level_req": 240
+ },
+ {
+  "item_id": "gunner_045_grimshot_shotgun",
+  "level_req": 240
+ },
+ {
+  "item_id": "gunner_046_eclipsefire_pistol",
+  "level_req": 270
+ },
+ {
+  "item_id": "gunner_047_eclipsefire_dual_pistols",
+  "level_req": 270
+ },
+ {
+  "item_id": "gunner_048_eclipsefire_rifle",
+  "level_req": 270
+ },
+ {
+  "item_id": "gunner_049_eclipsefire_sniper_rifle",
+  "level_req": 270
+ },
+ {
+  "item_id": "gunner_050_eclipsefire_shotgun",
+  "level_req": 270
+ },
+ {
+  "item_id": "extreme_001_rift_dual_chakrams",
+  "level_req": 1
+ },
+ {
+  "item_id": "extreme_002_rift_warblades",
+  "level_req": 1
+ },
+ {
+  "item_id": "extreme_003_rift_whip",
+  "level_req": 1
+ },
+ {
+  "item_id": "extreme_004_rift_dual_tonfas",
+  "level_req": 1
+ },
+ {
+  "item_id": "extreme_005_rift_crescent_blades",
+  "level_req": 1
+ },
+ {
+  "item_id": "extreme_006_tempest_dual_chakrams",
+  "level_req": 30
+ },
+ {
+  "item_id": "extreme_007_tempest_warblades",
+  "level_req": 30
+ },
+ {
+  "item_id": "extreme_008_tempest_whip",
+  "level_req": 30
+ },
+ {
+  "item_id": "extreme_009_tempest_dual_tonfas",
+  "level_req": 30
+ },
+ {
+  "item_id": "extreme_010_tempest_crescent_blades",
+  "level_req": 30
+ },
+ {
+  "item_id": "extreme_011_ravager_dual_chakrams",
+  "level_req": 60
+ },
+ {
+  "item_id": "extreme_012_ravager_warblades",
+  "level_req": 60
+ },
+ {
+  "item_id": "extreme_013_ravager_whip",
+  "level_req": 60
+ },
+ {
+  "item_id": "extreme_014_ravager_dual_tonfas",
+  "level_req": 60
+ },
+ {
+  "item_id": "extreme_015_ravager_crescent_blades",
+  "level_req": 60
+ },
+ {
+  "item_id": "extreme_016_moonreaver_dual_chakrams",
+  "level_req": 90
+ },
+ {
+  "item_id": "extreme_017_moonreaver_warblades",
+  "level_req": 90
+ },
+ {
+  "item_id": "extreme_018_moonreaver_whip",
+  "level_req": 90
+ },
+ {
+  "item_id": "extreme_019_moonreaver_dual_tonfas",
+  "level_req": 90
+ },
+ {
+  "item_id": "extreme_020_moonreaver_crescent_blades",
+  "level_req": 90
+ },
+ {
+  "item_id": "extreme_021_feral_dual_chakrams",
+  "level_req": 120
+ },
+ {
+  "item_id": "extreme_022_feral_warblades",
+  "level_req": 120
+ },
+ {
+  "item_id": "extreme_023_feral_whip",
+  "level_req": 120
+ },
+ {
+  "item_id": "extreme_024_feral_dual_tonfas",
+  "level_req": 120
+ },
+ {
+  "item_id": "extreme_025_feral_crescent_blades",
+  "level_req": 120
+ },
+ {
+  "item_id": "extreme_026_spiral_dual_chakrams",
+  "level_req": 150
+ },
+ {
+  "item_id": "extreme_027_spiral_warblades",
+  "level_req": 150
+ },
+ {
+  "item_id": "extreme_028_spiral_whip",
+  "level_req": 150
+ },
+ {
+  "item_id": "extreme_029_spiral_dual_tonfas",
+  "level_req": 150
+ },
+ {
+  "item_id": "extreme_030_spiral_crescent_blades",
+  "level_req": 150
+ },
+ {
+  "item_id": "extreme_031_soulrend_dual_chakrams",
+  "level_req": 180
+ },
+ {
+  "item_id": "extreme_032_soulrend_warblades",
+  "level_req": 180
+ },
+ {
+  "item_id": "extreme_033_soulrend_whip",
+  "level_req": 180
+ },
+ {
+  "item_id": "extreme_034_soulrend_dual_tonfas",
+  "level_req": 180
+ },
+ {
+  "item_id": "extreme_035_soulrend_crescent_blades",
+  "level_req": 180
+ },
+ {
+  "item_id": "extreme_036_duskfang_dual_chakrams",
+  "level_req": 210
+ },
+ {
+  "item_id": "extreme_037_duskfang_warblades",
+  "level_req": 210
+ },
+ {
+  "item_id": "extreme_038_duskfang_whip",
+  "level_req": 210
+ },
+ {
+  "item_id": "extreme_039_duskfang_dual_tonfas",
+  "level_req": 210
+ },
+ {
+  "item_id": "extreme_040_duskfang_crescent_blades",
+  "level_req": 210
+ },
+ {
+  "item_id": "extreme_041_voidedge_dual_chakrams",
+  "level_req": 240
+ },
+ {
+  "item_id": "extreme_042_voidedge_warblades",
+  "level_req": 240
+ },
+ {
+  "item_id": "extreme_043_voidedge_whip",
+  "level_req": 240
+ },
+ {
+  "item_id": "extreme_044_voidedge_dual_tonfas",
+  "level_req": 240
+ },
+ {
+  "item_id": "extreme_045_voidedge_crescent_blades",
+  "level_req": 240
+ },
+ {
+  "item_id": "extreme_046_wildstorm_dual_chakrams",
+  "level_req": 270
+ },
+ {
+  "item_id": "extreme_047_wildstorm_warblades",
+  "level_req": 270
+ },
+ {
+  "item_id": "extreme_048_wildstorm_whip",
+  "level_req": 270
+ },
+ {
+  "item_id": "extreme_049_wildstorm_dual_tonfas",
+  "level_req": 270
+ },
+ {
+  "item_id": "extreme_050_wildstorm_crescent_blades",
+  "level_req": 270
+ },
+ {
+  "item_id": "brawler_001_stonefist_knuckles",
+  "level_req": 1
+ },
+ {
+  "item_id": "brawler_002_stonefist_gauntlets",
+  "level_req": 1
+ },
+ {
+  "item_id": "brawler_003_stonefist_claw_gauntlets",
+  "level_req": 1
+ },
+ {
+  "item_id": "brawler_004_stonefist_combat_gloves",
+  "level_req": 1
+ },
+ {
+  "item_id": "brawler_005_stonefist_heavy_bracers",
+  "level_req": 1
+ },
+ {
+  "item_id": "brawler_006_ironhide_knuckles",
+  "level_req": 30
+ },
+ {
+  "item_id": "brawler_007_ironhide_gauntlets",
+  "level_req": 30
+ },
+ {
+  "item_id": "brawler_008_ironhide_claw_gauntlets",
+  "level_req": 30
+ },
+ {
+  "item_id": "brawler_009_ironhide_combat_gloves",
+  "level_req": 30
+ },
+ {
+  "item_id": "brawler_010_ironhide_heavy_bracers",
+  "level_req": 30
+ },
+ {
+  "item_id": "brawler_011_earthshaker_knuckles",
+  "level_req": 60
+ },
+ {
+  "item_id": "brawler_012_earthshaker_gauntlets",
+  "level_req": 60
+ },
+ {
+  "item_id": "brawler_013_earthshaker_claw_gauntlets",
+  "level_req": 60
+ },
+ {
+  "item_id": "brawler_014_earthshaker_combat_gloves",
+  "level_req": 60
+ },
+ {
+  "item_id": "brawler_015_earthshaker_heavy_bracers",
+  "level_req": 60
+ },
+ {
+  "item_id": "brawler_016_bloodmaul_knuckles",
+  "level_req": 90
+ },
+ {
+  "item_id": "brawler_017_bloodmaul_gauntlets",
+  "level_req": 90
+ },
+ {
+  "item_id": "brawler_018_bloodmaul_claw_gauntlets",
+  "level_req": 90
+ },
+ {
+  "item_id": "brawler_019_bloodmaul_combat_gloves",
+  "level_req": 90
+ },
+ {
+  "item_id": "brawler_020_bloodmaul_heavy_bracers",
+  "level_req": 90
+ },
+ {
+  "item_id": "brawler_021_warborn_knuckles",
+  "level_req": 120
+ },
+ {
+  "item_id": "brawler_022_warborn_gauntlets",
+  "level_req": 120
+ },
+ {
+  "item_id": "brawler_023_warborn_claw_gauntlets",
+  "level_req": 120
+ },
+ {
+  "item_id": "brawler_024_warborn_combat_gloves",
+  "level_req": 120
+ },
+ {
+  "item_id": "brawler_025_warborn_heavy_bracers",
+  "level_req": 120
+ },
+ {
+  "item_id": "brawler_026_titan_knuckles",
+  "level_req": 150
+ },
+ {
+  "item_id": "brawler_027_titan_gauntlets",
+  "level_req": 150
+ },
+ {
+  "item_id": "brawler_028_titan_claw_gauntlets",
+  "level_req": 150
+ },
+ {
+  "item_id": "brawler_029_titan_combat_gloves",
+  "level_req": 150
+ },
+ {
+  "item_id": "brawler_030_titan_heavy_bracers",
+  "level_req": 150
+ },
+ {
+  "item_id": "brawler_031_roughneck_knuckles",
+  "level_req": 180
+ },
+ {
+  "item_id": "brawler_032_roughneck_gauntlets",
+  "level_req": 180
+ },
+ {
+  "item_id": "brawler_033_roughneck_claw_gauntlets",
+  "level_req": 180
+ },
+ {
+  "item_id": "brawler_034_roughneck_combat_gloves",
+  "level_req": 180
+ },
+ {
+  "item_id": "brawler_035_roughneck_heavy_bracers",
+  "level_req": 180
+ },
+ {
+  "item_id": "brawler_036_thunderclap_knuckles",
+  "level_req": 210
+ },
+ {
+  "item_id": "brawler_037_thunderclap_gauntlets",
+  "level_req": 210
+ },
+ {
+  "item_id": "brawler_038_thunderclap_claw_gauntlets",
+  "level_req": 210
+ },
+ {
+  "item_id": "brawler_039_thunderclap_combat_gloves",
+  "level_req": 210
+ },
+ {
+  "item_id": "brawler_040_thunderclap_heavy_bracers",
+  "level_req": 210
+ },
+ {
+  "item_id": "brawler_041_dreadknuckle_knuckles",
+  "level_req": 240
+ },
+ {
+  "item_id": "brawler_042_dreadknuckle_gauntlets",
+  "level_req": 240
+ },
+ {
+  "item_id": "brawler_043_dreadknuckle_claw_gauntlets",
+  "level_req": 240
+ },
+ {
+  "item_id": "brawler_044_dreadknuckle_combat_gloves",
+  "level_req": 240
+ },
+ {
+  "item_id": "brawler_045_dreadknuckle_heavy_bracers",
+  "level_req": 240
+ },
+ {
+  "item_id": "brawler_046_mountain_knuckles",
+  "level_req": 270
+ },
+ {
+  "item_id": "brawler_047_mountain_gauntlets",
+  "level_req": 270
+ },
+ {
+  "item_id": "brawler_048_mountain_claw_gauntlets",
+  "level_req": 270
+ },
+ {
+  "item_id": "brawler_049_mountain_combat_gloves",
+  "level_req": 270
+ },
+ {
+  "item_id": "brawler_050_mountain_heavy_bracers",
+  "level_req": 270
+ },
+ {
+  "item_id": "healer_001_dawnlight_holy_mace",
+  "level_req": 1
+ },
+ {
+  "item_id": "healer_002_dawnlight_holy_staff",
+  "level_req": 1
+ },
+ {
+  "item_id": "healer_003_dawnlight_healing_wand",
+  "level_req": 1
+ },
+ {
+  "item_id": "healer_004_dawnlight_sacred_scepter",
+  "level_req": 1
+ },
+ {
+  "item_id": "healer_005_dawnlight_blessed_bell",
+  "level_req": 1
+ },
+ {
+  "item_id": "healer_006_sanctuary_holy_mace",
+  "level_req": 30
+ },
+ {
+  "item_id": "healer_007_sanctuary_holy_staff",
+  "level_req": 30
+ },
+ {
+  "item_id": "healer_008_sanctuary_healing_wand",
+  "level_req": 30
+ },
+ {
+  "item_id": "healer_009_sanctuary_sacred_scepter",
+  "level_req": 30
+ },
+ {
+  "item_id": "healer_010_sanctuary_blessed_bell",
+  "level_req": 30
+ },
+ {
+  "item_id": "healer_011_grace_holy_mace",
+  "level_req": 60
+ },
+ {
+  "item_id": "healer_012_grace_holy_staff",
+  "level_req": 60
+ },
+ {
+  "item_id": "healer_013_grace_healing_wand",
+  "level_req": 60
+ },
+ {
+  "item_id": "healer_014_grace_sacred_scepter",
+  "level_req": 60
+ },
+ {
+  "item_id": "healer_015_grace_blessed_bell",
+  "level_req": 60
+ },
+ {
+  "item_id": "healer_016_lifebloom_holy_mace",
+  "level_req": 90
+ },
+ {
+  "item_id": "healer_017_lifebloom_holy_staff",
+  "level_req": 90
+ },
+ {
+  "item_id": "healer_018_lifebloom_healing_wand",
+  "level_req": 90
+ },
+ {
+  "item_id": "healer_019_lifebloom_sacred_scepter",
+  "level_req": 90
+ },
+ {
+  "item_id": "healer_020_lifebloom_blessed_bell",
+  "level_req": 90
+ },
+ {
+  "item_id": "healer_021_seraph_holy_mace",
+  "level_req": 120
+ },
+ {
+  "item_id": "healer_022_seraph_holy_staff",
+  "level_req": 120
+ },
+ {
+  "item_id": "healer_023_seraph_healing_wand",
+  "level_req": 120
+ },
+ {
+  "item_id": "healer_024_seraph_sacred_scepter",
+  "level_req": 120
+ },
+ {
+  "item_id": "healer_025_seraph_blessed_bell",
+  "level_req": 120
+ },
+ {
+  "item_id": "healer_026_sunblessed_holy_mace",
+  "level_req": 150
+ },
+ {
+  "item_id": "healer_027_sunblessed_holy_staff",
+  "level_req": 150
+ },
+ {
+  "item_id": "healer_028_sunblessed_healing_wand",
+  "level_req": 150
+ },
+ {
+  "item_id": "healer_029_sunblessed_sacred_scepter",
+  "level_req": 150
+ },
+ {
+  "item_id": "healer_030_sunblessed_blessed_bell",
+  "level_req": 150
+ },
+ {
+  "item_id": "healer_031_mercy_holy_mace",
+  "level_req": 180
+ },
+ {
+  "item_id": "healer_032_mercy_holy_staff",
+  "level_req": 180
+ },
+ {
+  "item_id": "healer_033_mercy_healing_wand",
+  "level_req": 180
+ },
+ {
+  "item_id": "healer_034_mercy_sacred_scepter",
+  "level_req": 180
+ },
+ {
+  "item_id": "healer_035_mercy_blessed_bell",
+  "level_req": 180
+ },
+ {
+  "item_id": "healer_036_radiant_holy_mace",
+  "level_req": 210
+ },
+ {
+  "item_id": "healer_037_radiant_holy_staff",
+  "level_req": 210
+ },
+ {
+  "item_id": "healer_038_radiant_healing_wand",
+  "level_req": 210
+ },
+ {
+  "item_id": "healer_039_radiant_sacred_scepter",
+  "level_req": 210
+ },
+ {
+  "item_id": "healer_040_radiant_blessed_bell",
+  "level_req": 210
+ },
+ {
+  "item_id": "healer_041_everlight_holy_mace",
+  "level_req": 240
+ },
+ {
+  "item_id": "healer_042_everlight_holy_staff",
+  "level_req": 240
+ },
+ {
+  "item_id": "healer_043_everlight_healing_wand",
+  "level_req": 240
+ },
+ {
+  "item_id": "healer_044_everlight_sacred_scepter",
+  "level_req": 240
+ },
+ {
+  "item_id": "healer_045_everlight_blessed_bell",
+  "level_req": 240
+ },
+ {
+  "item_id": "healer_046_hallowed_holy_mace",
+  "level_req": 270
+ },
+ {
+  "item_id": "healer_047_hallowed_holy_staff",
+  "level_req": 270
+ },
+ {
+  "item_id": "healer_048_hallowed_healing_wand",
+  "level_req": 270
+ },
+ {
+  "item_id": "healer_049_hallowed_sacred_scepter",
+  "level_req": 270
+ },
+ {
+  "item_id": "healer_050_hallowed_blessed_bell",
+  "level_req": 270
+ },
+ {
+  "item_id": "necromancer_001_gravecaller_soul_scythe",
+  "level_req": 1
+ },
+ {
+  "item_id": "necromancer_002_gravecaller_necromancer_staff",
+  "level_req": 1
+ },
+ {
+  "item_id": "necromancer_003_gravecaller_dark_spellbook",
+  "level_req": 1
+ },
+ {
+  "item_id": "necromancer_004_gravecaller_soul_orb",
+  "level_req": 1
+ },
+ {
+  "item_id": "necromancer_005_gravecaller_bone_scepter",
+  "level_req": 1
+ },
+ {
+  "item_id": "necromancer_006_soulreaper_soul_scythe",
+  "level_req": 30
+ },
+ {
+  "item_id": "necromancer_007_soulreaper_necromancer_staff",
+  "level_req": 30
+ },
+ {
+  "item_id": "necromancer_008_soulreaper_dark_spellbook",
+  "level_req": 30
+ },
+ {
+  "item_id": "necromancer_009_soulreaper_soul_orb",
+  "level_req": 30
+ },
+ {
+  "item_id": "necromancer_010_soulreaper_bone_scepter",
+  "level_req": 30
+ },
+ {
+  "item_id": "necromancer_011_nightgrave_soul_scythe",
+  "level_req": 60
+ },
+ {
+  "item_id": "necromancer_012_nightgrave_necromancer_staff",
+  "level_req": 60
+ },
+ {
+  "item_id": "necromancer_013_nightgrave_dark_spellbook",
+  "level_req": 60
+ },
+ {
+  "item_id": "necromancer_014_nightgrave_soul_orb",
+  "level_req": 60
+ },
+ {
+  "item_id": "necromancer_015_nightgrave_bone_scepter",
+  "level_req": 60
+ },
+ {
+  "item_id": "necromancer_016_bonebound_soul_scythe",
+  "level_req": 90
+ },
+ {
+  "item_id": "necromancer_017_bonebound_necromancer_staff",
+  "level_req": 90
+ },
+ {
+  "item_id": "necromancer_018_bonebound_dark_spellbook",
+  "level_req": 90
+ },
+ {
+  "item_id": "necromancer_019_bonebound_soul_orb",
+  "level_req": 90
+ },
+ {
+  "item_id": "necromancer_020_bonebound_bone_scepter",
+  "level_req": 90
+ },
+ {
+  "item_id": "necromancer_021_wraith_soul_scythe",
+  "level_req": 120
+ },
+ {
+  "item_id": "necromancer_022_wraith_necromancer_staff",
+  "level_req": 120
+ },
+ {
+  "item_id": "necromancer_023_wraith_dark_spellbook",
+  "level_req": 120
+ },
+ {
+  "item_id": "necromancer_024_wraith_soul_orb",
+  "level_req": 120
+ },
+ {
+  "item_id": "necromancer_025_wraith_bone_scepter",
+  "level_req": 120
+ },
+ {
+  "item_id": "necromancer_026_deathwhisper_soul_scythe",
+  "level_req": 150
+ },
+ {
+  "item_id": "necromancer_027_deathwhisper_necromancer_staff",
+  "level_req": 150
+ },
+ {
+  "item_id": "necromancer_028_deathwhisper_dark_spellbook",
+  "level_req": 150
+ },
+ {
+  "item_id": "necromancer_029_deathwhisper_soul_orb",
+  "level_req": 150
+ },
+ {
+  "item_id": "necromancer_030_deathwhisper_bone_scepter",
+  "level_req": 150
+ },
+ {
+  "item_id": "necromancer_031_doom_soul_scythe",
+  "level_req": 180
+ },
+ {
+  "item_id": "necromancer_032_doom_necromancer_staff",
+  "level_req": 180
+ },
+ {
+  "item_id": "necromancer_033_doom_dark_spellbook",
+  "level_req": 180
+ },
+ {
+  "item_id": "necromancer_034_doom_soul_orb",
+  "level_req": 180
+ },
+ {
+  "item_id": "necromancer_035_doom_bone_scepter",
+  "level_req": 180
+ },
+ {
+  "item_id": "necromancer_036_hollow_soul_scythe",
+  "level_req": 210
+ },
+ {
+  "item_id": "necromancer_037_hollow_necromancer_staff",
+  "level_req": 210
+ },
+ {
+  "item_id": "necromancer_038_hollow_dark_spellbook",
+  "level_req": 210
+ },
+ {
+  "item_id": "necromancer_039_hollow_soul_orb",
+  "level_req": 210
+ },
+ {
+  "item_id": "necromancer_040_hollow_bone_scepter",
+  "level_req": 210
+ },
+ {
+  "item_id": "necromancer_041_umbral_soul_scythe",
+  "level_req": 240
+ },
+ {
+  "item_id": "necromancer_042_umbral_necromancer_staff",
+  "level_req": 240
+ },
+ {
+  "item_id": "necromancer_043_umbral_dark_spellbook",
+  "level_req": 240
+ },
+ {
+  "item_id": "necromancer_044_umbral_soul_orb",
+  "level_req": 240
+ },
+ {
+  "item_id": "necromancer_045_umbral_bone_scepter",
+  "level_req": 240
+ },
+ {
+  "item_id": "necromancer_046_lichborn_soul_scythe",
+  "level_req": 270
+ },
+ {
+  "item_id": "necromancer_047_lichborn_necromancer_staff",
+  "level_req": 270
+ },
+ {
+  "item_id": "necromancer_048_lichborn_dark_spellbook",
+  "level_req": 270
+ },
+ {
+  "item_id": "necromancer_049_lichborn_soul_orb",
+  "level_req": 270
+ },
+ {
+  "item_id": "necromancer_050_lichborn_bone_scepter",
+  "level_req": 270
+ },
+ {
+  "item_id": "fire_warrior_helm_set",
+  "level_req": 10
+ },
+ {
+  "item_id": "fire_warrior_chest_set",
+  "level_req": 14
+ },
+ {
+  "item_id": "fire_warrior_gloves_set",
+  "level_req": 18
+ },
+ {
+  "item_id": "fire_warrior_pants_set",
+  "level_req": 22
+ },
+ {
+  "item_id": "fire_warrior_boots_set",
+  "level_req": 26
+ },
+ {
+  "item_id": "fire_warrior_ring_set",
+  "level_req": 29
+ },
+ {
+  "item_id": "fire_warrior_necklace_set",
+  "level_req": 33
+ },
+ {
+  "item_id": "ice_mage_helm_set",
+  "level_req": 16
+ },
+ {
+  "item_id": "ice_mage_chest_set",
+  "level_req": 20
+ },
+ {
+  "item_id": "ice_mage_gloves_set",
+  "level_req": 24
+ },
+ {
+  "item_id": "ice_mage_pants_set",
+  "level_req": 28
+ },
+ {
+  "item_id": "ice_mage_boots_set",
+  "level_req": 31
+ },
+ {
+  "item_id": "ice_mage_ring_set",
+  "level_req": 35
+ },
+ {
+  "item_id": "ice_mage_necklace_set",
+  "level_req": 39
+ },
+ {
+  "item_id": "wind_archer_helm_set",
+  "level_req": 22
+ },
+ {
+  "item_id": "wind_archer_chest_set",
+  "level_req": 26
+ },
+ {
+  "item_id": "wind_archer_gloves_set",
+  "level_req": 29
+ },
+ {
+  "item_id": "wind_archer_pants_set",
+  "level_req": 33
+ },
+ {
+  "item_id": "wind_archer_boots_set",
+  "level_req": 37
+ },
+ {
+  "item_id": "wind_archer_ring_set",
+  "level_req": 41
+ },
+ {
+  "item_id": "wind_archer_necklace_set",
+  "level_req": 45
+ },
+ {
+  "item_id": "poison_rogue_helm_set",
+  "level_req": 28
+ },
+ {
+  "item_id": "poison_rogue_chest_set",
+  "level_req": 31
+ },
+ {
+  "item_id": "poison_rogue_gloves_set",
+  "level_req": 35
+ },
+ {
+  "item_id": "poison_rogue_pants_set",
+  "level_req": 39
+ },
+ {
+  "item_id": "poison_rogue_boots_set",
+  "level_req": 43
+ },
+ {
+  "item_id": "poison_rogue_ring_set",
+  "level_req": 47
+ },
+ {
+  "item_id": "poison_rogue_necklace_set",
+  "level_req": 51
+ },
+ {
+  "item_id": "lightning_gunner_helm_set",
+  "level_req": 33
+ },
+ {
+  "item_id": "lightning_gunner_chest_set",
+  "level_req": 37
+ },
+ {
+  "item_id": "lightning_gunner_gloves_set",
+  "level_req": 41
+ },
+ {
+  "item_id": "lightning_gunner_pants_set",
+  "level_req": 45
+ },
+ {
+  "item_id": "lightning_gunner_boots_set",
+  "level_req": 49
+ },
+ {
+  "item_id": "lightning_gunner_ring_set",
+  "level_req": 53
+ },
+ {
+  "item_id": "lightning_gunner_necklace_set",
+  "level_req": 57
+ },
+ {
+  "item_id": "dark_extreme_helm_set",
+  "level_req": 39
+ },
+ {
+  "item_id": "dark_extreme_chest_set",
+  "level_req": 43
+ },
+ {
+  "item_id": "dark_extreme_gloves_set",
+  "level_req": 47
+ },
+ {
+  "item_id": "dark_extreme_pants_set",
+  "level_req": 51
+ },
+ {
+  "item_id": "dark_extreme_boots_set",
+  "level_req": 55
+ },
+ {
+  "item_id": "dark_extreme_ring_set",
+  "level_req": 59
+ },
+ {
+  "item_id": "dark_extreme_necklace_set",
+  "level_req": 62
+ },
+ {
+  "item_id": "earth_brawler_helm_set",
+  "level_req": 45
+ },
+ {
+  "item_id": "earth_brawler_chest_set",
+  "level_req": 49
+ },
+ {
+  "item_id": "earth_brawler_gloves_set",
+  "level_req": 53
+ },
+ {
+  "item_id": "earth_brawler_pants_set",
+  "level_req": 57
+ },
+ {
+  "item_id": "earth_brawler_boots_set",
+  "level_req": 61
+ },
+ {
+  "item_id": "earth_brawler_ring_set",
+  "level_req": 64
+ },
+ {
+  "item_id": "earth_brawler_necklace_set",
+  "level_req": 68
+ },
+ {
+  "item_id": "light_healer_helm_set",
+  "level_req": 51
+ },
+ {
+  "item_id": "light_healer_chest_set",
+  "level_req": 55
+ },
+ {
+  "item_id": "light_healer_gloves_set",
+  "level_req": 59
+ },
+ {
+  "item_id": "light_healer_pants_set",
+  "level_req": 62
+ },
+ {
+  "item_id": "light_healer_boots_set",
+  "level_req": 66
+ },
+ {
+  "item_id": "light_healer_ring_set",
+  "level_req": 70
+ },
+ {
+  "item_id": "light_healer_necklace_set",
+  "level_req": 74
+ },
+ {
+  "item_id": "dark_necromancer_helm_set",
+  "level_req": 57
+ },
+ {
+  "item_id": "dark_necromancer_chest_set",
+  "level_req": 61
+ },
+ {
+  "item_id": "dark_necromancer_gloves_set",
+  "level_req": 64
+ },
+ {
+  "item_id": "dark_necromancer_pants_set",
+  "level_req": 68
+ },
+ {
+  "item_id": "dark_necromancer_boots_set",
+  "level_req": 72
+ },
+ {
+  "item_id": "dark_necromancer_ring_set",
+  "level_req": 76
+ },
+ {
+  "item_id": "dark_necromancer_necklace_set",
+  "level_req": 80
+ },
+ {
+  "item_id": "fire_attuned_ring",
+  "level_req": 33
+ },
+ {
+  "item_id": "fire_attuned_necklace",
+  "level_req": 33
+ },
+ {
+  "item_id": "ice_attuned_ring",
+  "level_req": 38
+ },
+ {
+  "item_id": "ice_attuned_necklace",
+  "level_req": 38
+ },
+ {
+  "item_id": "lightning_attuned_ring",
+  "level_req": 42
+ },
+ {
+  "item_id": "lightning_attuned_necklace",
+  "level_req": 42
+ },
+ {
+  "item_id": "earth_attuned_ring",
+  "level_req": 47
+ },
+ {
+  "item_id": "earth_attuned_necklace",
+  "level_req": 47
+ },
+ {
+  "item_id": "wind_attuned_ring",
+  "level_req": 52
+ },
+ {
+  "item_id": "wind_attuned_necklace",
+  "level_req": 52
+ },
+ {
+  "item_id": "light_attuned_ring",
+  "level_req": 57
+ },
+ {
+  "item_id": "light_attuned_necklace",
+  "level_req": 57
+ },
+ {
+  "item_id": "dark_attuned_ring",
+  "level_req": 62
+ },
+ {
+  "item_id": "dark_attuned_necklace",
+  "level_req": 62
+ },
+ {
+  "item_id": "poison_attuned_ring",
+  "level_req": 67
+ },
+ {
+  "item_id": "poison_attuned_necklace",
+  "level_req": 67
+ }
 ]

@@ -184,7 +184,7 @@ func use_quick_slot(resource: String) -> Dictionary:
 
 
 func _use_elixir(item_id: String) -> Dictionary:
-	var result = Session.activate_elixir(item_id, _now())
+	var result := Session.activate_elixir(item_id, _now())
 	if not result["ok"]:
 		return result
 	_elixir_timer = 0.0
@@ -201,6 +201,19 @@ func _now() -> int:
 
 func now_unix() -> int:
 	return _now()
+
+
+## Seconds since the last fight action (attacking or being hit).
+func seconds_since_combat() -> float:
+	return _combat_clock
+
+
+## Moves the player to a spot on the ground (waypoint teleport).
+func teleport_to(point: Vector3) -> void:
+	global_position = Vector3(point.x, 0.2, point.z)
+	velocity = Vector3.ZERO
+	target = null
+	target_changed.emit(null)
 
 
 ## Drinks potions by itself when health or mana falls under the player's limits.

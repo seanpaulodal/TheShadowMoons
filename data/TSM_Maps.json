@@ -1,0 +1,33 @@
+{
+  "_note": "PLACEHOLDER layout for Map 1 (levels 1-50). Place names are placeholders from your lore. Positions are [x, z]. The shops are in TSM_Shop_Rules.json and the enemy camps in TSM_World_Camps.json: keep waypoints, fountains and decor away from them (the data check tells you if something overlaps).",
+  "map_1": {
+    "name": "Oakhaven Wilds",
+    "level_range": [1, 50],
+    "size": 200.0,
+    "spawn": [0, 0],
+    "waypoint_radius": 3.2,
+    "waypoint_clear_radius": 16.0,
+    "teleport_combat_delay": 5.0,
+    "fountain_radius": 3.6,
+    "heal_per_second": 10,
+    "day_night": { "mode": "real_clock", "time_scale": 1.0, "fixed_hour": 12.0 },
+    "moons": [
+      { "id": "moon_1", "azimuth": 205.0, "elevation": 42.0, "size": 34.0, "color": "c9b8ff" },
+      { "id": "moon_2", "azimuth": 232.0, "elevation": 30.0, "size": 22.0, "color": "9fd0ff" },
+      { "id": "moon_3", "azimuth": 190.0, "elevation": 24.0, "size": 14.0, "color": "ffb0c8" }
+    ],
+    "waypoints": [
+      { "id": "oakhaven_village", "name": "Oakhaven Village", "position": [4, 6],     "level_range": [1, 10],  "unlocked_by_default": true },
+      { "id": "goblin_hollow",    "name": "Goblin Hollow",    "position": [16, -2],   "level_range": [1, 6],   "unlocked_by_default": false },
+      { "id": "spider_marsh",     "name": "Spider Marsh",     "position": [-22, -12], "level_range": [4, 12],  "unlocked_by_default": false },
+      { "id": "ruined_temple",    "name": "Ruined Temple",    "position": [38, 30],   "level_range": [8, 20],  "unlocked_by_default": false },
+      { "id": "ashen_border",     "name": "Ashen Border",     "position": [60, -46],  "level_range": [18, 32], "unlocked_by_default": false },
+      { "id": "moonfall_ridge",   "name": "Moonfall Ridge",   "position": [-64, -54], "level_range": [26, 40], "unlocked_by_default": false }
+    ],
+    "fountains": [
+      { "id": "village_fountain", "position": [0, 22] },
+      { "id": "temple_fountain",  "position": [46, 24] }
+    ],
+    "decor": { "seed": 777, "trees": 110, "rocks": 45, "mountains": 20, "temple": [48, 42] }
+  }
+}

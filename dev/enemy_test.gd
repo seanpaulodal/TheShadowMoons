@@ -95,6 +95,7 @@ func _build_arena() -> void:
 	add_child(_world)
 	await _frames(3)
 	_player = _world.player
+	_world.clear_decor()
 	for camp in _world.camps:
 		camp.queue_free()
 	for child in _world.get_children():

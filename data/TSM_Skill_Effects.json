@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0.0",
+  "status_effects": {
+    "burn": {
+      "duration_seconds": 5,
+      "tick_interval_seconds": 1,
+      "damage_type": "fire",
+      "stacking": "refresh_duration"
+    },
+    "poison": {
+      "duration_seconds": 6,
+      "tick_interval_seconds": 1,
+      "damage_type": "poison",
+      "stacking": "up_to_3"
+    },
+    "slow": {
+      "duration_seconds": 3,
+      "movement_speed_reduction_percent": 0.3,
+      "stacking": "refresh_duration"
+    },
+    "root": {
+      "duration_seconds": 2,
+      "prevents_movement": true
+    },
+    "silence": {
+      "duration_seconds": 2,
+      "prevents_skill_casting": true
+    },
+    "stun": {
+      "duration_seconds": 1.2,
+      "prevents_actions": true
+    },
+    "armor_break": {
+      "duration_seconds": 6,
+      "defense_reduction_percent": 0.15
+    },
+    "healing_reduction": {
+      "duration_seconds": 6,
+      "healing_received_reduction_percent": 0.35
+    },
+    "curse": {
+      "duration_seconds": 8,
+      "damage_taken_increase_percent": 0.08
+    },
+    "mark": {
+      "duration_seconds": 8,
+      "damage_from_caster_increase_percent": 0.12
+    }
+  },
+  "combat_rules": {
+    "damage_formula": "final_damage = (base_damage + scaling_attribute_value * attribute_scaling) * rank_multiplier * buffs * target_mitigation",
+    "healing_formula": "final_heal = (base_heal + WIS * healing_scaling) * rank_multiplier * healing_modifiers",
+    "cooldown_rule": "Cooldown begins after successful skill activation unless a skill explicitly defines another rule.",
+    "resource_rule": "Validate resource cost before casting; deduct only after activation succeeds.",
+    "rank_rule": "Rank 1 is the learned baseline. Each rank applies the skill's rank_scaling values.",
+    "server_authority": "In multiplayer, validate damage, cooldowns, resources, summons, and status effects on the authoritative server."
+  },
+  "effect_resolver_notes": {
+    "direct_damage": "Apply damage using damage_type and scaling fields.",
+    "healing": "Resolve target eligibility and max-HP percentage.",
+    "buff": "Apply stat_modifiers for duration_seconds, then remove them.",
+    "crowd_control": "Apply control effect with duration and resistance checks.",
+    "summon": "Spawn the configured summon and enforce max_active_summons.",
+    "movement": "Perform movement after collision and navigation validation.",
+    "defense": "Apply absorption or mitigation and expire it after duration.",
+    "execute": "Check target HP threshold and apply bonus damage; do not guarantee instant kills on bosses."
+  }
+}

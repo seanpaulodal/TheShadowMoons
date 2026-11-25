@@ -1,16 +1,23 @@
 extends Node3D
-## Test world (M4): a big checkered field with some obstacles. Walk around with
-## WASD / the touch joystick and turn the camera with the right mouse button or
-## by dragging the right side of the screen. Combat and enemies come later.
+## Map 1 (Oakhaven Wilds): balete trees, rocks, a ruined temple, mountains in the
+## distance, a village market, waypoints, healing fountains, enemy camps and a
+## day and night sky. Everything placed in it comes from the data files.
 
 const WORLD_SIZE := 200.0
-const OBSTACLE_COUNT := 36
+const MAP_ID := "map_1"
 
 var player: PlayerController
 var controls: TouchControls
 var combat_hud: CombatHud
 var camps: Array = []
 var shop_npcs: Array = []
+var waypoints: Array = []
+var fountains: Array = []
+var decor: MapDecor
+var day_night: DayNight
+
+var _sun: DirectionalLight3D
+var _environment: Environment
 
 
 
@@ -22,8 +29,10 @@ func _ready() -> void:
 		return
 	_build_environment()
 	_build_ground()
-	_scatter_obstacles()
 	_spawn_shops()
+	_spawn_waypoints()
+	_spawn_fountains()
+	_build_decor()
 	_spawn_player()
 	add_dummy(Vector3(0, 0, -6))
 	add_dummy(Vector3(-6, 0, -10))
@@ -63,14 +72,6 @@ func _spawn_shops() -> void:
 		shop_npcs.append(npc)
 
 
-func _near_a_shop(spot: Vector2) -> bool:
-	for def in DataRegistry.get_config("shop_rules").get("shops", []):
-		var at: Array = def.get("position", [0, 14])
-		if spot.distance_to(Vector2(float(at[0]), float(at[1]))) < 9.0:
-			return true
-	return false
-
-
 ## Places the enemy camps listed in TSM_World_Camps.json.
 func _spawn_camps() -> void:
 	var map_rules: Dictionary = DataRegistry.get_config("world_camps").get("map_1", {})
@@ -93,20 +94,22 @@ func add_dummy(at: Vector3) -> TrainingDummy:
 # ---------- world ----------
 
 func _build_environment() -> void:
-	var environment := Environment.new()
-	environment.background_mode = Environment.BG_COLOR
-	environment.background_color = TSMTheme.BG
-	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color("7a6a9a")
-	environment.ambient_light_energy = 0.9
+	_environment = Environment.new()
+	_environment.background_mode = Environment.BG_COLOR
+	_environment.background_color = TSMTheme.BG
+	_environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	var world_environment := WorldEnvironment.new()
-	world_environment.environment = environment
+	world_environment.environment = _environment
 	add_child(world_environment)
 
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-50, -30, 0)
-	sun.shadow_enabled = false    # keep it light for phones
-	add_child(sun)
+	_sun = DirectionalLight3D.new()
+	_sun.shadow_enabled = false    # keep it light for phones
+	add_child(_sun)
+
+	# The sky follows the time of day (a real 24 hour cycle).
+	day_night = DayNight.new()
+	add_child(day_night)
+	day_night.setup(_sun, _environment, MAP_ID)
 
 
 func _build_ground() -> void:
@@ -120,10 +123,10 @@ func _build_ground() -> void:
 
 	var mesh_instance := MeshInstance3D.new()
 	var plane := PlaneMesh.new()
-	plane.size = Vector2(WORLD_SIZE, WORLD_SIZE)
+	plane.size = Vector2(WORLD_SIZE * 3.0, WORLD_SIZE * 3.0)     # reaches past the walls, to the mountains
 	var material := StandardMaterial3D.new()
 	material.albedo_texture = _checker_texture()
-	material.uv1_scale = Vector3(WORLD_SIZE / 4.0, WORLD_SIZE / 4.0, 1.0)
+	material.uv1_scale = Vector3(WORLD_SIZE * 3.0 / 4.0, WORLD_SIZE * 3.0 / 4.0, 1.0)
 	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	plane.material = material
 	mesh_instance.mesh = plane
@@ -150,18 +153,51 @@ func add_wall(center: Vector3, size: Vector3) -> void:
 	add_child(wall)
 
 
-func _scatter_obstacles() -> void:
-	# The same seed gives the same field every time, so it feels like a place.
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 12345
-	var limit := WORLD_SIZE / 2.0 - 10.0
-	for i in OBSTACLE_COUNT:
-		var spot := Vector2(rng.randf_range(-limit, limit), rng.randf_range(-limit, limit))
-		if spot.length() < 8.0 or _near_a_shop(spot):
-			continue    # keep the spawn area and the market clear
-		var size := Vector3(rng.randf_range(1.5, 4.0), rng.randf_range(1.0, 6.0), rng.randf_range(1.5, 4.0))
-		var tint := Color("3a2a58").lerp(Color("5b2a8c"), rng.randf())
-		add_box(Vector3(spot.x, size.y / 2.0, spot.y), size, tint)
+## Places the waypoint obelisks listed in TSM_Maps.json.
+func _spawn_waypoints() -> void:
+	for entry in MapData.waypoints(MAP_ID):
+		var waypoint := Waypoint.new()
+		waypoint.waypoint_id = str(entry["id"])
+		var at := MapData.position_of(entry)
+		waypoint.position = Vector3(at.x, 0.0, at.y)
+		add_child(waypoint)
+		waypoints.append(waypoint)
+
+
+## Places the healing fountains listed in TSM_Maps.json.
+func _spawn_fountains() -> void:
+	for entry in MapData.fountains(MAP_ID):
+		var fountain := HealingFountain.new()
+		fountain.fountain_id = str(entry["id"])
+		var at := MapData.position_of(entry)
+		fountain.position = Vector3(at.x, 0.0, at.y)
+		add_child(fountain)
+		fountains.append(fountain)
+
+
+## Trees, rocks, mountains and the temple, kept away from the start, the market,
+## the camps, the waypoints and the fountains.
+func _build_decor() -> void:
+	var reserved: Array = [[Vector2.ZERO, 10.0]]
+	for shop in DataRegistry.get_config("shop_rules").get("shops", []):
+		reserved.append([MapData.position_of(shop), 5.0])
+	for camp in DataRegistry.get_config("world_camps").get(MAP_ID, {}).get("camps", []):
+		reserved.append([MapData.position_of(camp), float(camp.get("radius", 8)) + 4.0])
+	for entry in MapData.waypoints(MAP_ID):
+		reserved.append([MapData.position_of(entry), 4.5])
+	for entry in MapData.fountains(MAP_ID):
+		reserved.append([MapData.position_of(entry), 6.0])
+	decor = MapDecor.new()
+	add_child(decor)
+	decor.build(MAP_ID, reserved)
+
+
+## Removes all the scenery (tests use this to get an empty field).
+func clear_decor() -> void:
+	if decor != null:
+		decor.clear()
+		decor.queue_free()
+		decor = null
 
 
 func _checker_texture() -> ImageTexture:
@@ -169,7 +205,7 @@ func _checker_texture() -> ImageTexture:
 	for y in 64:
 		for x in 64:
 			var dark := ((x >> 5) + (y >> 5)) % 2 == 0
-			image.set_pixel(x, y, Color("221733") if dark else Color("2e2144"))
+			image.set_pixel(x, y, Color("27342b") if dark else Color("2f3d32"))
 	image.generate_mipmaps()
 	return ImageTexture.create_from_image(image)
 

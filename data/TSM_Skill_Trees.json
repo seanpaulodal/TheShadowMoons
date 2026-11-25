@@ -1,0 +1,438 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Class specialization paths and ordered prerequisite progression.",
+  "paths": [
+    {
+      "class_id": "warrior",
+      "class_name": "Warrior",
+      "path_id": "blade_mastery",
+      "path_name": "Blade Mastery",
+      "path_order": 1,
+      "skill_ids": [
+        "WAR_01_01",
+        "WAR_01_02",
+        "WAR_01_03",
+        "WAR_01_04",
+        "WAR_01_05",
+        "WAR_01_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "warrior",
+      "class_name": "Warrior",
+      "path_id": "iron_fortress",
+      "path_name": "Iron Fortress",
+      "path_order": 2,
+      "skill_ids": [
+        "WAR_02_01",
+        "WAR_02_02",
+        "WAR_02_03",
+        "WAR_02_04",
+        "WAR_02_05",
+        "WAR_02_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "warrior",
+      "class_name": "Warrior",
+      "path_id": "berserkers_wrath",
+      "path_name": "Berserkers Wrath",
+      "path_order": 3,
+      "skill_ids": [
+        "WAR_03_01",
+        "WAR_03_02",
+        "WAR_03_03",
+        "WAR_03_04",
+        "WAR_03_05",
+        "WAR_03_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "mage",
+      "class_name": "Mage",
+      "path_id": "elemental_destruction",
+      "path_name": "Elemental Destruction",
+      "path_order": 1,
+      "skill_ids": [
+        "MAG_01_01",
+        "MAG_01_02",
+        "MAG_01_03",
+        "MAG_01_04",
+        "MAG_01_05",
+        "MAG_01_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "mage",
+      "class_name": "Mage",
+      "path_id": "arcane_control",
+      "path_name": "Arcane Control",
+      "path_order": 2,
+      "skill_ids": [
+        "MAG_02_01",
+        "MAG_02_02",
+        "MAG_02_03",
+        "MAG_02_04",
+        "MAG_02_05",
+        "MAG_02_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "mage",
+      "class_name": "Mage",
+      "path_id": "forbidden_sorcery",
+      "path_name": "Forbidden Sorcery",
+      "path_order": 3,
+      "skill_ids": [
+        "MAG_03_01",
+        "MAG_03_02",
+        "MAG_03_03",
+        "MAG_03_04",
+        "MAG_03_05",
+        "MAG_03_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "archer",
+      "class_name": "Archer",
+      "path_id": "precision_archery",
+      "path_name": "Precision Archery",
+      "path_order": 1,
+      "skill_ids": [
+        "ARC_01_01",
+        "ARC_01_02",
+        "ARC_01_03",
+        "ARC_01_04",
+        "ARC_01_05",
+        "ARC_01_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "archer",
+      "class_name": "Archer",
+      "path_id": "windrunner",
+      "path_name": "Windrunner",
+      "path_order": 2,
+      "skill_ids": [
+        "ARC_02_01",
+        "ARC_02_02",
+        "ARC_02_03",
+        "ARC_02_04",
+        "ARC_02_05",
+        "ARC_02_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "archer",
+      "class_name": "Archer",
+      "path_id": "trapper",
+      "path_name": "Trapper",
+      "path_order": 3,
+      "skill_ids": [
+        "ARC_03_01",
+        "ARC_03_02",
+        "ARC_03_03",
+        "ARC_03_04",
+        "ARC_03_05",
+        "ARC_03_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "rogue",
+      "class_name": "Rogue",
+      "path_id": "silent_execution",
+      "path_name": "Silent Execution",
+      "path_order": 1,
+      "skill_ids": [
+        "ROG_01_01",
+        "ROG_01_02",
+        "ROG_01_03",
+        "ROG_01_04",
+        "ROG_01_05",
+        "ROG_01_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "rogue",
+      "class_name": "Rogue",
+      "path_id": "phantom_movement",
+      "path_name": "Phantom Movement",
+      "path_order": 2,
+      "skill_ids": [
+        "ROG_02_01",
+        "ROG_02_02",
+        "ROG_02_03",
+        "ROG_02_04",
+        "ROG_02_05",
+        "ROG_02_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "rogue",
+      "class_name": "Rogue",
+      "path_id": "venomcraft",
+      "path_name": "Venomcraft",
+      "path_order": 3,
+      "skill_ids": [
+        "ROG_03_01",
+        "ROG_03_02",
+        "ROG_03_03",
+        "ROG_03_04",
+        "ROG_03_05",
+        "ROG_03_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "gunner",
+      "class_name": "Gunner",
+      "path_id": "firearm_mastery",
+      "path_name": "Firearm Mastery",
+      "path_order": 1,
+      "skill_ids": [
+        "GUN_01_01",
+        "GUN_01_02",
+        "GUN_01_03",
+        "GUN_01_04",
+        "GUN_01_05",
+        "GUN_01_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "gunner",
+      "class_name": "Gunner",
+      "path_id": "demolition_expert",
+      "path_name": "Demolition Expert",
+      "path_order": 2,
+      "skill_ids": [
+        "GUN_02_01",
+        "GUN_02_02",
+        "GUN_02_03",
+        "GUN_02_04",
+        "GUN_02_05",
+        "GUN_02_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "gunner",
+      "class_name": "Gunner",
+      "path_id": "tactical_engineering",
+      "path_name": "Tactical Engineering",
+      "path_order": 3,
+      "skill_ids": [
+        "GUN_03_01",
+        "GUN_03_02",
+        "GUN_03_03",
+        "GUN_03_04",
+        "GUN_03_05",
+        "GUN_03_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "healer",
+      "class_name": "Healer",
+      "path_id": "divine_restoration",
+      "path_name": "Divine Restoration",
+      "path_order": 1,
+      "skill_ids": [
+        "HEA_01_01",
+        "HEA_01_02",
+        "HEA_01_03",
+        "HEA_01_04",
+        "HEA_01_05",
+        "HEA_01_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "healer",
+      "class_name": "Healer",
+      "path_id": "divine_protection",
+      "path_name": "Divine Protection",
+      "path_order": 2,
+      "skill_ids": [
+        "HEA_02_01",
+        "HEA_02_02",
+        "HEA_02_03",
+        "HEA_02_04",
+        "HEA_02_05",
+        "HEA_02_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "healer",
+      "class_name": "Healer",
+      "path_id": "holy_retribution",
+      "path_name": "Holy Retribution",
+      "path_order": 3,
+      "skill_ids": [
+        "HEA_03_01",
+        "HEA_03_02",
+        "HEA_03_03",
+        "HEA_03_04",
+        "HEA_03_05",
+        "HEA_03_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "extreme",
+      "class_name": "Extreme",
+      "path_id": "chaos_assault",
+      "path_name": "Chaos Assault",
+      "path_order": 1,
+      "skill_ids": [
+        "EXT_01_01",
+        "EXT_01_02",
+        "EXT_01_03",
+        "EXT_01_04",
+        "EXT_01_05",
+        "EXT_01_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "extreme",
+      "class_name": "Extreme",
+      "path_id": "ascendant_form",
+      "path_name": "Ascendant Form",
+      "path_order": 2,
+      "skill_ids": [
+        "EXT_02_01",
+        "EXT_02_02",
+        "EXT_02_03",
+        "EXT_02_04",
+        "EXT_02_05",
+        "EXT_02_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "extreme",
+      "class_name": "Extreme",
+      "path_id": "void_manipulation",
+      "path_name": "Void Manipulation",
+      "path_order": 3,
+      "skill_ids": [
+        "EXT_03_01",
+        "EXT_03_02",
+        "EXT_03_03",
+        "EXT_03_04",
+        "EXT_03_05",
+        "EXT_03_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "brawler",
+      "class_name": "Brawler",
+      "path_id": "iron_fist",
+      "path_name": "Iron Fist",
+      "path_order": 1,
+      "skill_ids": [
+        "BRA_01_01",
+        "BRA_01_02",
+        "BRA_01_03",
+        "BRA_01_04",
+        "BRA_01_05",
+        "BRA_01_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "brawler",
+      "class_name": "Brawler",
+      "path_id": "martial_discipline",
+      "path_name": "Martial Discipline",
+      "path_order": 2,
+      "skill_ids": [
+        "BRA_02_01",
+        "BRA_02_02",
+        "BRA_02_03",
+        "BRA_02_04",
+        "BRA_02_05",
+        "BRA_02_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "brawler",
+      "class_name": "Brawler",
+      "path_id": "combo_mastery",
+      "path_name": "Combo Mastery",
+      "path_order": 3,
+      "skill_ids": [
+        "BRA_03_01",
+        "BRA_03_02",
+        "BRA_03_03",
+        "BRA_03_04",
+        "BRA_03_05",
+        "BRA_03_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "necromancer",
+      "class_name": "Necromancer",
+      "path_id": "death_sorcery",
+      "path_name": "Death Sorcery",
+      "path_order": 1,
+      "skill_ids": [
+        "NEC_01_01",
+        "NEC_01_02",
+        "NEC_01_03",
+        "NEC_01_04",
+        "NEC_01_05",
+        "NEC_01_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "necromancer",
+      "class_name": "Necromancer",
+      "path_id": "undead_summoning",
+      "path_name": "Undead Summoning",
+      "path_order": 2,
+      "skill_ids": [
+        "NEC_02_01",
+        "NEC_02_02",
+        "NEC_02_03",
+        "NEC_02_04",
+        "NEC_02_05",
+        "NEC_02_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    },
+    {
+      "class_id": "necromancer",
+      "class_name": "Necromancer",
+      "path_id": "soul_dominion",
+      "path_name": "Soul Dominion",
+      "path_order": 3,
+      "skill_ids": [
+        "NEC_03_01",
+        "NEC_03_02",
+        "NEC_03_03",
+        "NEC_03_04",
+        "NEC_03_05",
+        "NEC_03_06"
+      ],
+      "unlock_rule": "Unlock each node by meeting its character level, spending skill points, and learning its prerequisite."
+    }
+  ]
+}

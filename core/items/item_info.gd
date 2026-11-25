@@ -23,7 +23,9 @@ static func lines(item_id: String) -> Array:
 
 	var slot := ItemDB.equip_slot(item_id)
 	var type_text := ItemDB.category(item_id).capitalize()
-	if slot != "":
+	if ItemDB.weapon_type(item_id) != "":
+		type_text += "  -  " + ItemDB.weapon_type(item_id)
+	elif slot != "":
 		type_text += "  -  " + slot_label(slot)
 	result.append({"text": "%s  |  %s" % [type_text, ItemDB.rarity(item_id)], "kind": "muted"})
 
@@ -35,7 +37,15 @@ static func lines(item_id: String) -> Array:
 	if not damage.is_empty():
 		result.append({"text": "Damage  %d - %d" % [int(damage["min"]), int(damage["max"])], "kind": "stat"})
 
+	var attribute := ItemDB.attribute_bonus(item_id)
+	if not attribute.is_empty():
+		var points := float(attribute["points"])
+		var points_text := str(int(points)) if is_equal_approx(points, roundf(points)) else str(points)
+		result.append({"text": "%s  +%s" % [str(attribute["label"]), points_text], "kind": "stat"})
+
 	for modifier in ItemDB.stat_modifiers(item_id):
+		if modifier.has("attribute"):
+			continue            # shown above as attribute points
 		var stat := str(modifier["stat"])
 		var text := "%s  %s" % [StatDisplay.stat_name(stat), StatDisplay.format_bonus(stat, modifier["flat"])]
 		if ItemDB.category(item_id) == "mount":
