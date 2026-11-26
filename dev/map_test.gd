@@ -153,9 +153,9 @@ func _test_day_night_rules() -> void:
 	_report("there are no sudden jumps in the light", jump < 0.01, str(jump))
 	_near("hours wrap around: 25:00 is 1:00", DayNightRules.state_for_hour(25.0)["night"], DayNightRules.state_for_hour(1.0)["night"])
 
-	_eq("hour text", DayNightRules.format_hour(14.6), "14:36")
-	_eq("midnight text", DayNightRules.format_hour(0.0), "00:00")
-	_eq("the last minute of the day", DayNightRules.format_hour(23.999), "23:59")
+	_eq("hour text", DayNightRules.format_hour(14.6), "2:36 PM")
+	_eq("midnight text", DayNightRules.format_hour(0.0), "12:00 AM")
+	_eq("the last minute of the day", DayNightRules.format_hour(23.999), "11:59 PM")
 	_eq("period: 3:00 is night", DayNightRules.period_name(3.0), "Night")
 	_eq("period: 6:00 is dawn", DayNightRules.period_name(6.0), "Dawn")
 	_eq("period: 12:00 is day", DayNightRules.period_name(12.0), "Day")
@@ -340,7 +340,7 @@ func _test_map_window_and_teleport() -> void:
 	_eq("the screen is fading", _hud._fade.visible, true)
 	_report("...with the place named", "Spider Marsh" in _hud._fade_label.text, _hud._fade_label.text)
 	_eq("the controls are off while it happens", _world.controls.enabled, false)
-	_eq("a second teleport is refused meanwhile", _hud.teleport_to("goblin_hollow")["error"], "BUSY")
+	_eq("a second teleport is refused meanwhile", _hud.teleport_to("goblin_hollow").get("error", ""), "BUSY")
 	await _frames(40)
 	_eq("it finishes", arrivals, ["spider_marsh"])
 	_eq("the fade is gone", _hud._fade.visible, false)
@@ -475,7 +475,7 @@ func _test_sky_and_moons() -> void:
 	# The HUD clock.
 	sky.hour_override = 14.6
 	await _frames(80)
-	_eq("the HUD clock shows the time of day", _hud._time_label.text, "Day  14:36")
+	_eq("the HUD clock shows the time of day", _hud._time_label.text, "Day  2:36 PM")
 	sky.hour_override = -1.0
 	var real_hour = sky.current_hour()
 	_report("with no override the real clock is used", real_hour >= 0.0 and real_hour < 24.0)

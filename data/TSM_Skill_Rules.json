@@ -7,8 +7,88 @@
   "require_trials": false,
   "respec_gold": 0,
   "resource_labels": {
-    "rage": "Rage", "mana": "Mana", "focus": "Focus", "shadow_energy": "Shadow Energy",
-    "ammo": "Ammo", "divine_energy": "Divine Energy", "anomaly_energy": "Anomaly Energy",
-    "combo_gauge": "Combo Gauge", "soul_essence": "Soul Essence"
+    "rage": "Rage",
+    "mana": "Mana",
+    "focus": "Focus",
+    "shadow_energy": "Shadow Energy",
+    "ammo": "Ammo",
+    "divine_energy": "Divine Energy",
+    "anomaly_energy": "Anomaly Energy",
+    "combo_gauge": "Combo Gauge",
+    "soul_essence": "Soul Essence"
+  },
+  "hit_delay_seconds": 0.12,
+  "dash_speed": 28.0,
+  "cc_status_by_tag": {
+    "root": "root",
+    "root_trap": "root",
+    "root_aoe": "root",
+    "bind": "root",
+    "control_zone": "root",
+    "silence": "silence",
+    "slow_field": "slow",
+    "slow_projectile": "slow",
+    "slow_poison": "slow",
+    "time_slow": "slow",
+    "suppression_zone": "slow",
+    "pull": "slow",
+    "pull_aoe": "slow"
+  },
+  "dot_element_by_tag": {
+    "dark_dot": "dark",
+    "curse_detonation": "dark",
+    "poison_dot": "poison",
+    "poison_aoe": "poison",
+    "poison_melee": "poison",
+    "poison_explosion": "poison",
+    "poison_spread": "poison"
+  },
+  "buff_by_tag": {
+    "defense_buff": {
+      "stats": [
+        "def_power"
+      ]
+    },
+    "defensive_form": {
+      "stats": [
+        "def_power"
+      ]
+    },
+    "mobility_buff": {
+      "stats": [
+        "move_speed"
+      ]
+    },
+    "attack_speed_form": {
+      "stats": [
+        "atk_speed"
+      ]
+    },
+    "magic_buff": {
+      "stats": [
+        "magic_power"
+      ]
+    },
+    "attack_debuff": {
+      "stats": [
+        "atk_power"
+      ],
+      "negative": true,
+      "on_enemy": true
+    },
+    "defense_and_speed_debuff": {
+      "stats": [
+        "def_power",
+        "move_speed"
+      ],
+      "negative": true,
+      "on_enemy": true
+    }
+  },
+  "movement_by_tag": {
+    "backstep": "backstep",
+    "dash": "dash",
+    "leap_multishot": "dash",
+    "teleport_behind": "teleport_behind"
   }
 }

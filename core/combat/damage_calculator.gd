@@ -90,6 +90,54 @@ static func resolve(attacker: Dictionary, defender: Dictionary, rolls: Dictionar
 	return result
 
 
+## Works out what one SKILL hit does. Skills never miss and cannot be parried or
+## blocked, but they can crit. `skill` = {"raw": damage before defense, "damage_type":
+## "physical" | "magic" | "holy" | "dark" | "chaos", "crit_bonus": extra crit chance in
+## percent points, "power_multiplier": buffs, "damage_multiplier": execute and the like}.
+## Physical damage is reduced by physical defense, everything else by magic defense.
+## Holy and dark damage counts as that element against the target's weaknesses.
+## `rolls` may hold "crit" (0..100). Returns the same shape as resolve().
+static func resolve_skill(attacker: Dictionary, defender: Dictionary, skill: Dictionary,
+		rolls: Dictionary = {}, rng: RandomNumberGenerator = null) -> Dictionary:
+	var rules := DataRegistry.get_config("combat_rules")
+	var result := {
+		"outcome": "hit", "damage": 0, "physical": 0, "elemental": 0, "element": "",
+		"element_multiplier": 1.0, "is_crit": false, "blocked": false, "hit_chance": 100.0, "is_skill": true,
+	}
+	if rules.is_empty():
+		result["outcome"] = "miss"
+		return result
+	var generator := rng if rng != null else _get_shared_rng()
+	var a_stats: Dictionary = attacker.get("stats", {})
+	var d_stats: Dictionary = defender.get("stats", {})
+
+	var crit_chance := float(a_stats.get("crit_chance", 0.0)) + float(skill.get("crit_bonus", 0.0))
+	var is_crit := _roll(rolls, "crit", generator) < crit_chance
+
+	var kind := str(skill.get("damage_type", "physical"))
+	var base := float(skill.get("raw", 0.0)) * float(skill.get("power_multiplier", 1.0)) * float(skill.get("damage_multiplier", 1.0))
+	var defense_stat := str(rules["physical_defense_stat"]) if kind == "physical" else str(rules["magic_defense_stat"])
+	var defense := maxf(0.0, float(d_stats.get(defense_stat, 0.0)))
+	var reduction := minf(defense / (defense + float(rules["defense_constant"])), float(rules["max_reduction"]))
+
+	var element_name := kind if (kind == "holy" or kind == "dark") else ""
+	var element_mult := ElementalSystem.multiplier(element_name, defender.get("profile", {})) if element_name != "" else 1.0
+	var after_defense := base * (1.0 - reduction) * element_mult
+
+	var factor := float(defender.get("damage_taken_multiplier", 1.0))
+	if is_crit:
+		factor *= maxf(float(a_stats.get("crit_damage", 150.0)), 100.0) / 100.0
+
+	var total := int(floor(after_defense * factor))
+	result["physical"] = total if kind == "physical" else 0
+	result["elemental"] = total if element_name != "" else 0
+	result["damage"] = maxi(total, int(rules["min_damage"]))
+	result["element"] = element_name
+	result["element_multiplier"] = element_mult
+	result["is_crit"] = is_crit
+	return result
+
+
 static func _roll(rolls: Dictionary, key: String, generator: RandomNumberGenerator) -> float:
 	if rolls.has(key):
 		return float(rolls[key])

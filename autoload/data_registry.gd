@@ -71,6 +71,10 @@ const CONFIGS := {
 		"path": "res://data/TSM_Skill_Rules.json",
 		"required": ["points_per_level", "equip_slots", "ability_rank_cost"],
 	},
+	"class_resources": {
+		"path": "res://data/TSM_Class_Resources.json",
+		"required": ["classes"],
+	},
 	"skill_trees": {
 		"path": "res://data/TSM_Skill_Trees.json",
 		"required": ["paths"],
@@ -321,13 +325,15 @@ func _normalize(data: Variant, id_field: String) -> Array:
 		if not (node is Dictionary) or _looks_like_rows(node):
 			break
 		var next: Variant = null
+		var candidates: Array = []       # keys that hold a list or a table (text and numbers beside them are fine)
 		for key in node:
 			var candidate: Variant = node[key]
 			if candidate is Array or (candidate is Dictionary and not candidate.has(id_field)):
+				candidates.append(str(key))
 				if next == null:
 					next = candidate
-					if node.size() > 1:
-						_warnings.append("Several top-level keys found; using \"%s\"" % str(key))
+		if candidates.size() > 1:
+			_warnings.append("Several tables found at the top level (%s); using \"%s\"" % [", ".join(candidates), str(candidates[0])])
 		if next == null:
 			break
 		node = next

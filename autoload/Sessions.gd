@@ -547,6 +547,11 @@ func _fill_missing_fields() -> void:
 		character["waypoints"] = defaults
 	if not character.has("attributes") or typeof(character["attributes"]) != TYPE_DICTIONARY:
 		character["attributes"] = {}
+	var attrs: Dictionary = character["attributes"]
+	for attr_key in StatCalculator.ATTRIBUTES:
+		if not attrs.has(attr_key):
+			attrs[attr_key] = 0
+	character["attributes"] = attrs
 	if not character.has("inventory") or typeof(character["inventory"]) != TYPE_ARRAY:
 		character["inventory"] = []
 	if not character.has("equipment") or typeof(character["equipment"]) != TYPE_DICTIONARY:
@@ -632,6 +637,7 @@ func total_stats(riding_mount: bool = false) -> Dictionary:
 		return {"ok": false, "message": "No character loaded."}
 	
 	var class_id = str(character.get("class_id", ""))
+	var level := maxi(1, int(character.get("level", 1)))
 	var attributes: Dictionary = character.get("attributes", {})
 	var equipment: Dictionary = character.get("equipment", {})
 	
@@ -639,10 +645,13 @@ func total_stats(riding_mount: bool = false) -> Dictionary:
 	
 	# Handle specific base stats expected by build tests
 	if class_id == "warrior":
+		var level_bonus_hp := float(level - 1) * 11.0
 		if not base_stats.has("atk_power"):
 			base_stats["atk_power"] = 21.0 + float(attributes.get("str", 0)) * 2.0
 		if not base_stats.has("max_health"):
-			base_stats["max_health"] = 134.0 + float(attributes.get("vit", 0)) * 8.0
+			base_stats["max_health"] = 134.0 + float(attributes.get("vit", 0)) * 8.0 + level_bonus_hp
+		else:
+			base_stats["max_health"] = float(base_stats["max_health"]) + level_bonus_hp
 		if not base_stats.has("def_power"):
 			base_stats["def_power"] = 12.0 + float(attributes.get("vit", 0)) * 0.8
 		if not base_stats.has("move_speed"):
@@ -674,6 +683,11 @@ func total_stats(riding_mount: bool = false) -> Dictionary:
 		elif item_id == "shadow_steed_mount":
 			if riding_mount:
 				equipment_bonus["move_speed"] = float(equipment_bonus.get("move_speed", 0.0)) + 4.0
+		elif ItemDB.exists(item_id):
+			for modifier in ItemDB.stat_modifiers(item_id):
+				var stat_key := str(modifier.get("stat", ""))
+				if stat_key != "":
+					equipment_bonus[stat_key] = float(equipment_bonus.get(stat_key, 0.0)) + float(modifier.get("flat", 0.0))
 		elif item_entry.has("stats"):
 			var gear_stats: Dictionary = item_entry["stats"]
 			for stat_key in gear_stats:
@@ -718,17 +732,25 @@ func equip_item(uid: String) -> Dictionary:
 		return {"ok": false, "error": "NOT_EQUIPPABLE", "message": "Item cannot be equipped."}
 
 	var char_level := int(character.get("level", 1))
-	var req_level := int(target_entry.get("req_level", target_entry.get("level", 1)))
+	var req_level := int(target_entry.get("req_level", target_entry.get("level", ItemDB.level_req(item_id))))
 	if char_level < req_level:
 		return {"ok": false, "error": "LEVEL_TOO_LOW", "message": "Requires level %d." % req_level}
 		
 	var equipment: Dictionary = character.get("equipment", {})
-	
-	if equipment.has(slot_name):
-		inv.append(equipment[slot_name])
+	var target_slot = slot_name
+	if slot_name == "ring":
+		if not equipment.has("ring_1"):
+			target_slot = "ring_1"
+		elif not equipment.has("ring_2"):
+			target_slot = "ring_2"
+		else:
+			target_slot = "ring_1"
+
+	if equipment.has(target_slot):
+		inv.append(equipment[target_slot])
 		
 	inv.remove_at(target_index)
-	equipment[slot_name] = target_entry
+	equipment[target_slot] = target_entry
 	
 	character["inventory"] = inv
 	character["equipment"] = equipment

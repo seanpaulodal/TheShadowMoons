@@ -37,6 +37,24 @@ static func attack(attacker: Combatant, defender: Combatant, skill_multiplier: f
 	return result
 
 
+## One hit of a skill (see DamageCalculator.resolve_skill). Returns the result with
+## "ok": true and "killed", or {"ok": false, "error": CODE}.
+static func skill_hit(attacker: Combatant, defender: Combatant, skill: Dictionary,
+		rolls: Dictionary = {}) -> Dictionary:
+	if attacker.is_dead:
+		return {"ok": false, "error": "ATTACKER_DEAD"}
+	if defender.is_dead:
+		return {"ok": false, "error": "TARGET_DEAD"}
+	defender.last_attacker = attacker
+	var result := DamageCalculator.resolve_skill(attacker.combat_info(), defender.combat_info(), skill, rolls, _get_rng())
+	result["ok"] = true
+	result["attacker"] = attacker.display_name
+	result["target"] = defender.display_name
+	defender.take_damage(int(result["damage"]), result)
+	result["killed"] = defender.is_dead
+	return result
+
+
 static func _apply_on_hit_status(attacker: Combatant, defender: Combatant, result: Dictionary,
 		rolls: Dictionary) -> void:
 	if defender.is_dead:

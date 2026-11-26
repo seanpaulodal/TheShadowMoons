@@ -13,7 +13,7 @@ signal removed(effect_id: String)
 const KINDS: Array[String] = ["dot", "hot", "buff", "debuff", "cc"]
 const STACKING: Array[String] = ["refresh", "stack", "ignore"]
 
-var _active: Dictionary = {}    # effect_id -> {"stacks", "remaining", "tick_timer", "source"}
+var _active: Dictionary = {}    # effect_id -> {"stacks", "remaining", "tick_timer", "source", "def"?}
 
 
 ## "Armor Break" -> "armor_break", "Weaken" -> "weakness". "" if unknown.
@@ -53,6 +53,31 @@ func apply(effect_name: String, source: Dictionary = {}) -> Dictionary:
 	return {"ok": true, "effect_id": effect_id, "stacks": _active[effect_id]["stacks"]}
 
 
+## Puts an effect made by a skill on the target (it carries its own definition:
+## name, kind, duration, modifiers, tick, flags...). Using it again restarts it.
+func apply_custom(definition: Dictionary, source: Dictionary = {}) -> Dictionary:
+	var effect_id := str(definition.get("effect_id", ""))
+	if effect_id == "":
+		return {"ok": false, "error": "NO_ID"}
+	var duration := float(definition.get("duration", 1.0))
+	if _active.has(effect_id):
+		_active[effect_id]["remaining"] = duration
+		_active[effect_id]["def"] = definition.duplicate(true)
+	else:
+		_active[effect_id] = {"stacks": 1, "remaining": duration, "tick_timer": 0.0,
+				"source": source, "def": definition.duplicate(true)}
+	changed.emit()
+	return {"ok": true, "effect_id": effect_id, "stacks": 1}
+
+
+## The definition of an active effect: its own (made by a skill) or the one in the data.
+func definition(effect_id: String) -> Dictionary:
+	var entry: Dictionary = _active.get(effect_id, {})
+	if entry.has("def"):
+		return entry["def"]
+	return DataRegistry.get_status_effect(effect_id)
+
+
 ## Moves time forward. Returns what happened: a list of
 ## {"effect_id", "kind": "damage" | "heal", "amount": float, "element": String, "source": Dictionary}.
 func update(delta: float, max_health: float) -> Array:
@@ -60,7 +85,7 @@ func update(delta: float, max_health: float) -> Array:
 	var expired: Array = []
 	for effect_id in _active:
 		var entry: Dictionary = _active[effect_id]
-		var effect_def := DataRegistry.get_status_effect(effect_id)
+		var effect_def := definition(effect_id)
 		var step := minf(delta, float(entry["remaining"]))
 
 		if effect_def.has("tick"):
@@ -116,7 +141,7 @@ func remove(effect_id: String) -> void:
 ## Removes every effect that may be cleansed (all of them, by default).
 func cleanse() -> void:
 	for effect_id in _active.keys():
-		if DataRegistry.get_status_effect(effect_id).get("cleansable", true):
+		if definition(effect_id).get("cleansable", true):
 			_active.erase(effect_id)
 			removed.emit(effect_id)
 	changed.emit()
@@ -136,7 +161,7 @@ func modifiers() -> Array:
 	var result: Array = []
 	for effect_id in _active:
 		var count: int = _active[effect_id]["stacks"]
-		for entry in DataRegistry.get_status_effect(effect_id).get("modifiers", []):
+		for entry in definition(effect_id).get("modifiers", []):
 			result.append({
 				"stat": str(entry["stat"]),
 				"flat": float(entry.get("flat", 0.0)) * count,
@@ -148,7 +173,7 @@ func modifiers() -> Array:
 
 func has_flag(flag: String) -> bool:
 	for effect_id in _active:
-		if (DataRegistry.get_status_effect(effect_id).get("flags", []) as Array).has(flag):
+		if (definition(effect_id).get("flags", []) as Array).has(flag):
 			return true
 	return false
 
@@ -169,7 +194,7 @@ func can_cast() -> bool:
 func damage_taken_multiplier() -> float:
 	var extra := 0.0
 	for effect_id in _active:
-		extra += float(DataRegistry.get_status_effect(effect_id).get("damage_taken_percent", 0.0)) \
+		extra += float(definition(effect_id).get("damage_taken_percent", 0.0)) \
 				* int(_active[effect_id]["stacks"])
 	return maxf(0.0, 1.0 + extra / 100.0)
 

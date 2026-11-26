@@ -35,6 +35,8 @@ const ACTION_KEYS := {
 	"move_right": [KEY_D, KEY_RIGHT],
 	"attack": [KEY_SPACE, KEY_F],
 	"interact": [KEY_E],
+	"skill_1": [KEY_1], "skill_2": [KEY_2], "skill_3": [KEY_3], "skill_4": [KEY_4],
+	"skill_5": [KEY_5], "skill_6": [KEY_6], "skill_7": [KEY_7], "skill_8": [KEY_8],
 }
 
 ## Stats from the character's build and gear (see CharacterStats), before status effects.
@@ -49,6 +51,9 @@ var controls: TouchControls
 var move_override: Vector2 = Vector2.ZERO
 var spawn_position: Vector3 = Vector3(0, 1, 0)
 
+## Casts the skills on the eight slots (see SkillCaster).
+var skills: SkillCaster
+
 ## One cooldown per potion (see PotionCooldowns).
 var potion_cooldowns := PotionCooldowns.new()
 ## Tests only: a fixed "now" in Unix seconds for elixirs. -1 means the real clock.
@@ -58,6 +63,8 @@ var _autopot_timer: float = 0.0
 var _elixir_timer: float = 0.0
 var _vitals_timer: float = 0.0
 var _vitals_dirty: bool = false
+var _dash_direction: Vector3 = Vector3.ZERO
+var _dash_left: float = 0.0
 var _dead: bool = false
 var _combat_clock: float = 99.0      # seconds since the last fight action
 var _regen_pools := {"hp": 0.0, "mp": 0.0, "sp": 0.0}
@@ -84,12 +91,16 @@ func _ready() -> void:
 	combatant = Combatant.new()
 	add_child(combatant)
 	combatant.owner_node = self
+	skills = SkillCaster.new()
+	skills.setup(self)
+	add_child(skills)
 	refresh_stats()
 	combatant.damaged.connect(_on_combatant_damaged)
 	combatant.died.connect(_on_died)
 	_apply_saved_vitals()
 	combatant.changed.connect(func() -> void: _vitals_dirty = true)
 	Session.character_changed.connect(_on_character_changed)
+	Session.reward_granted.connect(_on_kill_reward)
 	global_position = spawn_position
 
 
@@ -109,6 +120,7 @@ func refresh_stats(extra_modifiers: Array = [], mounted: bool = false) -> void:
 		if not _combatant_ready:
 			combatant.setup(str(Session.character.get("name", "Player")),
 					int(Session.character.get("level", 1)), stats, "player")
+			combatant.mp = ClassResource.start_value(str(Session.character.get("class_id", "")), combatant.max_mana())
 			_combatant_ready = true
 		else:
 			combatant.level = int(Session.character.get("level", 1))
@@ -311,6 +323,8 @@ func _on_died() -> void:
 
 func _on_combatant_damaged(result: Dictionary) -> void:
 	_combat_clock = 0.0
+	if int(result.get("damage", 0)) > 0 and str(result.get("outcome", "hit")) != "dot":
+		gain_resource("hit_taken")
 	var at := global_position + Vector3(0, 2.9, 0)
 	var outcome := str(result.get("outcome", "hit"))
 	if outcome == "miss":
@@ -337,12 +351,6 @@ func _regenerate(delta: float) -> void:
 	if whole_hp > 0:
 		_regen_pools["hp"] -= whole_hp
 		combatant.heal(whole_hp)
-	_regen_pools["mp"] += float(combatant.max_mana()) * rate * delta
-	var whole_mp := int(_regen_pools["mp"])
-	if whole_mp > 0:
-		_regen_pools["mp"] -= whole_mp
-		combatant.mp = mini(combatant.mp + whole_mp, combatant.max_mana())
-		changed = true
 	_regen_pools["sp"] += float(combatant.max_stamina()) * rate * delta
 	var whole_sp := int(_regen_pools["sp"])
 	if whole_sp > 0:
@@ -351,6 +359,78 @@ func _regenerate(delta: float) -> void:
 		changed = true
 	if changed:
 		combatant.changed.emit()
+
+
+## The class bar (the MP bar) refills, builds up or drains by the rules of the class.
+func _update_class_bar(delta: float) -> void:
+	var class_id := str(Session.character.get("class_id", ""))
+	var per_second := ClassResource.rate(class_id, _combat_clock)
+	if per_second == 0.0:
+		return
+	_regen_pools["mp"] += per_second * delta
+	var whole := int(_regen_pools["mp"])
+	if whole != 0:
+		_regen_pools["mp"] -= whole
+		var before := combatant.mp
+		combatant.mp = clampi(combatant.mp + whole, 0, combatant.max_mana())
+		if combatant.mp != before:
+			combatant.changed.emit()
+
+
+## Adds to (or takes from) the class bar after a fight event: "hit", "hit_taken", "kill".
+func gain_resource(event: String) -> void:
+	var amount := ClassResource.gain(str(Session.character.get("class_id", "")), event)
+	if amount > 0.0 and combatant != null and not combatant.is_dead:
+		combatant.mp = mini(combatant.mp + roundi(amount), combatant.max_mana())
+		combatant.changed.emit()
+
+
+func _on_kill_reward(summary: Dictionary) -> void:
+	if int(summary.get("exp", 0)) > 0 or int(summary.get("gold", 0)) > 0:
+		gain_resource("kill")
+
+
+## A skill of mine hit something.
+func on_skill_hit(result: Dictionary, victim: Node3D) -> void:
+	_combat_clock = 0.0
+	gain_resource("hit")
+	if result.get("killed", false) and victim == target:
+		target = null
+		target_changed.emit(null)
+
+
+## Resets the "in a fight" timer (casting counts as fighting).
+func mark_combat() -> void:
+	_combat_clock = 0.0
+
+
+func set_target(node: Node3D) -> void:
+	if node != target:
+		target = node
+		target_changed.emit(target)
+
+
+## Turns to look at a point (ground only).
+func face(point: Vector3) -> void:
+	var toward := point - global_position
+	if Vector2(toward.x, toward.z).length() > 0.01:
+		_model.rotation.y = atan2(-toward.x, -toward.z)
+
+
+## The way the character faces, as a flat direction.
+func facing_vector() -> Vector3:
+	var yaw := _model.rotation.y
+	return Vector3(-sin(yaw), 0.0, -cos(yaw))
+
+
+## A quick dash: runs over a fraction of a second, stopping at walls.
+func dash(direction: Vector3, distance: float) -> void:
+	var flat := Vector3(direction.x, 0.0, direction.z)
+	if flat.length() < 0.01 or distance <= 0.0:
+		return
+	var speed := float(DataRegistry.get_config("skill_rules").get("dash_speed", 28.0))
+	_dash_direction = flat.normalized() * speed
+	_dash_left = distance / speed
 
 
 ## Walking speed right now, including slows and haste.
@@ -382,6 +462,8 @@ func try_attack(rolls: Dictionary = {}) -> Dictionary:
 		return {"ok": false, "error": "DEAD"}
 	if _attack_cooldown > 0.0:
 		return {"ok": false, "error": "COOLDOWN"}
+	if skills != null and skills.is_casting():
+		return {"ok": false, "error": "CASTING"}
 	if not combatant.status.can_attack():
 		attack_failed.emit("You can't attack right now")
 		return {"ok": false, "error": "CANNOT_ATTACK"}
@@ -412,6 +494,8 @@ func try_attack(rolls: Dictionary = {}) -> Dictionary:
 	create_tween().tween_property(_model, "scale", Vector3.ONE, 0.15)
 
 	_combat_clock = 0.0
+	if str(result.get("outcome", "")) == "hit":
+		gain_resource("hit")
 	attacked.emit(result)
 	if result.get("killed", false):
 		target = null
@@ -429,6 +513,7 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 	_regenerate(delta)
+	_update_class_bar(delta)
 	potion_cooldowns.update(delta)
 	_run_autopot(delta)
 	_tick_elixir(delta)
@@ -439,6 +524,11 @@ func _physics_process(delta: float) -> void:
 		input = Vector2.ZERO
 	var direction := Basis(Vector3.UP, _yaw) * Vector3(input.x, 0.0, input.y)
 	var target_velocity := direction * move_speed()
+	if _dash_left > 0.0:
+		_dash_left -= delta
+		target_velocity = _dash_direction
+		velocity.x = _dash_direction.x
+		velocity.z = _dash_direction.z
 
 	velocity.x = move_toward(velocity.x, target_velocity.x, ACCELERATION * delta)
 	velocity.z = move_toward(velocity.z, target_velocity.z, ACCELERATION * delta)
@@ -479,6 +569,12 @@ func _process(_delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	for slot_name in SkillDB.SLOT_NAMES:
+		if event.is_action_pressed(slot_name) and skills != null:
+			var result := skills.cast_slot(slot_name)
+			if not result["ok"]:
+				attack_failed.emit(str(result.get("message", "")))
+			return
 	if event is InputEventMouseMotion:
 		if (event.button_mask & MOUSE_BUTTON_MASK_RIGHT) != 0:
 			_mouse_look += event.relative * MOUSE_LOOK_SENSITIVITY

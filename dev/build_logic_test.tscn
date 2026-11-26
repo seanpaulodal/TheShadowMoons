@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://bmtc6agwpjsup"]
 
-[ext_resource type="Script" path="res://dev/build_logic_test.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://b86b4rv4wtk60" path="res://dev/build_logic_test.gd" id="1_script"]
 
-[node name="BuildLogicTest" type="Node"]
+[node name="BuildLogicTest" type="Node" unique_id=1006416953]
 script = ExtResource("1_script")

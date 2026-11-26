@@ -68,11 +68,17 @@ static func state_for_hour(hour: float) -> Dictionary:
 	}
 
 
-## "14:05".
+## "2:36 PM", "12:07 AM", "12:00 PM".
 @warning_ignore("integer_division")
 static func format_hour(hour: float) -> String:
-	var minutes_total := int(floor(fposmod(hour, 24.0) * 60.0 + 0.001))    # the 0.001 absorbs float error (14.6 h)
-	return "%02d:%02d" % [minutes_total / 60, minutes_total % 60]
+	var minutes_total := int(floor(fposmod(hour, 24.0) * 60.0 + 0.001)) % (24 * 60)    # the 0.001 absorbs float error (14.6 h)
+	var hour_24 := minutes_total / 60
+	var minute := minutes_total % 60
+	var meridiem := "AM" if hour_24 < 12 else "PM"
+	var hour_12 := hour_24 % 12
+	if hour_12 == 0:
+		hour_12 = 12
+	return "%d:%02d %s" % [hour_12, minute, meridiem]
 
 
 ## A short word for the time of day, for the HUD.

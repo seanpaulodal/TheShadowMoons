@@ -93,7 +93,7 @@
     },
     "max_mana": {
       "integer": true,
-      "min": 0
+      "min": 100
     },
     "max_stamina": {
       "integer": true,

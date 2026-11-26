@@ -57,7 +57,7 @@ func _test_stats() -> void:
 	var warrior := _stats("warrior", 1)
 	_eq("warrior L1 ok", warrior["ok"], true)
 	_eq("warrior L1 max_health", warrior["stats"]["max_health"], 134)
-	_eq("warrior L1 max_mana", warrior["stats"]["max_mana"], 36)
+	_eq("warrior L1 max_mana (the class bar is at least 100)", warrior["stats"]["max_mana"], 100)
 	_eq("warrior L1 atk_power", warrior["stats"]["atk_power"], 21)
 	_eq("warrior L1 def_power", warrior["stats"]["def_power"], 12)
 	_near("warrior L1 crit_chance", warrior["stats"]["crit_chance"], 5.8)

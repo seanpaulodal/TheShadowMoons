@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://db2a7h0o1aniq"]
 
-[ext_resource type="Script" path="res://dev/gear_data_test.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dabcdgktkvml6" path="res://dev/gear_data_test.gd" id="1_script"]
 
-[node name="GearDataTest" type="Node"]
+[node name="GearDataTest" type="Node" unique_id=1567094710]
 script = ExtResource("1_script")

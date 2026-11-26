@@ -4,8 +4,10 @@ extends RefCounted
 ## "targetable" and has a `combatant` property (and optionally `target_radius`).
 
 
-static func is_valid_target(node: Node) -> bool:
-	if node == null or not is_instance_valid(node):
+## `node` is a Variant on purpose: a target that has been removed from the game
+## (an enemy whose corpse faded away) must count as "not valid" instead of causing an error.
+static func is_valid_target(node: Variant) -> bool:
+	if not is_instance_valid(node) or not (node is Node):
 		return false
 	var fighter: Variant = node.get("combatant")
 	return fighter is Combatant and not (fighter as Combatant).is_dead
@@ -21,7 +23,7 @@ static func distance(from: Node3D, target: Node3D) -> float:
 
 ## Keeps `current` while it is still alive and in range, otherwise picks the
 ## nearest valid target in range. Returns null if there is none.
-static func pick(from: Node3D, attack_range: float, current: Node3D = null) -> Node3D:
+static func pick(from: Node3D, attack_range: float, current: Variant = null) -> Node3D:
 	if is_valid_target(current) and distance(from, current) <= attack_range:
 		return current
 	var best: Node3D = null

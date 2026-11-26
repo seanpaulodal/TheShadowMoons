@@ -30,6 +30,10 @@ var _mp_bar: ProgressBar
 var _sp_bar: ProgressBar
 var _hp_text: Label
 var _mp_text: Label
+var _mp_label: Label
+var _skill_buttons: Dictionary = {}      # 1..4 -> {"button", "icon", "cost", "shade", "time"}
+var _skill_page: int = 0                 # 0 = slots 1-4, 1 = slots 5-8
+var _swap_button: Button
 var _sp_text: Label
 var _exp_bar: ProgressBar
 var _exp_text: Label
@@ -75,6 +79,7 @@ func setup(player: PlayerController) -> void:
 	_build_banner()
 	_build_death_panel()
 	_build_quick_slots()
+	_build_skill_buttons()
 	_build_interact_button()
 	_build_minimap()
 	_build_windows()
@@ -154,6 +159,7 @@ func _process(delta: float) -> void:
 		_refresh_target()
 		_refresh_buffs()
 		_refresh_quick_slots()
+		_refresh_skills()
 		_refresh_interact()
 		_clock_timer += 0.1
 		if _clock_timer >= 1.0:
@@ -198,6 +204,7 @@ func _build_left_column() -> void:
 	var mp := _bar_row(box, "MP", Color("2f7fd1"))
 	_mp_bar = mp[0]
 	_mp_text = mp[1]
+	_mp_label = mp[2]
 	var sp := _bar_row(box, "SP", Color("3aa655"))
 	_sp_bar = sp[0]
 	_sp_text = sp[1]
@@ -242,7 +249,7 @@ func _bar_row(parent: Control, label_text: String, color: Color) -> Array:
 	var value := Label.new()
 	value.add_theme_font_size_override("font_size", 16)
 	row.add_child(value)
-	return [bar, value]
+	return [bar, value, label]
 
 
 func _make_bar(color: Color, min_size: Vector2) -> ProgressBar:
@@ -474,6 +481,125 @@ func _build_quick_slots() -> void:
 		button.add_child(time)
 
 		_quick_buttons[resource] = {"button": button, "icon": icon, "count": count, "shade": shade, "time": time}
+
+
+## Four skill buttons in an arc above and left of the ATK button, and a small
+## button that swaps them between slots 1-4 and 5-8.
+func _build_skill_buttons() -> void:
+	var center := Vector2(-150.0, -150.0)            # the ATK button, from the bottom right corner
+	for index in 4:
+		var angle := deg_to_rad([160.0, 130.0, 100.0, 70.0][index])
+		var middle := center + Vector2(cos(angle), -sin(angle)) * 215.0
+		var button := Button.new()
+		button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+		button.offset_left = middle.x - 48.0
+		button.offset_right = middle.x + 48.0
+		button.offset_top = middle.y - 48.0
+		button.offset_bottom = middle.y + 48.0
+		for state in ["normal", "hover", "pressed", "focus"]:
+			button.add_theme_stylebox_override(state, GameWindow.slot_style(Color("8a5fd0"), false))
+		button.pressed.connect(_on_skill_button.bind(index + 1))
+		add_child(button)
+
+		var number := Label.new()
+		number.text = str(index + 1)
+		number.position = Vector2(8, 2)
+		number.add_theme_font_size_override("font_size", 16)
+		number.add_theme_color_override("font_color", TSMTheme.MUTED)
+		number.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(number)
+
+		var icon := Label.new()
+		icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		icon.add_theme_font_size_override("font_size", 30)
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(icon)
+
+		var cost := Label.new()
+		cost.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 6)
+		cost.add_theme_font_size_override("font_size", 16)
+		cost.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(cost)
+
+		var shade := ColorRect.new()
+		shade.color = Color(0, 0, 0, 0.62)
+		shade.anchor_left = 0.0
+		shade.anchor_right = 1.0
+		shade.anchor_bottom = 1.0
+		shade.anchor_top = 1.0
+		shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(shade)
+
+		var time := Label.new()
+		time.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		time.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		time.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		time.add_theme_font_size_override("font_size", 28)
+		time.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(time)
+		_skill_buttons[index + 1] = {"button": button, "icon": icon, "cost": cost, "shade": shade, "time": time}
+
+	_swap_button = Button.new()
+	_swap_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	var swap_middle := center + Vector2(99.0, -99.0)
+	_swap_button.offset_left = swap_middle.x - 32.0
+	_swap_button.offset_right = swap_middle.x + 32.0
+	_swap_button.offset_top = swap_middle.y - 32.0
+	_swap_button.offset_bottom = swap_middle.y + 32.0
+	_swap_button.add_theme_font_size_override("font_size", 16)
+	_swap_button.pressed.connect(swap_skill_page)
+	add_child(_swap_button)
+	_refresh_skills()
+
+
+## Shows slots 5-8 instead of 1-4 (and back).
+func swap_skill_page() -> void:
+	_skill_page = 1 - _skill_page
+	_refresh_skills()
+
+
+func _skill_slot(index: int) -> String:
+	return "skill_%d" % (_skill_page * 4 + index)
+
+
+func _on_skill_button(index: int) -> void:
+	var result := _player.skills.cast_slot(_skill_slot(index))
+	if not result["ok"]:
+		show_message(str(result.get("message", "")))
+
+
+func _refresh_skills() -> void:
+	if _player == null or _player.skills == null or not Session.has_character():
+		return
+	_swap_button.text = "1-4" if _skill_page == 0 else "5-8"
+	var class_id := str(Session.character.get("class_id", ""))
+	for index in _skill_buttons:
+		var parts: Dictionary = _skill_buttons[index]
+		var skill_id := _player.skills.slot_skill(_skill_slot(index))
+		(parts["button"] as Button).get_child(0).text = str(_skill_page * 4 + index)
+		(parts["icon"] as Label).text = SkillWindow._initials(skill_id) if skill_id != "" else "+"
+		(parts["icon"] as Label).add_theme_color_override("font_color", TSMTheme.TEXT if skill_id != "" else Color("5d5470"))
+		var shade := parts["shade"] as ColorRect
+		if skill_id == "":
+			(parts["cost"] as Label).text = ""
+			shade.anchor_top = 1.0
+			(parts["time"] as Label).text = ""
+			(parts["button"] as Button).modulate.a = 0.5
+			continue
+		var rank := _player.skills.rank_of(skill_id)
+		var cost := roundi(SkillDB.cost_at_rank(skill_id, maxi(rank, 1)))
+		(parts["cost"] as Label).text = str(cost)
+		var affordable := _player.combatant.mp >= cost
+		(parts["cost"] as Label).add_theme_color_override("font_color", TSMTheme.OK if affordable else TSMTheme.ERROR)
+		var remaining := _player.skills.cooldowns.remaining(skill_id)
+		var total := maxf(0.1, SkillDB.cooldown_at_rank(skill_id, maxi(rank, 1)))
+		shade.anchor_top = 1.0 - clampf(remaining / total, 0.0, 1.0)
+		shade.offset_top = 0.0
+		shade.offset_bottom = 0.0
+		(parts["time"] as Label).text = str(ceili(remaining)) if remaining > 0.0 else ""
+		(parts["button"] as Button).modulate.a = 1.0 if affordable else 0.6
 
 
 func _build_interact_button() -> void:
@@ -742,6 +868,11 @@ func _refresh_player() -> void:
 	_name_label.text = "%s   %s  Lv %d" % [str(c.get("name", "?")),
 			str(c.get("class_id", "?")).capitalize(), int(c.get("level", 1))]
 	_set_bar(_hp_bar, _hp_text, fighter.hp, fighter.max_health())
+	var class_id := str(Session.character.get("class_id", ""))
+	_mp_label.text = ClassResource.short_label(class_id)
+	var fill := _mp_bar.get_theme_stylebox("fill") as StyleBoxFlat
+	if fill != null:
+		fill.bg_color = ClassResource.color(class_id)
 	_set_bar(_mp_bar, _mp_text, fighter.mp, fighter.max_mana())
 	_set_bar(_sp_bar, _sp_text, fighter.sp, fighter.max_stamina())
 	var level := int(c.get("level", 1))
@@ -770,7 +901,7 @@ func _refresh_target() -> void:
 	var effects: Array = []
 	for effect_id in fighter.status.active_ids():
 		var count := fighter.status.stacks(effect_id)
-		var effect_name := str(DataRegistry.get_status_effect(effect_id).get("name", effect_id))
+		var effect_name := str(fighter.status.definition(effect_id).get("name", effect_id))
 		effects.append("%s x%d" % [effect_name, count] if count > 1 else effect_name)
 	_target_status.text = ", ".join(effects)
 	_target_status.visible = not effects.is_empty()
@@ -811,7 +942,7 @@ func _refresh_buffs() -> void:
 		var label := chip.get_child(0) as Label
 		var seconds := ceili(status.remaining(effect_id))
 		var count := status.stacks(effect_id)
-		var effect_name := str(DataRegistry.get_status_effect(effect_id).get("name", effect_id))
+		var effect_name := str(status.definition(effect_id).get("name", effect_id))
 		label.text = "%s%s %ds" % [effect_name, (" x%d" % count) if count > 1 else "", seconds]
 
 
@@ -843,7 +974,7 @@ func _make_elixir_chip(text: String) -> Control:
 
 
 func _make_buff_chip(effect_id: String) -> Control:
-	var kind := str(DataRegistry.get_status_effect(effect_id).get("kind", "debuff"))
+	var kind := str(_player.combatant.status.definition(effect_id).get("kind", "debuff"))
 	var color := Color("ffb36b")
 	if kind == "buff" or kind == "hot":
 		color = Color("7be07b")

@@ -1,0 +1,122 @@
+{
+  "_note": "PLACEHOLDER class resources. The MP bar is the class bar: every class has at least min_pool (set in TSM_Stat_Rules.json as the minimum max_mana); INT and WIS raise it further. start: 'full' or 'empty'. regen_per_second always refills it; idle_regen_per_second adds more after 5 s without fighting. decay_per_second drains it after decay_delay seconds without fighting (Rage, Combo). gain_on_hit: added each time you hit an enemy; gain_when_hit: each time you are hit; gain_on_kill: each kill.",
+  "classes": {
+    "warrior": {
+      "resource": "rage",
+      "short": "RG",
+      "color": "d9453a",
+      "start": "empty",
+      "regen_per_second": 0,
+      "idle_regen_per_second": 0,
+      "decay_per_second": 6,
+      "decay_delay": 4,
+      "gain_on_hit": 6,
+      "gain_when_hit": 5,
+      "gain_on_kill": 0
+    },
+    "mage": {
+      "resource": "mana",
+      "short": "MP",
+      "color": "2f7fd1",
+      "start": "full",
+      "regen_per_second": 4,
+      "idle_regen_per_second": 6,
+      "decay_per_second": 0,
+      "decay_delay": 0,
+      "gain_on_hit": 0,
+      "gain_when_hit": 0,
+      "gain_on_kill": 0
+    },
+    "archer": {
+      "resource": "focus",
+      "short": "FC",
+      "color": "3fb37f",
+      "start": "full",
+      "regen_per_second": 5,
+      "idle_regen_per_second": 5,
+      "decay_per_second": 0,
+      "decay_delay": 0,
+      "gain_on_hit": 0,
+      "gain_when_hit": 0,
+      "gain_on_kill": 0
+    },
+    "rogue": {
+      "resource": "shadow_energy",
+      "short": "SE",
+      "color": "8a5fd0",
+      "start": "full",
+      "regen_per_second": 6,
+      "idle_regen_per_second": 4,
+      "decay_per_second": 0,
+      "decay_delay": 0,
+      "gain_on_hit": 2,
+      "gain_when_hit": 0,
+      "gain_on_kill": 0
+    },
+    "gunner": {
+      "resource": "ammo",
+      "short": "AM",
+      "color": "d4a02f",
+      "start": "full",
+      "regen_per_second": 6,
+      "idle_regen_per_second": 6,
+      "decay_per_second": 0,
+      "decay_delay": 0,
+      "gain_on_hit": 0,
+      "gain_when_hit": 0,
+      "gain_on_kill": 0
+    },
+    "healer": {
+      "resource": "divine_energy",
+      "short": "DV",
+      "color": "f0e08a",
+      "start": "full",
+      "regen_per_second": 4,
+      "idle_regen_per_second": 6,
+      "decay_per_second": 0,
+      "decay_delay": 0,
+      "gain_on_hit": 0,
+      "gain_when_hit": 0,
+      "gain_on_kill": 0
+    },
+    "extreme": {
+      "resource": "anomaly_energy",
+      "short": "AN",
+      "color": "d05fb4",
+      "start": "full",
+      "regen_per_second": 5,
+      "idle_regen_per_second": 5,
+      "decay_per_second": 0,
+      "decay_delay": 0,
+      "gain_on_hit": 1,
+      "gain_when_hit": 0,
+      "gain_on_kill": 0
+    },
+    "brawler": {
+      "resource": "combo_gauge",
+      "short": "CB",
+      "color": "e8873a",
+      "start": "empty",
+      "regen_per_second": 0,
+      "idle_regen_per_second": 0,
+      "decay_per_second": 8,
+      "decay_delay": 3,
+      "gain_on_hit": 7,
+      "gain_when_hit": 0,
+      "gain_on_kill": 0
+    },
+    "necromancer": {
+      "resource": "soul_essence",
+      "short": "SL",
+      "color": "58c9c0",
+      "start": "full",
+      "regen_per_second": 1.5,
+      "idle_regen_per_second": 2,
+      "decay_per_second": 0,
+      "decay_delay": 0,
+      "gain_on_hit": 2,
+      "gain_when_hit": 0,
+      "gain_on_kill": 20
+    }
+  }
+}
