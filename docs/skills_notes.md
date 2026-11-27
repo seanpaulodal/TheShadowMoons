@@ -41,6 +41,30 @@ for now; the server check comes with the multiplayer backend.)
 - Keys 1 to 8 cast the slots. On the phone, four buttons sit around the ATK button; the small
   button swaps between slots 1-4 and 5-8.
 
-## Not built yet (part 3)
-Summons (10 summon skills are refused for now: "coming in the next update"), the nine
-ultimates and the nine special attacks.
+## Part 3: summons, special attacks, ultimates
+- Summons (data/TSM_Summons.json, placeholders: your files name 10 summon ids but give no
+  stats): each follows you, picks the nearest enemy (within 12 m) and attacks it until its
+  time is up. Damage per attack = the summon skill's damage (or your attack/magic power if
+  the skill has none) x summon_attack_power_percent. Kills count as yours. Casting a summon
+  skill again replaces the old ones of that kind; Army of the Damned calls its 5 at once.
+  Summons cannot be hurt yet (no taunt either). Kinds: melee, ranged, tank, caster, turret
+  (stands still), construct, bomb (explodes when it expires), aura (+25% damage to all your
+  summons). They disappear when you die.
+- Special attacks (unlock level 100) and ultimates (level 200) have their own buttons (and the
+  Q and R keys). What each does is set per ability in TSM_Skill_Rules.json (ability_behaviors).
+  Damage listed as base_damage is the TOTAL on each enemy: waves, rockets and repeated hits
+  share it between them.
+  - Special attacks: Executioner's Judgment and Final Silence (execute strikes), Arcane Overload
+    (costs 40 extra mana; the next damaging skill does +65%), Deadly Focus (+25 crit chance and
+    +20% damage for 8 s), Deadlock Execution (6 shots that grow with lock-on), Guardian's Sacrifice
+    (protects you for now: it was meant for an ally), Zero Point Collapse (needs a full bar, empties
+    it, pulls enemies in and blasts), One Thousand Fists (12 punches, each 6% stronger), Soul Devourer
+    (heals 30% of the damage, +25 Soul Essence, +20% against cursed enemies).
+  - Ultimates: Kingdom's Last Stand (+35% attack, +25% defense), Eternal Cataclysm / Heaven's Arrowfall /
+    Apocalypse Protocol (waves or rockets over an area around your target), Requiem of the Eclipse
+    (up to 5 enemies, 8 hits each, +30% on marked ones), Divine Ascension (heal, shield and damage field),
+    The Absolute Anomaly (+40% attack, +30% attack speed, 15% less damage taken, drains the bar 8 a second
+    until it ends or the bar is empty), Dragon King's Ascension (10 growing hits on everything around you),
+    The Undying Legion (8 skeletons for 20 s).
+- Not built: the trials that unlock ultimates and specials (require_trials is off), summon health and
+  taunt, party and ally effects (healing and protecting others).

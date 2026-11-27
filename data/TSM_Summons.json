@@ -1,0 +1,17 @@
+{
+  "_note": "PLACEHOLDER summons (your skill files name 10 summon ids but give no stats). Each follows you, picks the nearest enemy, and attacks it. Their damage per attack = the summon skill's damage (or your attack/magic power if the skill has none) x summon_attack_power_percent. Summons cannot be hurt for now: they last for the skill's duration. attack_interval is seconds between attacks; attack_range and move_speed are metres. kind: melee, ranged, tank, caster, turret, construct, bomb (explodes when it expires), aura (makes your other summons hit harder).",
+  "follow": { "stay_distance": 3.0, "catch_up_distance": 5.0, "teleport_distance": 25.0, "aggro_radius": 12.0 },
+  "summons": {
+    "TURRET":              { "name": "Auto Turret",      "kind": "turret",    "color": "d4a02f", "size": 0.9, "attack_interval": 0.8, "attack_range": 14.0, "move_speed": 0.0, "damage_type": "physical" },
+    "COMBAT_CONSTRUCT":    { "name": "War Machine",      "kind": "construct", "color": "b0873a", "size": 1.5, "attack_interval": 1.4, "attack_range": 10.0, "move_speed": 3.0, "damage_type": "physical" },
+    "SKELETON_SUMMON":     { "name": "Skeleton",         "kind": "melee",     "color": "d8d4c0", "size": 1.0, "attack_interval": 1.1, "attack_range": 2.0,  "move_speed": 6.5, "damage_type": "dark" },
+    "RANGED_SUMMON":       { "name": "Bone Archer",      "kind": "ranged",    "color": "c8c4a8", "size": 0.95, "attack_interval": 1.4, "attack_range": 12.0, "move_speed": 5.0, "damage_type": "dark" },
+    "TANK_SUMMON":         { "name": "Grave Guardian",   "kind": "tank",      "color": "7a8fa0", "size": 1.4, "attack_interval": 1.6, "attack_range": 2.2,  "move_speed": 4.5, "damage_type": "dark" },
+    "SUMMON_EMPOWER":      { "name": "Soulbound Minion", "kind": "melee",     "color": "a56fe0", "size": 1.1, "attack_interval": 0.9, "attack_range": 2.0,  "move_speed": 7.0, "damage_type": "dark" },
+    "CASTER_SUMMON":       { "name": "Lich Servant",     "kind": "caster",    "color": "58c9c0", "size": 1.1, "attack_interval": 1.6, "attack_range": 13.0, "move_speed": 4.5, "damage_type": "dark" },
+    "ARMY_SUMMON":         { "name": "Damned Soldier",   "kind": "melee",     "color": "8f8a78", "size": 0.9, "attack_interval": 1.2, "attack_range": 2.0,  "move_speed": 6.5, "damage_type": "dark" },
+    "SUMMON_SACRIFICE":    { "name": "Pact Fiend",       "kind": "bomb",      "color": "d0485a", "size": 1.1, "attack_interval": 1.0, "attack_range": 2.0,  "move_speed": 7.0, "damage_type": "dark", "explode_on_expire_percent": 3.0, "explode_radius": 4.0 },
+    "SUMMON_EMPOWER_AURA": { "name": "Dominion Avatar",  "kind": "aura",      "color": "e0c060", "size": 1.6, "attack_interval": 1.5, "attack_range": 12.0, "move_speed": 4.0, "damage_type": "dark", "aura_attack_bonus": 0.25 },
+    "LEGION_SKELETON":     { "name": "Legion Skeleton",  "kind": "melee",     "color": "b9b4a0", "size": 1.0, "attack_interval": 1.0, "attack_range": 2.0,  "move_speed": 7.0, "damage_type": "dark" }
+  }
+}

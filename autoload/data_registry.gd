@@ -71,6 +71,10 @@ const CONFIGS := {
 		"path": "res://data/TSM_Skill_Rules.json",
 		"required": ["points_per_level", "equip_slots", "ability_rank_cost"],
 	},
+	"summons": {
+		"path": "res://data/TSM_Summons.json",
+		"required": ["follow", "summons"],
+	},
 	"class_resources": {
 		"path": "res://data/TSM_Class_Resources.json",
 		"required": ["classes"],

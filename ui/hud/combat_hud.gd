@@ -20,28 +20,6 @@ var fade_seconds: float = 0.35
 
 signal teleported(waypoint_id: String)
 
-const MAX_LABEL_CHARS: int = 10
-const QUICK_SLOT_LABEL_CHARS: int = 7
-const VITALS_WIDTH: float = 368.0
-const VITALS_HEIGHT: float = 0.0
-const BAR_WIDTH: float = 176.0
-const BAR_HEIGHT: float = 18.0
-const QUICK_SLOT_SIZE: float = 90.0
-const SKILL_BUTTON_SIZE: float = 76.0
-const SKILL_ARC_RADIUS: float = 188.0
-const LABEL_WORDS := {
-	"hp": "Health",
-	"health": "Health",
-	"mp": "Mana",
-	"mana": "Mana",
-	"sp": "Stamina",
-	"stamina": "Stamina",
-	"rg": "Rage",
-	"exp": "Experience",
-	"lv": "Level",
-	"atk": "Attack",
-}
-
 var _player: PlayerController
 var _controls: TouchControls
 var _target: Node3D
@@ -56,6 +34,7 @@ var _mp_label: Label
 var _skill_buttons: Dictionary = {}      # 1..4 -> {"button", "icon", "cost", "shade", "time"}
 var _skill_page: int = 0                 # 0 = slots 1-4, 1 = slots 5-8
 var _swap_button: Button
+var _ability_buttons: Dictionary = {}    # "special" / "ultimate" -> {"button", "icon", "cost", "shade", "time", "lock"}
 var _sp_text: Label
 var _exp_bar: ProgressBar
 var _exp_text: Label
@@ -87,88 +66,114 @@ var _message_time: float = 0.0
 var _refresh_time: float = 0.0
 
 
-func _word_label(raw_label: String, max_chars: int = MAX_LABEL_CHARS) -> String:
-	var trimmed := raw_label.strip_edges()
-	if trimmed == "":
-		return ""
-	var word := str(LABEL_WORDS.get(trimmed.to_lower(), trimmed))
-	if word.length() <= max_chars:
-		return word
-	if max_chars <= 3:
-		return "...".substr(0, max_chars)
-	return word.left(max_chars - 3) + "..."
+func _style_slot_label(label: Label, font_size: int = 12, top_margin: float = 18.0, bottom_margin: float = 20.0) -> void:
+	label.anchor_left = 0.0
+	label.anchor_right = 1.0
+	label.anchor_top = 0.0
+	label.anchor_bottom = 1.0
+	label.offset_left = 4.0
+	label.offset_right = -4.0
+	label.offset_top = top_margin
+	label.offset_bottom = -bottom_margin
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	label.add_theme_font_size_override("font_size", font_size)
 
 
-func _extract_name_from_variant(entry: Variant) -> String:
+func _item_word_name(item_id: String) -> String:
+	if item_id.strip_edges() == "":
+		return "+"
+	var raw := ItemDB.display_name(item_id).strip_edges()
+	if raw == "":
+		raw = item_id.replace("_", " ").replace("-", " ").strip_edges()
+	var words := PackedStringArray()
+	for part in raw.split(" ", false):
+		var token := part.strip_edges()
+		if token == "":
+			continue
+		if token.to_upper() == token and token.length() <= 3:
+			words.append(token)
+		else:
+			words.append(token.substr(0, 1).to_upper() + token.substr(1))
+	var joined := " ".join(words).strip_edges()
+	return joined if joined != "" else item_id
+
+
+func _resource_word(short_code: String, fallback: String) -> String:
+	match short_code.strip_edges().to_upper():
+		"HP":
+			return "Health"
+		"MP":
+			return "Mana"
+		"SP":
+			return "Stamina"
+		"RG", "RAGE":
+			return "Rage"
+		"EN", "ENERGY":
+			return "Energy"
+		"AP", "AETHER":
+			return "Aether"
+		_:
+			return fallback
+
+
+func _extract_skill_title(entry: Variant) -> String:
 	if entry is Dictionary:
-		var d := entry as Dictionary
-		for key in ["name", "display_name", "title", "label"]:
-			if d.has(key) and str(d[key]).strip_edges() != "":
-				return str(d[key]).strip_edges()
+		var dict = entry as Dictionary
+		for key in ["name", "skill_name", "display_name", "title"]:
+			if dict.has(key) and str(dict[key]).strip_edges() != "":
+				return str(dict[key]).strip_edges()
 	elif entry is Object and entry != null:
-		for prop in ["name", "display_name", "title", "skill_name"]:
+		for prop in ["name", "skill_name", "display_name", "title"]:
 			if prop in entry and str(entry.get(prop)).strip_edges() != "":
 				return str(entry.get(prop)).strip_edges()
 	return ""
 
 
-func _skill_display_name(skill_id: String) -> String:
+func _skill_display_name(skill_id: String, slot_number: int = 0) -> String:
 	if skill_id == "":
 		return "+"
-
-	var db_type: Variant = SkillDB
-	if db_type != null:
-		for method_name in ["display_name", "skill_name", "name_of", "get_name", "title_of"]:
-			if db_type.has_method(method_name):
-				var resolved := str(db_type.call(method_name, skill_id)).strip_edges()
+	if _player != null and _player.skills != null:
+		for method_name in ["skill_name", "display_name", "name_of"]:
+			if _player.skills.has_method(method_name):
+				var resolved_player = str(_player.skills.call(method_name, skill_id)).strip_edges()
+				if resolved_player != "" and resolved_player.to_lower() != skill_id.to_lower():
+					return resolved_player
+	var db = SkillDB.new()
+	if db != null:
+		for method_name in ["skill_name", "display_name", "name_of", "get_name"]:
+			if db.has_method(method_name):
+				var resolved = str(db.call(method_name, skill_id)).strip_edges()
 				if resolved != "" and resolved.to_lower() != skill_id.to_lower():
 					return resolved
-
-		for getter_name in ["get_skill", "skill_data", "get_entry", "entry", "definition", "data_of"]:
-			if db_type.has_method(getter_name):
-				var entry_name := _extract_name_from_variant(db_type.call(getter_name, skill_id))
-				if entry_name != "":
-					return entry_name
-
-		for dict_prop in ["skills", "SKILLS", "entries", "DEFINITIONS", "definitions", "catalog", "db"]:
-			if dict_prop in db_type and db_type.get(dict_prop) is Dictionary:
-				var dict_val: Dictionary = db_type.get(dict_prop)
+		for getter_name in ["get_skill", "skill_data", "get_entry", "entry", "definition"]:
+			if db.has_method(getter_name):
+				var resolved_name = _extract_skill_title(db.call(getter_name, skill_id))
+				if resolved_name != "":
+					return resolved_name
+		for dict_prop in ["skills", "SKILLS", "entries", "definitions", "DEFINITIONS"]:
+			if dict_prop in db and db.get(dict_prop) is Dictionary:
+				var dict_val: Dictionary = db.get(dict_prop)
 				if dict_val.has(skill_id):
-					var dict_name := _extract_name_from_variant(dict_val[skill_id])
-					if dict_name != "":
-						return dict_name
-				for v in dict_val.values():
-					if v is Dictionary and str((v as Dictionary).get("id", "")) == skill_id:
-						var nested_name := _extract_name_from_variant(v)
-						if nested_name != "":
-							return nested_name
+					var resolved_dict = _extract_skill_title(dict_val[skill_id])
+					if resolved_dict != "":
+						return resolved_dict
 
-	return skill_id.replace("_", " ").capitalize()
-
-
-func _replace_atk_in_tree(node: Node, attack_word: String) -> void:
-	if node == null:
-		return
-	if node is Button:
-		var btn := node as Button
-		if btn.text.strip_edges().to_upper() == "ATK":
-			btn.text = attack_word
-	elif node is Label:
-		var lbl := node as Label
-		if lbl.text.strip_edges().to_upper() == "ATK":
-			lbl.text = attack_word
-	for child in node.get_children():
-		_replace_atk_in_tree(child, attack_word)
-
-
-func _apply_attack_label_if_present() -> void:
-	var attack_word := _word_label("ATK")
-	if _controls != null:
-		for prop in ["attack_text", "atk_text", "attack_label", "atk_label"]:
-			if prop in _controls and _controls.get(prop) is String:
-				_controls.set(prop, attack_word)
-		_replace_atk_in_tree(_controls, attack_word)
-	_replace_atk_in_tree(self, attack_word)
+	var cleaned = skill_id.strip_edges().replace("_", " ").replace("-", " ")
+	var words = PackedStringArray()
+	for part in cleaned.split(" ", false):
+		var token = part
+		if token.length() <= 2 and token.is_valid_int():
+			continue
+		if token.length() > 0:
+			token = token.substr(0, 1).to_upper() + token.substr(1).to_lower()
+		words.append(token)
+	var result = " ".join(words).strip_edges()
+	if result == "" or result.length() <= 3:
+		return "Skill %d" % slot_number if slot_number > 0 else "Skill"
+	return result
 
 
 func setup(player: PlayerController) -> void:
@@ -190,7 +195,6 @@ func setup(player: PlayerController) -> void:
 	_build_minimap()
 	_build_windows()
 	_build_fade()
-	_apply_attack_label_if_present()
 
 	Session.reward_granted.connect(_on_reward)
 	Session.character_changed.connect(_refresh_player)
@@ -267,6 +271,7 @@ func _process(delta: float) -> void:
 		_refresh_buffs()
 		_refresh_quick_slots()
 		_refresh_skills()
+		_refresh_abilities()
 		_refresh_interact()
 		_clock_timer += 0.1
 		if _clock_timer >= 1.0:
@@ -277,7 +282,7 @@ func _process(delta: float) -> void:
 # ---------- building ----------
 
 func _panel_style(margin: int = 10) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
+	var style = StyleBoxFlat.new()
 	style.bg_color = Color(TSMTheme.PANEL, 0.88)
 	style.border_color = TSMTheme.BORDER
 	style.set_border_width_all(2)
@@ -287,17 +292,16 @@ func _panel_style(margin: int = 10) -> StyleBoxFlat:
 
 
 func _build_left_column() -> void:
-	var column := VBoxContainer.new()
+	var column = VBoxContainer.new()
 	column.position = Vector2(16, 12)
 	column.add_theme_constant_override("separation", 6)
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(column)
 
-	var frame := PanelContainer.new()
-	frame.custom_minimum_size = Vector2(VITALS_WIDTH, VITALS_HEIGHT)
+	var frame = PanelContainer.new()
 	frame.add_theme_stylebox_override("panel", _panel_style())
 	column.add_child(frame)
-	var box := VBoxContainer.new()
+	var box = VBoxContainer.new()
 	box.add_theme_constant_override("separation", 5)
 	frame.add_child(box)
 
@@ -306,18 +310,18 @@ func _build_left_column() -> void:
 	_name_label.add_theme_color_override("font_color", TSMTheme.ACCENT)
 	box.add_child(_name_label)
 
-	var hp := _bar_row(box, _word_label("HP"), Color("c0392b"))
+	var hp = _bar_row(box, "Health", Color("c0392b"))
 	_hp_bar = hp[0]
 	_hp_text = hp[1]
-	var mp := _bar_row(box, _word_label("MP"), Color("2f7fd1"))
+	var mp = _bar_row(box, "Mana", Color("2f7fd1"))
 	_mp_bar = mp[0]
 	_mp_text = mp[1]
 	_mp_label = mp[2]
-	var sp := _bar_row(box, _word_label("SP"), Color("3aa655"))
+	var sp = _bar_row(box, "Stamina", Color("3aa655"))
 	_sp_bar = sp[0]
 	_sp_text = sp[1]
 
-	_exp_bar = _make_bar(Color("8fd0ff"), Vector2(VITALS_WIDTH - 24.0, 12.0))
+	_exp_bar = _make_bar(Color("8fd0ff"), Vector2(300, 12))
 	box.add_child(_exp_bar)
 	_exp_text = Label.new()
 	_exp_text.add_theme_font_size_override("font_size", 15)
@@ -340,40 +344,38 @@ func _build_left_column() -> void:
 
 
 func _bar_row(parent: Control, label_text: String, color: Color) -> Array:
-	var row := HBoxContainer.new()
+	var row = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	parent.add_child(row)
 
-	var label := Label.new()
-	label.text = _word_label(label_text)
-	label.custom_minimum_size = Vector2(92, 0)
-	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	label.add_theme_font_size_override("font_size", 18)
+	var label = Label.new()
+	label.text = label_text
+	label.custom_minimum_size = Vector2(72, 0)
+	label.add_theme_font_size_override("font_size", 15)
 	label.add_theme_color_override("font_color", TSMTheme.MUTED)
 	row.add_child(label)
 
-	var bar := _make_bar(color, Vector2(BAR_WIDTH, BAR_HEIGHT))
+	var bar = _make_bar(color, Vector2(184, 18))
 	row.add_child(bar)
 
-	var value := Label.new()
-	value.custom_minimum_size = Vector2(74, 0)
-	value.add_theme_font_size_override("font_size", 16)
+	var value = Label.new()
+	value.add_theme_font_size_override("font_size", 15)
 	row.add_child(value)
 	return [bar, value, label]
 
 
 func _make_bar(color: Color, min_size: Vector2) -> ProgressBar:
-	var bar := ProgressBar.new()
+	var bar = ProgressBar.new()
 	bar.show_percentage = false
 	bar.min_value = 0.0
 	bar.max_value = 1.0
 	bar.step = 0.00001
 	bar.custom_minimum_size = min_size
-	var fill := StyleBoxFlat.new()
+	var fill = StyleBoxFlat.new()
 	fill.bg_color = color
 	fill.set_corner_radius_all(4)
 	bar.add_theme_stylebox_override("fill", fill)
-	var background := StyleBoxFlat.new()
+	var background = StyleBoxFlat.new()
 	background.bg_color = Color("0d0718")
 	background.border_color = TSMTheme.BORDER
 	background.set_border_width_all(1)
@@ -383,7 +385,7 @@ func _make_bar(color: Color, min_size: Vector2) -> ProgressBar:
 
 
 func _build_menu_buttons() -> void:
-	var row := HBoxContainer.new()
+	var row = HBoxContainer.new()
 	row.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	row.offset_left = -576
 	row.offset_right = -16
@@ -392,7 +394,7 @@ func _build_menu_buttons() -> void:
 	row.add_theme_constant_override("separation", 10)
 	add_child(row)
 	for entry in [["Bag", open_inventory], ["Char", open_character], ["Skills", open_skills], ["Map", open_map]]:
-		var button := Button.new()
+		var button = Button.new()
 		button.text = entry[0]
 		button.custom_minimum_size = Vector2(130, 72)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -411,7 +413,7 @@ func _build_target_frame() -> void:
 	_target_panel.visible = false
 	add_child(_target_panel)
 
-	var box := VBoxContainer.new()
+	var box = VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
 	_target_panel.add_child(box)
 
@@ -478,18 +480,18 @@ func _build_death_panel() -> void:
 	_death_panel.visible = false
 	add_child(_death_panel)
 
-	var box := VBoxContainer.new()
+	var box = VBoxContainer.new()
 	box.add_theme_constant_override("separation", 18)
 	_death_panel.add_child(box)
 
-	var title := Label.new()
+	var title = Label.new()
 	title.text = "YOU DIED"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 40)
 	title.add_theme_color_override("font_color", TSMTheme.ERROR)
 	box.add_child(title)
 
-	var revive := Button.new()
+	var revive = Button.new()
 	revive.text = "Revive"
 	revive.custom_minimum_size = Vector2(0, 80)
 	revive.add_theme_font_size_override("font_size", 30)
@@ -524,7 +526,7 @@ func _build_windows() -> void:
 	map_window.setup(_player, str(Session.character.get("current_map", "map_1")))
 	map_window.closed.connect(_on_window_closed)
 	map_window.teleport_requested.connect(func(waypoint_id: String) -> void:
-		var result := teleport_to(waypoint_id)
+		var result = teleport_to(waypoint_id)
 		if result["ok"]:
 			map_window.show_message("", false)
 		else:
@@ -532,50 +534,52 @@ func _build_windows() -> void:
 
 
 func _build_quick_slots() -> void:
-	var row := HBoxContainer.new()
+	var row = HBoxContainer.new()
 	row.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	row.offset_right = -276
-	row.offset_left = -276 - 3 * (QUICK_SLOT_SIZE + 8.0)
-	row.offset_bottom = -32
-	row.offset_top = -32 - QUICK_SLOT_SIZE
+	row.offset_right = -396
+	row.offset_left = -396 - 3 * 94
+	row.offset_bottom = -28
+	row.offset_top = -114
 	row.add_theme_constant_override("separation", 8)
 	add_child(row)
 
-	var tags := {"health": "HP", "mana": "MP", "stamina": "SP"}
+	var tags = {"health": "Health", "mana": "Mana", "stamina": "Stamina"}
 	for resource in DataRegistry.get_config("consumable_rules").get("quick_slots", []):
-		var button := Button.new()
-		button.custom_minimum_size = Vector2(QUICK_SLOT_SIZE, QUICK_SLOT_SIZE)
+		var button = Button.new()
+		button.custom_minimum_size = Vector2(86, 86)
+		var base_style := GameWindow.slot_style(Color("5b2a8c"), false)
+		if base_style is StyleBoxFlat:
+			var flat := base_style as StyleBoxFlat
+			flat.content_margin_left = 0.0
+			flat.content_margin_right = 0.0
+			flat.content_margin_top = 0.0
+			flat.content_margin_bottom = 0.0
 		for state in ["normal", "hover", "pressed", "focus"]:
-			button.add_theme_stylebox_override(state, GameWindow.slot_style(Color("5b2a8c"), false))
+			button.add_theme_stylebox_override(state, base_style)
 		button.pressed.connect(_on_quick_slot.bind(str(resource)))
 		row.add_child(button)
 
-		var tag := Label.new()
-		tag.text = _word_label(str(tags.get(resource, resource)), QUICK_SLOT_LABEL_CHARS)
+		var tag = Label.new()
+		tag.text = str(tags.get(resource, ""))
 		tag.position = Vector2(6, 2)
-		tag.size = Vector2(QUICK_SLOT_SIZE - 12.0, 20)
-		tag.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		tag.add_theme_font_size_override("font_size", 13)
+		tag.add_theme_font_size_override("font_size", 11)
 		tag.add_theme_color_override("font_color", TSMTheme.MUTED)
 		tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		button.add_child(tag)
 
-		var icon := Label.new()
-		icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		icon.add_theme_font_size_override("font_size", 30)
+		var icon = Label.new()
+		_style_slot_label(icon, 11, 16.0, 20.0)
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		button.add_child(icon)
 
-		var count := Label.new()
-		count.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 8)
-		count.add_theme_font_size_override("font_size", 20)
+		var count = Label.new()
+		count.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 5)
+		count.add_theme_font_size_override("font_size", 14)
 		count.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		button.add_child(count)
 
 		# Darkens from the top down while the potion cools down.
-		var shade := ColorRect.new()
+		var shade = ColorRect.new()
 		shade.color = Color(0, 0, 0, 0.62)
 		shade.anchor_left = 0.0
 		shade.anchor_right = 1.0
@@ -584,68 +588,59 @@ func _build_quick_slots() -> void:
 		shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		button.add_child(shade)
 
-		var time := Label.new()
+		var time = Label.new()
 		time.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		time.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		time.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		time.add_theme_font_size_override("font_size", 28)
+		time.add_theme_font_size_override("font_size", 26)
 		time.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		button.add_child(time)
 
 		_quick_buttons[resource] = {"button": button, "icon": icon, "count": count, "shade": shade, "time": time}
 
 
-## Four skill buttons in an arc above and left of the ATK button, and a small
-## button that swaps them between slots 1-4 and 5-8.
+## Four skill buttons spaced cleanly outside the ATK circle (center ~ (-150, -150),
+## radius ~ 92px) so ATK never overlaps any skill slot.
 func _build_skill_buttons() -> void:
-	var center := Vector2(-152.0, -138.0)            # the ATK button, from the bottom right corner
-	var half_button := SKILL_BUTTON_SIZE * 0.5
+	var centers = [
+		Vector2(-322.0, -70.0),   # 1: left of ATK, right of SP quick slot
+		Vector2(-306.0, -172.0),  # 2: left of ATK circle
+		Vector2(-236.0, -258.0),  # 3: upper-left of ATK circle
+		Vector2(-134.0, -296.0),  # 4: above ATK circle, below clock/minimap
+	]
 	for index in 4:
-		var angle := deg_to_rad([166.0, 138.0, 110.0, 82.0][index])
-		var middle := center + Vector2(cos(angle), -sin(angle)) * SKILL_ARC_RADIUS
-		var button := Button.new()
+		var middle: Vector2 = centers[index]
+		var button = Button.new()
 		button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-		button.offset_left = middle.x - half_button
-		button.offset_right = middle.x + half_button
-		button.offset_top = middle.y - half_button
-		button.offset_bottom = middle.y + half_button
+		button.offset_left = middle.x - 40.0
+		button.offset_right = middle.x + 40.0
+		button.offset_top = middle.y - 40.0
+		button.offset_bottom = middle.y + 40.0
 		for state in ["normal", "hover", "pressed", "focus"]:
 			button.add_theme_stylebox_override(state, GameWindow.slot_style(Color("8a5fd0"), false))
 		button.pressed.connect(_on_skill_button.bind(index + 1))
 		add_child(button)
 
-		var number := Label.new()
+		var number = Label.new()
 		number.text = str(index + 1)
-		number.position = Vector2(8, 2)
-		number.add_theme_font_size_override("font_size", 16)
+		number.position = Vector2(7, 2)
+		number.add_theme_font_size_override("font_size", 14)
 		number.add_theme_color_override("font_color", TSMTheme.MUTED)
 		number.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		button.add_child(number)
 
-		var icon := Label.new()
-		icon.anchor_left = 0.0
-		icon.anchor_right = 1.0
-		icon.anchor_top = 0.0
-		icon.anchor_bottom = 1.0
-		icon.offset_left = 4.0
-		icon.offset_right = -4.0
-		icon.offset_top = 18.0
-		icon.offset_bottom = -16.0
-		icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		icon.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		icon.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		icon.add_theme_font_size_override("font_size", 13)
+		var icon = Label.new()
+		_style_slot_label(icon, 11, 16.0, 18.0)
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		button.add_child(icon)
 
-		var cost := Label.new()
-		cost.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 6)
-		cost.add_theme_font_size_override("font_size", 16)
+		var cost = Label.new()
+		cost.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 4)
+		cost.add_theme_font_size_override("font_size", 13)
 		cost.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		button.add_child(cost)
 
-		var shade := ColorRect.new()
+		var shade = ColorRect.new()
 		shade.color = Color(0, 0, 0, 0.62)
 		shade.anchor_left = 0.0
 		shade.anchor_right = 1.0
@@ -654,26 +649,141 @@ func _build_skill_buttons() -> void:
 		shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		button.add_child(shade)
 
-		var time := Label.new()
+		var time = Label.new()
 		time.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		time.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		time.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		time.add_theme_font_size_override("font_size", 28)
+		time.add_theme_font_size_override("font_size", 24)
 		time.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		button.add_child(time)
 		_skill_buttons[index + 1] = {"button": button, "icon": icon, "cost": cost, "shade": shade, "time": time}
 
 	_swap_button = Button.new()
 	_swap_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	var swap_middle := center + Vector2(96.0, -96.0)
-	_swap_button.offset_left = swap_middle.x - 32.0
-	_swap_button.offset_right = swap_middle.x + 32.0
-	_swap_button.offset_top = swap_middle.y - 32.0
-	_swap_button.offset_bottom = swap_middle.y + 32.0
-	_swap_button.add_theme_font_size_override("font_size", 16)
+	var swap_middle = Vector2(-42.0, -278.0)
+	_swap_button.offset_left = swap_middle.x - 28.0
+	_swap_button.offset_right = swap_middle.x + 28.0
+	_swap_button.offset_top = swap_middle.y - 28.0
+	_swap_button.offset_bottom = swap_middle.y + 28.0
+	_swap_button.add_theme_font_size_override("font_size", 15)
 	_swap_button.pressed.connect(swap_skill_page)
 	add_child(_swap_button)
+
+	_build_ability_button("special", Vector2(-406.0, -214.0), 86.0, Color("d4a02f"))
+	_build_ability_button("ultimate", Vector2(-326.0, -314.0), 90.0, Color("e0507a"))
 	_refresh_skills()
+
+
+## The special attack (Q) and ultimate (R): placed cleanly on the outer-left/upper
+## side of the skill cluster with clear separation from all other buttons.
+func _build_ability_button(kind: String, middle: Vector2, size: float, border: Color) -> void:
+	var button = Button.new()
+	button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	button.offset_left = middle.x - size / 2.0
+	button.offset_right = middle.x + size / 2.0
+	button.offset_top = middle.y - size / 2.0
+	button.offset_bottom = middle.y + size / 2.0
+	for state in ["normal", "hover", "pressed", "focus"]:
+		button.add_theme_stylebox_override(state, GameWindow.slot_style(border, false))
+	button.pressed.connect(_on_ability_button.bind(kind))
+	add_child(button)
+
+	var tag = Label.new()
+	tag.text = "Q" if kind == "special" else "R"
+	tag.position = Vector2(7, 2)
+	tag.add_theme_font_size_override("font_size", 14)
+	tag.add_theme_color_override("font_color", TSMTheme.MUTED)
+	tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(tag)
+
+	var icon = Label.new()
+	_style_slot_label(icon, 11, 17.0, 22.0)
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(icon)
+
+	var cost = Label.new()
+	cost.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 6)
+	cost.add_theme_font_size_override("font_size", 13)
+	cost.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(cost)
+
+	var shade = ColorRect.new()
+	shade.color = Color(0, 0, 0, 0.62)
+	shade.anchor_left = 0.0
+	shade.anchor_right = 1.0
+	shade.anchor_bottom = 1.0
+	shade.anchor_top = 1.0
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(shade)
+
+	var time = Label.new()
+	time.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	time.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	time.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	time.add_theme_font_size_override("font_size", 24)
+	time.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(time)
+
+	var lock = Label.new()
+	lock.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	lock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lock.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	lock.offset_bottom = -3.0
+	lock.add_theme_font_size_override("font_size", 13)
+	lock.add_theme_color_override("font_color", TSMTheme.MUTED)
+	lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(lock)
+	_ability_buttons[kind] = {"button": button, "icon": icon, "cost": cost, "shade": shade, "time": time, "lock": lock}
+
+
+func _ability_for(kind: String) -> Dictionary:
+	var class_id = str(Session.character.get("class_id", ""))
+	return SkillDB.special_for_class(class_id) if kind == "special" else SkillDB.ultimate_for_class(class_id)
+
+
+func _on_ability_button(kind: String) -> void:
+	var ability = _ability_for(kind)
+	if ability.is_empty():
+		return
+	var result = _player.skills.cast_ability(str(ability["ability_id"]))
+	if not result["ok"]:
+		show_message(str(result.get("message", "")))
+
+
+func _refresh_abilities() -> void:
+	if _player == null or _player.skills == null or not Session.has_character():
+		return
+	for kind in _ability_buttons:
+		var parts: Dictionary = _ability_buttons[kind]
+		var ability = _ability_for(str(kind))
+		(parts["button"] as Button).visible = not ability.is_empty()
+		if ability.is_empty():
+			continue
+		var ability_id = str(ability["ability_id"])
+		var rank = SkillBook.ability_rank(Session.character, ability_id)
+		var ability_name = str(ability.get("ability_name", "")).strip_edges()
+		if ability_name == "":
+			ability_name = _skill_display_name(ability_id)
+		(parts["icon"] as Label).text = ability_name
+		var cost = AbilityEffects.cost(ability_id)
+		(parts["cost"] as Label).text = str(cost)
+		var shade = parts["shade"] as ColorRect
+		if rank < 1:
+			(parts["lock"] as Label).text = "Lv %d" % int(ability["unlock_level"])
+			(parts["button"] as Button).modulate.a = 0.45
+			shade.anchor_top = 1.0
+			(parts["time"] as Label).text = ""
+			continue
+		(parts["lock"] as Label).text = ""
+		var affordable = _player.combatant.mp >= cost
+		(parts["cost"] as Label).add_theme_color_override("font_color", TSMTheme.OK if affordable else TSMTheme.ERROR)
+		var remaining = _player.skills.cooldowns.remaining(ability_id)
+		var total = maxf(0.1, AbilityEffects.cooldown_at_rank(ability_id, rank))
+		shade.anchor_top = 1.0 - clampf(remaining / total, 0.0, 1.0)
+		shade.offset_top = 0.0
+		shade.offset_bottom = 0.0
+		(parts["time"] as Label).text = str(ceili(remaining)) if remaining > 0.0 else ""
+		(parts["button"] as Button).modulate.a = 1.0 if affordable else 0.6
 
 
 ## Shows slots 5-8 instead of 1-4 (and back).
@@ -687,38 +797,37 @@ func _skill_slot(index: int) -> String:
 
 
 func _on_skill_button(index: int) -> void:
-	var result := _player.skills.cast_slot(_skill_slot(index))
+	var result = _player.skills.cast_slot(_skill_slot(index))
 	if not result["ok"]:
 		show_message(str(result.get("message", "")))
 
 
 func _refresh_skills() -> void:
-	_apply_attack_label_if_present()
 	if _player == null or _player.skills == null or not Session.has_character():
 		return
 	_swap_button.text = "1-4" if _skill_page == 0 else "5-8"
-	var class_id := str(Session.character.get("class_id", ""))
+	var class_id = str(Session.character.get("class_id", ""))
 	for index in _skill_buttons:
+		var slot_number = _skill_page * 4 + index
 		var parts: Dictionary = _skill_buttons[index]
-		var skill_id := _player.skills.slot_skill(_skill_slot(index))
-		(parts["button"] as Button).get_child(0).text = str(_skill_page * 4 + index)
-		var label_text := _skill_display_name(skill_id) if skill_id != "" else "+"
-		(parts["icon"] as Label).text = label_text
+		var skill_id = _player.skills.slot_skill(_skill_slot(index))
+		(parts["button"] as Button).get_child(0).text = str(slot_number)
+		(parts["icon"] as Label).text = _skill_display_name(skill_id, slot_number) if skill_id != "" else "+"
 		(parts["icon"] as Label).add_theme_color_override("font_color", TSMTheme.TEXT if skill_id != "" else Color("5d5470"))
-		var shade := parts["shade"] as ColorRect
+		var shade = parts["shade"] as ColorRect
 		if skill_id == "":
 			(parts["cost"] as Label).text = ""
 			shade.anchor_top = 1.0
 			(parts["time"] as Label).text = ""
 			(parts["button"] as Button).modulate.a = 0.5
 			continue
-		var rank := _player.skills.rank_of(skill_id)
-		var cost := roundi(SkillDB.cost_at_rank(skill_id, maxi(rank, 1)))
+		var rank = _player.skills.rank_of(skill_id)
+		var cost = roundi(SkillDB.cost_at_rank(skill_id, maxi(rank, 1)))
 		(parts["cost"] as Label).text = str(cost)
-		var affordable := _player.combatant.mp >= cost
+		var affordable = _player.combatant.mp >= cost
 		(parts["cost"] as Label).add_theme_color_override("font_color", TSMTheme.OK if affordable else TSMTheme.ERROR)
-		var remaining := _player.skills.cooldowns.remaining(skill_id)
-		var total := maxf(0.1, SkillDB.cooldown_at_rank(skill_id, maxi(rank, 1)))
+		var remaining = _player.skills.cooldowns.remaining(skill_id)
+		var total = maxf(0.1, SkillDB.cooldown_at_rank(skill_id, maxi(rank, 1)))
 		shade.anchor_top = 1.0 - clampf(remaining / total, 0.0, 1.0)
 		shade.offset_top = 0.0
 		shade.offset_bottom = 0.0
@@ -740,7 +849,7 @@ func _build_interact_button() -> void:
 
 
 func _on_quick_slot(resource: String) -> void:
-	var result := _player.use_quick_slot(resource)
+	var result = _player.use_quick_slot(resource)
 	if not result["ok"]:
 		show_message(str(result.get("message", "")))
 
@@ -751,20 +860,20 @@ func _refresh_quick_slots() -> void:
 	var slots: Dictionary = Session.character.get("settings", {}).get("quick_slots", {})
 	for resource in _quick_buttons:
 		var parts: Dictionary = _quick_buttons[resource]
-		var item_id := str(slots.get(resource, ""))
-		var owned := Inventory.count(Session.character.get("inventory", []), item_id) if item_id != "" else 0
-		(parts["icon"] as Label).text = GameWindow.initials(item_id) if item_id != "" else "+"
+		var item_id = str(slots.get(resource, ""))
+		var owned = Inventory.count(Session.character.get("inventory", []), item_id) if item_id != "" else 0
+		(parts["icon"] as Label).text = _item_word_name(item_id) if item_id != "" else "+"
 		(parts["icon"] as Label).add_theme_color_override("font_color",
 				TSMTheme.rarity_color(ItemDB.rarity(item_id)) if item_id != "" else Color("5d5470"))
 		(parts["count"] as Label).text = "x%d" % owned if item_id != "" else ""
 		(parts["button"] as Button).modulate.a = 1.0 if owned > 0 else 0.5
 
-		var fraction := _player.potion_cooldowns.fraction(item_id) if item_id != "" else 0.0
-		var shade := parts["shade"] as ColorRect
+		var fraction = _player.potion_cooldowns.fraction(item_id) if item_id != "" else 0.0
+		var shade = parts["shade"] as ColorRect
 		shade.anchor_top = 1.0 - fraction
 		shade.offset_top = 0.0
 		shade.offset_bottom = 0.0
-		var seconds := ceili(_player.potion_cooldowns.remaining(item_id)) if item_id != "" else 0
+		var seconds = ceili(_player.potion_cooldowns.remaining(item_id)) if item_id != "" else 0
 		(parts["time"] as Label).text = str(seconds) if seconds > 0 else ""
 
 
@@ -776,10 +885,10 @@ func _refresh_interact() -> void:
 	_interact_npc = null
 	_interact_waypoint = null
 	if not is_window_open() and not _player.is_dead() and not _teleporting:
-		var shop_radius := float(DataRegistry.get_config("shop_rules").get("interaction_radius", 3.5))
-		var waypoint_radius := float(MapData.get_map(str(Session.character.get("current_map", "map_1"))).get("waypoint_radius", 3.2))
-		var npc := ShopNpc.nearest(_player, shop_radius)
-		var waypoint := Waypoint.nearest(_player, waypoint_radius)
+		var shop_radius = float(DataRegistry.get_config("shop_rules").get("interaction_radius", 3.5))
+		var waypoint_radius = float(MapData.get_map(str(Session.character.get("current_map", "map_1"))).get("waypoint_radius", 3.2))
+		var npc = ShopNpc.nearest(_player, shop_radius)
+		var waypoint = Waypoint.nearest(_player, waypoint_radius)
 		if npc != null and (waypoint == null or Vector2(_player.global_position.x - npc.global_position.x, _player.global_position.z - npc.global_position.z).length() <= waypoint.ground_distance(_player.global_position)):
 			_interact_npc = npc
 		else:
@@ -803,8 +912,8 @@ func _on_interact() -> void:
 
 ## Turns a waypoint blue if you are close enough and the area is clear of enemies.
 func activate_waypoint(waypoint: Waypoint) -> Dictionary:
-	var map := MapData.get_map(str(Session.character.get("current_map", "map_1")))
-	var error := WaypointRules.activation_error(waypoint.unlocked,
+	var map = MapData.get_map(str(Session.character.get("current_map", "map_1")))
+	var error = WaypointRules.activation_error(waypoint.unlocked,
 			waypoint.ground_distance(_player.global_position),
 			waypoint.enemies_near(float(map.get("waypoint_clear_radius", 16.0))),
 			float(map.get("waypoint_radius", 3.2)))
@@ -823,8 +932,8 @@ func activate_waypoint(waypoint: Waypoint) -> Dictionary:
 func teleport_to(waypoint_id: String) -> Dictionary:
 	if _teleporting:
 		return {"ok": false, "error": "BUSY", "message": "Already teleporting."}
-	var map_id := str(Session.character.get("current_map", "map_1"))
-	var error := WaypointRules.teleport_error(Session.character, waypoint_id, _player.is_dead(),
+	var map_id = str(Session.character.get("current_map", "map_1"))
+	var error = WaypointRules.teleport_error(Session.character, waypoint_id, _player.is_dead(),
 			_player.seconds_since_combat(), float(MapData.get_map(map_id).get("teleport_combat_delay", 5.0)))
 	if error != "":
 		return {"ok": false, "error": error, "message": WaypointRules.message(error)}
@@ -837,18 +946,18 @@ func _run_teleport(waypoint_id: String, map_id: String) -> void:
 	close_windows()
 	if _controls != null:
 		_controls.enabled = false
-	var entry := MapData.waypoint(map_id, waypoint_id)
-	var at := MapData.position_of(entry)
+	var entry = MapData.waypoint(map_id, waypoint_id)
+	var at = MapData.position_of(entry)
 	_fade_label.text = "Teleporting to %s..." % str(entry.get("name", ""))
 	_fade.visible = true
 	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
 
-	var fade_out := create_tween()
+	var fade_out = create_tween()
 	fade_out.tween_property(_fade, "modulate:a", 1.0, fade_seconds)
 	await fade_out.finished
 	_player.teleport_to(Vector3(at.x, 0.0, at.y + 3.0))       # beside the obelisk, not inside it
 	await get_tree().create_timer(fade_seconds * 0.7).timeout
-	var fade_in := create_tween()
+	var fade_in = create_tween()
 	fade_in.tween_property(_fade, "modulate:a", 0.0, fade_seconds)
 	await fade_in.finished
 
@@ -908,11 +1017,11 @@ func _build_fade() -> void:
 
 ## "Day  14:35" from the sky, updated about once a second.
 func _refresh_clock() -> void:
-	var sky := get_tree().get_first_node_in_group("day_night") as DayNight
+	var sky = get_tree().get_first_node_in_group("day_night") as DayNight
 	if sky == null:
 		_time_label.text = ""
 		return
-	var hour := sky.current_hour()
+	var hour = sky.current_hour()
 	_time_label.text = "%s  %s" % [DayNightRules.period_name(hour), DayNightRules.format_hour(hour)]
 
 
@@ -942,16 +1051,16 @@ func _on_window_closed() -> void:
 
 ## One line in the reward list at the top left. It fades away on its own.
 func add_feed(text: String, color: Color) -> void:
-	var line := Label.new()
+	var line = Label.new()
 	line.text = text
 	line.add_theme_font_size_override("font_size", 18)
 	line.add_theme_color_override("font_color", color)
 	_feed.add_child(line)
 	while _feed.get_child_count() > 8:
-		var oldest := _feed.get_child(0)
+		var oldest = _feed.get_child(0)
 		_feed.remove_child(oldest)
 		oldest.queue_free()
-	var tween := line.create_tween()
+	var tween = line.create_tween()
 	tween.tween_interval(3.5)
 	tween.tween_property(line, "modulate:a", 0.0, 0.6)
 	tween.tween_callback(line.queue_free)
@@ -960,21 +1069,21 @@ func add_feed(text: String, color: Color) -> void:
 func show_banner(text: String) -> void:
 	_banner.text = text
 	_banner.modulate.a = 1.0
-	var tween := _banner.create_tween()
+	var tween = _banner.create_tween()
 	tween.tween_interval(2.2)
 	tween.tween_property(_banner, "modulate:a", 0.0, 0.6)
 
 
 func _on_reward(summary: Dictionary) -> void:
 	if int(summary.get("exp", 0)) > 0:
-		add_feed("+%d %s" % [int(summary["exp"]), _word_label("EXP")], Color("8fd0ff"))
+		add_feed("+%d EXP" % int(summary["exp"]), Color("8fd0ff"))
 	if int(summary.get("gold", 0)) > 0:
 		add_feed("+%d gold" % int(summary["gold"]), TSMTheme.ACCENT)
 	for entry in summary.get("items", []):
-		var item_id := str(entry["item_id"])
+		var item_id = str(entry["item_id"])
 		add_feed("+ %s" % ItemDB.display_name(item_id), TSMTheme.rarity_color(ItemDB.rarity(item_id)))
 	if int(summary.get("levels_gained", 0)) > 0:
-		show_banner("LEVEL UP!  %s %d" % [_word_label("Lv"), int(summary.get("level", 1))])
+		show_banner("LEVEL UP!  Lv %d" % int(summary.get("level", 1)))
 
 
 # ---------- updating ----------
@@ -987,19 +1096,19 @@ func _on_target_changed(target: Node3D) -> void:
 func _refresh_player() -> void:
 	if _player == null or not Session.has_character():
 		return
-	var fighter := _player.combatant
-	var c := Session.character
-	_name_label.text = "%s   %s  %s %d" % [str(c.get("name", "?")),
-			str(c.get("class_id", "?")).capitalize(), _word_label("Lv"), int(c.get("level", 1))]
+	var fighter = _player.combatant
+	var c = Session.character
+	_name_label.text = "%s   %s  Lv %d" % [str(c.get("name", "?")),
+			str(c.get("class_id", "?")).capitalize(), int(c.get("level", 1))]
 	_set_bar(_hp_bar, _hp_text, fighter.hp, fighter.max_health())
-	var class_id := str(Session.character.get("class_id", ""))
-	_mp_label.text = _word_label(ClassResource.short_label(class_id))
-	var fill := _mp_bar.get_theme_stylebox("fill") as StyleBoxFlat
+	var class_id = str(Session.character.get("class_id", ""))
+	_mp_label.text = _resource_word(ClassResource.short_label(class_id), "Mana")
+	var fill = _mp_bar.get_theme_stylebox("fill") as StyleBoxFlat
 	if fill != null:
 		fill.bg_color = ClassResource.color(class_id)
 	_set_bar(_mp_bar, _mp_text, fighter.mp, fighter.max_mana())
 	_set_bar(_sp_bar, _sp_text, fighter.sp, fighter.max_stamina())
-	var level := int(c.get("level", 1))
+	var level = int(c.get("level", 1))
 	_exp_bar.value = StatDisplay.exp_fraction(level, int(c.get("exp", 0)), int(c.get("rebirth", 0)))
 	_exp_text.text = StatDisplay.exp_text(level, int(c.get("exp", 0)), int(c.get("rebirth", 0)))
 	_gold_label.text = "Gold  %s" % StatDisplay.format_number(int(c.get("gold", 0)))
@@ -1018,14 +1127,14 @@ func _refresh_target() -> void:
 		return
 	var fighter: Combatant = _target.get("combatant")
 	_target_panel.visible = true
-	_target_name.text = "%s   %s %d" % [fighter.display_name, _word_label("Lv"), fighter.level]
+	_target_name.text = "%s   Lv %d" % [fighter.display_name, fighter.level]
 	_target_bar.value = float(fighter.hp) / maxf(1.0, float(fighter.max_health()))
-	_target_text.text = "%s %d / %d" % [_word_label("HP"), fighter.hp, fighter.max_health()]
+	_target_text.text = "HP %d / %d" % [fighter.hp, fighter.max_health()]
 
 	var effects: Array = []
 	for effect_id in fighter.status.active_ids():
-		var count := fighter.status.stacks(effect_id)
-		var effect_name := str(fighter.status.definition(effect_id).get("name", effect_id))
+		var count = fighter.status.stacks(effect_id)
+		var effect_name = str(fighter.status.definition(effect_id).get("name", effect_id))
 		effects.append("%s x%d" % [effect_name, count] if count > 1 else effect_name)
 	_target_status.text = ", ".join(effects)
 	_target_status.visible = not effects.is_empty()
@@ -1033,7 +1142,7 @@ func _refresh_target() -> void:
 	var meter: Variant = _target.get("dps_meter")
 	_target_dps.visible = meter is DpsMeter
 	if meter is DpsMeter:
-		var dps := meter as DpsMeter
+		var dps = meter as DpsMeter
 		_target_dps.text = "DPS (5s): %d    Total: %d    Hits: %d    Crits: %d    Misses: %d" % [
 				roundi(dps.dps()), dps.total, dps.hits, dps.crits, dps.misses]
 
@@ -1043,14 +1152,14 @@ func _refresh_target() -> void:
 func _refresh_buffs() -> void:
 	if _player == null or _player.combatant == null:
 		return
-	var status := _player.combatant.status
-	var ids := status.active_ids()
-	var elixir_text := _elixir_text()
+	var status = _player.combatant.status
+	var ids = status.active_ids()
+	var elixir_text = _elixir_text()
 	var signature: Array = []
 	for effect_id in ids:
 		signature.append("%s:%d" % [effect_id, status.stacks(effect_id)])
 	signature.append("elixir:" + elixir_text)
-	var key := ",".join(signature)
+	var key = ",".join(signature)
 
 	if key != _buff_signature:
 		_buff_signature = key
@@ -1062,17 +1171,17 @@ func _refresh_buffs() -> void:
 	for chip in _buff_box.get_children():
 		if str(chip.name) == "elixir":
 			continue
-		var effect_id := str(chip.name)
-		var label := chip.get_child(0) as Label
-		var seconds := ceili(status.remaining(effect_id))
-		var count := status.stacks(effect_id)
-		var effect_name := str(status.definition(effect_id).get("name", effect_id))
+		var effect_id = str(chip.name)
+		var label = chip.get_child(0) as Label
+		var seconds = ceili(status.remaining(effect_id))
+		var count = status.stacks(effect_id)
+		var effect_name = str(status.definition(effect_id).get("name", effect_id))
 		label.text = "%s%s %ds" % [effect_name, (" x%d" % count) if count > 1 else "", seconds]
 
 
 func _elixir_text() -> String:
 	var elixir: Dictionary = Session.character.get("elixir", {})
-	var now := _player.now_unix()
+	var now = _player.now_unix()
 	if not ElixirRules.is_active(elixir, now):
 		return ""
 	var definition: Dictionary = ElixirRules.types().get(str(elixir.get("id", "")), {})
@@ -1080,16 +1189,16 @@ func _elixir_text() -> String:
 
 
 func _make_elixir_chip(text: String) -> Control:
-	var chip := PanelContainer.new()
+	var chip = PanelContainer.new()
 	chip.name = "elixir"
-	var style := StyleBoxFlat.new()
+	var style = StyleBoxFlat.new()
 	style.bg_color = Color(TSMTheme.PANEL, 0.9)
 	style.border_color = Color("ffd23f")
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(6)
 	style.set_content_margin_all(4)
 	chip.add_theme_stylebox_override("panel", style)
-	var label := Label.new()
+	var label = Label.new()
 	label.text = text
 	label.add_theme_font_size_override("font_size", 15)
 	label.add_theme_color_override("font_color", Color("ffd23f"))
@@ -1098,22 +1207,22 @@ func _make_elixir_chip(text: String) -> Control:
 
 
 func _make_buff_chip(effect_id: String) -> Control:
-	var kind := str(_player.combatant.status.definition(effect_id).get("kind", "debuff"))
-	var color := Color("ffb36b")
+	var kind = str(_player.combatant.status.definition(effect_id).get("kind", "debuff"))
+	var color = Color("ffb36b")
 	if kind == "buff" or kind == "hot":
 		color = Color("7be07b")
 	elif kind == "cc":
 		color = Color("7fb4ff")
-	var chip := PanelContainer.new()
+	var chip = PanelContainer.new()
 	chip.name = effect_id
-	var style := StyleBoxFlat.new()
+	var style = StyleBoxFlat.new()
 	style.bg_color = Color(TSMTheme.PANEL, 0.9)
 	style.border_color = color
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(6)
 	style.set_content_margin_all(4)
 	chip.add_theme_stylebox_override("panel", style)
-	var label := Label.new()
+	var label = Label.new()
 	label.add_theme_font_size_override("font_size", 15)
 	label.add_theme_color_override("font_color", color)
 	chip.add_child(label)

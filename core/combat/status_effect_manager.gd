@@ -116,6 +116,23 @@ func update(delta: float, max_health: float) -> Array:
 	return events
 
 
+## The total of a number stored in the definitions of the active effects
+## (for example "resource_drain_per_second" or "next_skill_bonus").
+func sum_key(key: String) -> float:
+	var total := 0.0
+	for effect_id in _active:
+		total += float(definition(effect_id).get(key, 0.0))
+	return total
+
+
+## The id of an active effect that carries this key, or "".
+func find_with_key(key: String) -> String:
+	for effect_id in _active:
+		if definition(effect_id).has(key):
+			return str(effect_id)
+	return ""
+
+
 func has(effect_id: String) -> bool:
 	return _active.has(effect_id)
 

@@ -449,12 +449,6 @@ func _test_cast_time_and_blocks() -> void:
 	_player.revive()
 	await _frames(3)
 
-	# Summons come later.
-	var summon := _find_skill(func(id: String) -> bool: return SkillEffects.effect_type(id) == "summon")
-	_learn(summon)
-	_ready_to_cast(100)
-	_eq("a summon skill is refused for now", _player.skills.cast(summon)["error"], "NOT_READY")
-	_eq("...without spending anything", [_player.combatant.mp, _player.skills.cooldowns.is_ready(summon)], [100, true])
 	enemy.queue_free()
 
 
@@ -784,7 +778,7 @@ func _test_buttons() -> void:
 	_eq("four skill buttons and a swap button", [_hud._skill_buttons.size(), _hud._swap_button != null], [4, true])
 	_eq("the swap button names the page", _hud._swap_button.text, "1-4")
 	var first: Dictionary = _hud._skill_buttons[1]
-	_eq("button 1 shows Iron Slash's initials", (first["icon"] as Label).text, "IS")
+	_eq("button 1 shows Iron Slash's name", (first["icon"] as Label).text, SkillDB.skill_name("WAR_01_01"))
 	_eq("...and its cost", (first["cost"] as Label).text, "9")
 	_eq("an empty slot shows a +", (_hud._skill_buttons[3]["icon"] as Label).text, "+")
 
@@ -807,7 +801,7 @@ func _test_buttons() -> void:
 	_hud.swap_skill_page()
 	await _frames(12)
 	_eq("the swap button shows the other page", _hud._swap_button.text, "5-8")
-	_eq("slot 6 is now on button 2", (_hud._skill_buttons[2]["icon"] as Label).text, SkillWindow._initials("WAR_01_03"))
+	_eq("slot 6 is now on button 2", (_hud._skill_buttons[2]["icon"] as Label).text, SkillDB.skill_name("WAR_01_03"))
 	_eq("...and button 1 (slot 5) is empty", (_hud._skill_buttons[1]["icon"] as Label).text, "+")
 	_hud.swap_skill_page()
 
@@ -818,7 +812,7 @@ func _test_buttons() -> void:
 	_player._unhandled_input(key)
 	_eq("the 1 key casts slot 1", _hits.size(), 1)
 
-	_eq("the class bar is called RG for a warrior", _hud._mp_label.text, "RG")
+	_eq("the class bar is called Rage for a warrior", _hud._mp_label.text, ClassResource.label("warrior"))
 	_eq("...and has the Rage colour", (_hud._mp_bar.get_theme_stylebox("fill") as StyleBoxFlat).bg_color, ClassResource.color("warrior"))
 	await _setup_world("mage", 20)
-	_eq("a mage's bar is MP, blue", [_hud._mp_label.text, (_hud._mp_bar.get_theme_stylebox("fill") as StyleBoxFlat).bg_color], ["MP", ClassResource.color("mage")])
+	_eq("a mage's bar is Mana, blue", [_hud._mp_label.text, (_hud._mp_bar.get_theme_stylebox("fill") as StyleBoxFlat).bg_color], [ClassResource.label("mage"), ClassResource.color("mage")])

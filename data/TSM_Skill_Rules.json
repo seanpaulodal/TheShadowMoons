@@ -90,5 +90,34 @@
     "dash": "dash",
     "leap_multishot": "dash",
     "teleport_behind": "teleport_behind"
-  }
+  },
+  "ability_behaviors": {
+    "WAR_ULT_001": "kingdom_buff",
+    "MAG_ULT_001": "waves",
+    "ARC_ULT_001": "waves",
+    "ROG_ULT_001": "multi_strike",
+    "GUN_ULT_001": "waves",
+    "HEA_ULT_001": "field",
+    "EXT_ULT_001": "transform",
+    "BRA_ULT_001": "barrage",
+    "NEC_ULT_001": "legion",
+    "WAR_SPC_001": "execute_strike",
+    "MAG_SPC_001": "next_spell",
+    "ARC_SPC_001": "stance",
+    "ROG_SPC_001": "execute_strike",
+    "GUN_SPC_001": "lock_burst",
+    "HEA_SPC_001": "bond",
+    "EXT_SPC_001": "implosion",
+    "BRA_SPC_001": "fists",
+    "NEC_SPC_001": "devour"
+  },
+  "ability_needs_target": [
+    "waves",
+    "multi_strike",
+    "execute_strike",
+    "lock_burst",
+    "fists",
+    "devour"
+  ],
+  "wave_default_seconds": 3.0
 }

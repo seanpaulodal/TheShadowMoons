@@ -35,6 +35,7 @@ const ACTION_KEYS := {
 	"move_right": [KEY_D, KEY_RIGHT],
 	"attack": [KEY_SPACE, KEY_F],
 	"interact": [KEY_E],
+	"special": [KEY_Q], "ultimate": [KEY_R],
 	"skill_1": [KEY_1], "skill_2": [KEY_2], "skill_3": [KEY_3], "skill_4": [KEY_4],
 	"skill_5": [KEY_5], "skill_6": [KEY_6], "skill_7": [KEY_7], "skill_8": [KEY_8],
 }
@@ -316,6 +317,8 @@ func revive() -> void:
 
 func _on_died() -> void:
 	_dead = true
+	if skills != null:
+		skills.clear_summons()
 	target = null
 	target_changed.emit(null)
 	died.emit()
@@ -365,6 +368,13 @@ func _regenerate(delta: float) -> void:
 func _update_class_bar(delta: float) -> void:
 	var class_id := str(Session.character.get("class_id", ""))
 	var per_second := ClassResource.rate(class_id, _combat_clock)
+	var drain := combatant.status.sum_key("resource_drain_per_second")
+	if drain > 0.0:
+		per_second = -drain                      # while transformed the bar only drains
+		if combatant.mp <= 0:
+			for effect_id in combatant.status.active_ids():
+				if combatant.status.definition(str(effect_id)).has("resource_drain_per_second"):
+					combatant.status.remove(str(effect_id))     # the transformation ends when the bar is empty
 	if per_second == 0.0:
 		return
 	_regen_pools["mp"] += per_second * delta
@@ -388,6 +398,14 @@ func gain_resource(event: String) -> void:
 func _on_kill_reward(summary: Dictionary) -> void:
 	if int(summary.get("exp", 0)) > 0 or int(summary.get("gold", 0)) > 0:
 		gain_resource("kill")
+
+
+## A summon of mine hit something. It counts as my fight (and my kill).
+func on_summon_hit(result: Dictionary, victim: Node3D) -> void:
+	_combat_clock = 0.0
+	if result.get("killed", false) and victim == target:
+		target = null
+		target_changed.emit(null)
 
 
 ## A skill of mine hit something.
@@ -569,6 +587,14 @@ func _process(_delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	for kind in ["special", "ultimate"]:
+		if event.is_action_pressed(kind) and skills != null:
+			var ability: Dictionary = SkillDB.special_for_class(str(Session.character.get("class_id", ""))) if kind == "special" \
+					else SkillDB.ultimate_for_class(str(Session.character.get("class_id", "")))
+			var result := skills.cast_ability(str(ability.get("ability_id", "")))
+			if not result["ok"]:
+				attack_failed.emit(str(result.get("message", "")))
+			return
 	for slot_name in SkillDB.SLOT_NAMES:
 		if event.is_action_pressed(slot_name) and skills != null:
 			var result := skills.cast_slot(slot_name)

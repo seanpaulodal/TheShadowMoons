@@ -80,6 +80,8 @@ static func power_multiplier(fighter: Combatant) -> float:
 ## True for skills that need an enemy: damage, execute, crowd control, damage
 ## over time, and debuffs. Buffs, shields, heals and plain movement do not.
 static func needs_enemy(skill_id: String) -> bool:
+	if effect_type(skill_id) == "summon":
+		return false                       # a summon is called wherever you stand
 	if has_damage(skill_id):
 		return true
 	if ["direct_damage", "execute", "damage_over_time", "crowd_control"].has(effect_type(skill_id)):

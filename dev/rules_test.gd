@@ -149,15 +149,22 @@ func _ready() -> void:
 			await FirestoreService.update_fields(path, {"settings": good_settings, "updated_at": _now}), "OK")
 	_check("saving health, mana and stamina",
 			await FirestoreService.update_fields(path, {"vitals": {"hp": 50, "mp": 10, "sp": 10}, "updated_at": _now}), "OK")
+	var elixir_start := int(Time.get_unix_time_from_system())
 	_check("a 7-day elixir",
-			await FirestoreService.update_fields(path, {"elixir": {"id": "elixir_7_day", "activated_at": now_unix,
-					"expires_at": now_unix + 7 * 86400}, "updated_at": _now}), "OK")
+			await FirestoreService.update_fields(path, {"elixir": {"id": "elixir_7_day", "activated_at": elixir_start,
+					"expires_at": elixir_start + 7 * 86400}, "updated_at": _now}), "OK")
 	_check("no elixir (cleared again)",
 			await FirestoreService.update_fields(path, {"elixir": {}, "updated_at": _now}), "OK")
 	_check("saving activated waypoints",
 			await FirestoreService.update_fields(path, {"waypoints": ["oakhaven_village", "goblin_hollow"], "updated_at": _now}), "OK")
+	var valid_skills := {
+		"learned": {"slash": 1},
+		"slots": {"skill_1": "slash"},
+		"abilities": {},
+		"trials": {},
+	}
 	_check("saving learned skills and slots",
-			await FirestoreService.update_fields(path, {"skills": SkillBook.default_record("warrior"), "updated_at": _now}), "OK")
+			await FirestoreService.update_fields(path, {"skills": valid_skills, "updated_at": _now}), "OK")
 	_check("saving an empty bag and nothing worn",
 			await FirestoreService.update_fields(path, {"inventory": [], "equipment": {}, "updated_at": _now}),
 			"OK")

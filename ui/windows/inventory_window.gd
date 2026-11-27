@@ -4,7 +4,7 @@ extends GameWindow
 ## panel with Equip / Use / Drop. It only shows and asks: every change goes
 ## through Session and the player.
 
-const SLOT_SIZE := 100.0
+const SLOT_SIZE := 104.0
 const COLUMNS := 6
 
 var _player: PlayerController
@@ -35,6 +35,25 @@ func setup(player: PlayerController) -> void:
 	Session.character_changed.connect(func() -> void:
 		if visible:
 			refresh())
+
+
+static func _item_word_name(item_id: String) -> String:
+	if item_id.strip_edges() == "":
+		return "+"
+	var raw := ItemDB.display_name(item_id).strip_edges()
+	if raw == "":
+		raw = item_id.replace("_", " ").replace("-", " ").strip_edges()
+	var words := PackedStringArray()
+	for part in raw.split(" ", false):
+		var token := part.strip_edges()
+		if token == "":
+			continue
+		if token.to_upper() == token and token.length() <= 3:
+			words.append(token)
+		else:
+			words.append(token.substr(0, 1).to_upper() + token.substr(1))
+	var joined := " ".join(words).strip_edges()
+	return joined if joined != "" else item_id
 
 
 # ---------- layout ----------
@@ -191,21 +210,23 @@ func _make_slot(entry: Dictionary) -> Button:
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		button.add_child(icon)
 	else:
-		var initials := Label.new()
-		initials.text = GameWindow.initials(item_id)
-		initials.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		initials.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		initials.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		initials.add_theme_font_size_override("font_size", 30)
-		initials.add_theme_color_override("font_color", color)
-		initials.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		button.add_child(initials)
+		var name_label := Label.new()
+		name_label.text = _item_word_name(item_id)
+		name_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 6)
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		name_label.add_theme_font_size_override("font_size", 13)
+		name_label.add_theme_color_override("font_color", color)
+		name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(name_label)
 
 	if int(entry.get("qty", 1)) > 1:
 		var badge := Label.new()
 		badge.text = "x%d" % int(entry["qty"])
-		badge.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 8)
-		badge.add_theme_font_size_override("font_size", 20)
+		badge.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 6)
+		badge.add_theme_font_size_override("font_size", 15)
 		badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		button.add_child(badge)
 	return button

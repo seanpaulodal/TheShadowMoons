@@ -16,6 +16,10 @@ var cooldowns := PotionCooldowns.new()
 ## Tests only: resolve the skill the moment it is cast, and all hits at once.
 var instant: bool = false
 var casting_skill: String = ""
+## The summons that are out now (see Summon).
+var summons: Array = []
+
+var _runner := AbilityRunner.new(self)
 
 var _cast_left: float = 0.0
 var _cast_target: Variant = null          # may be removed from the game before the cast ends
@@ -69,8 +73,6 @@ func cast(skill_id: String, rolls: Dictionary = {}) -> Dictionary:
 		return _fail("CANNOT_CAST", "You can't cast right now.")
 	if not cooldowns.is_ready(skill_id):
 		return _fail("COOLDOWN", "Not ready (%ds)." % ceili(cooldowns.remaining(skill_id)))
-	if SkillEffects.effect_type(skill_id) == "summon":
-		return _fail("NOT_READY", "Summons are coming in the next update.")
 
 	var cost := roundi(SkillDB.cost_at_rank(skill_id, rank))
 	if fighter.mp < cost:
@@ -100,6 +102,55 @@ func cast(skill_id: String, rolls: Dictionary = {}) -> Dictionary:
 	return {"ok": true, "skill_id": skill_id, "rank": rank, "cast_time": float(data.get("skill_cast_time_seconds", 0.0))}
 
 
+## Casts the class's special attack or ultimate (by ability id, "WAR_ULT_001").
+## Needs it unlocked (by level), a free cooldown, enough of the class bar, and for
+## most of them an enemy in range.
+func cast_ability(ability_id: String, rolls: Dictionary = {}) -> Dictionary:
+	var fighter := player.combatant
+	var data := SkillDB.ability(ability_id)
+	if data.is_empty():
+		return _fail("UNKNOWN", "Unknown ability.")
+	if fighter == null or fighter.is_dead:
+		return _fail("DEAD", "You can't cast while dead.")
+	if casting_skill != "":
+		return _fail("BUSY", "Still casting.")
+	var rank := SkillBook.ability_rank(Session.character, ability_id)
+	if rank < 1:
+		return _fail("LOCKED", "Reach level %d to use %s." % [int(data.get("unlock_level", 1)), str(data.get("ability_name", ""))])
+	if not fighter.status.can_cast():
+		return _fail("CANNOT_CAST", "You can't cast right now.")
+	if not cooldowns.is_ready(ability_id):
+		return _fail("COOLDOWN", "Not ready (%ds)." % ceili(cooldowns.remaining(ability_id)))
+	var label := ClassResource.label(str(Session.character.get("class_id", "")))
+	if AbilityEffects.requires_full_resource(ability_id) and fighter.mp < fighter.max_mana():
+		return _fail("FULL_RESOURCE_NEEDED", "%s must be full." % label)
+	var cost := AbilityEffects.cost(ability_id)
+	if fighter.mp < cost:
+		return _fail("NOT_ENOUGH_RESOURCE", "Not enough %s." % label)
+
+	var target: Node3D = null
+	if AbilityEffects.needs_target(ability_id):
+		target = Targeting.pick(player, AbilityEffects.range_meters(ability_id), player.target)
+		if target == null:
+			return _fail("NO_TARGET", "No target in range.")
+		player.set_target(target)
+
+	fighter.mp -= cost
+	fighter.changed.emit()
+	cooldowns.start(ability_id, AbilityEffects.cooldown_at_rank(ability_id, rank))
+	casting_skill = ability_id
+	_cast_target = target
+	_cast_rolls = rolls
+	_cast_left = float(data.get("cast_time_seconds", 0.0))
+	player.mark_combat()
+	if target != null:
+		player.face(target.global_position)
+	cast_started.emit(ability_id)
+	if instant or _cast_left <= 0.0:
+		finish_cast()
+	return {"ok": true, "skill_id": ability_id, "rank": rank, "cast_time": float(data.get("cast_time_seconds", 0.0))}
+
+
 ## Ends the cast now and applies the skill. (Called when the cast time is up.)
 func finish_cast() -> void:
 	if casting_skill == "":
@@ -112,7 +163,10 @@ func finish_cast() -> void:
 	_cast_rolls = {}
 	if player.is_dead():
 		return
-	_resolve(skill_id, target, rolls)
+	if SkillDB.ability(skill_id).is_empty():
+		_resolve(skill_id, target, rolls)
+	else:
+		_runner.run(skill_id, SkillBook.ability_rank(Session.character, skill_id), target, rolls)
 	cast_finished.emit(skill_id)
 
 
@@ -131,6 +185,8 @@ func _resolve(skill_id: String, target: Variant, rolls: Dictionary) -> void:
 	var fighter := player.combatant
 	var source := {"from": fighter.display_name}
 	match SkillEffects.effect_type(skill_id):
+		"summon":
+			_summon_skill(skill_id, rank)
 		"buff":
 			if SkillEffects.buff_on_enemy(skill_id):
 				for node in _targets_for(skill_id, target):
@@ -192,6 +248,11 @@ func _damage(skill_id: String, rank: int, primary: Variant, rolls: Dictionary) -
 	var hits := SkillEffects.hit_count(skill_id)
 	var delay := 0.0 if instant else float(DataRegistry.get_config("skill_rules").get("hit_delay_seconds", 0.12))
 	var targets := _targets_for(skill_id, primary)
+	var status := player.combatant.status
+	var boost_id := status.find_with_key("next_skill_bonus")
+	if boost_id != "" and SkillEffects.has_damage(skill_id):
+		raw *= 1.0 + float(status.definition(boost_id)["next_skill_bonus"])
+		status.remove(boost_id)
 	for index in hits:
 		if index == 0 or delay <= 0.0:
 			_hit_all(skill_id, rank, targets, raw, hits, index, rolls)
@@ -251,6 +312,64 @@ func _move(skill_id: String, target: Variant) -> void:
 				player.dash(forward, distance)
 		_:
 			player.dash(toward, distance)
+
+
+# ---------- summons ----------
+
+func active_summons(summon_id: String = "") -> Array:
+	summons = summons.filter(func(node: Variant) -> bool: return is_instance_valid(node) and not (node as Node).is_queued_for_deletion())
+	if summon_id == "":
+		return summons.duplicate()
+	return summons.filter(func(node: Summon) -> bool: return node.summon_id == summon_id)
+
+
+## Extra damage that an active aura summon gives all summons (0 = none).
+func summon_attack_bonus() -> float:
+	var best := 0.0
+	for node in active_summons():
+		best = maxf(best, float((node as Summon).definition.get("aura_attack_bonus", 0.0)))
+	return best
+
+
+func owner_power() -> float:
+	var stats := player.combatant.stats
+	return maxf(float(stats.get("atk_power", 0.0)), float(stats.get("magic_power", 0.0)))
+
+
+func spawn_summon(summon_id: String, seconds: float, damage: float, index: int = 0, count: int = 1) -> Summon:
+	var summon := Summon.new()
+	var angle := TAU * float(index) / float(maxi(1, count))
+	summon.setup(summon_id, player, seconds, damage, player.global_position + Vector3(cos(angle), 0.0, sin(angle)) * 2.5)
+	player.get_parent().add_child(summon)
+	summons.append(summon)
+	return summon
+
+
+func clear_summons() -> void:
+	for node in summons:
+		if is_instance_valid(node):
+			(node as Node).queue_free()
+	summons.clear()
+
+
+## A summon skill: calls up to max_active_summons helpers, replacing the old ones
+## of the same kind. Each hits for the skill's damage (or your power) x its percent.
+func _summon_skill(skill_id: String, rank: int) -> void:
+	var data := SkillEffects.effect(skill_id)
+	var summon_id := str(data.get("summon_id", ""))
+	var power := float(data.get("summon_attack_power_percent", 0.5)) * SkillDB.effect_multiplier(skill_id, rank)
+	var base := SkillEffects.raw_damage(skill_id, rank, _attributes())
+	var damage := base * power if base > 0.0 else owner_power() * power
+	for old in active_summons(summon_id):
+		(old as Node).queue_free()
+	var count := maxi(1, int(data.get("max_active_summons", 1)))
+	for index in count:
+		spawn_summon(summon_id, float(data.get("duration_seconds", 30.0)), damage, index, count)
+	say(SkillDB.skill_name(skill_id), Color("b9a0ff"))
+
+
+func say(text: String, color: Color) -> void:
+	_say(text, color)
 
 
 func _say(text: String, color: Color) -> void:
