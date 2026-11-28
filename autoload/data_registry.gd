@@ -123,6 +123,10 @@ const CONFIGS := {
 		"path": "res://data/TSM_Progression.json",
 		"required": ["max_level", "max_rebirth", "exp_base", "exp_exponent", "stat_points_per_level"],
 	},
+	"quests": {
+		"path": "res://data/TSM_Quests.json",
+		"required": [],
+	},
 }
 
 var loaded: bool = false

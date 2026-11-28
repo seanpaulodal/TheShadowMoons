@@ -1,0 +1,22 @@
+{
+  "quest_001": {
+    "title": "The Fallen Moons",
+    "description": "Investigate the strange darkness near Oakhaven.",
+    "type": "main",
+    "required": 1,
+    "rewards": {
+      "items": ["potion_hp_01", "gold_100"],
+      "exp": 500
+    }
+  },
+  "quest_002": {
+    "title": "Training Dummy",
+    "description": "Practice your combat skills on a training dummy.",
+    "type": "side",
+    "required": 1,
+    "rewards": {
+      "items": ["potion_mp_01"],
+      "exp": 100
+    }
+  }
+}
